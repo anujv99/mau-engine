@@ -7,6 +7,8 @@
 
 namespace mau {
 
+  PFN_vkCmdPushDescriptorSetKHR vkCmdPushDescriptorSetKHR = nullptr;
+
   static VKAPI_ATTR VkBool32 VKAPI_CALL debug_callback(
     VkDebugUtilsMessageSeverityFlagBitsEXT message_severity,
     VkDebugUtilsMessageTypeFlagsEXT message_type,
@@ -46,6 +48,17 @@ namespace mau {
   template <typename T>
   T load_instance_function(VkInstance instance, std::string_view name) {
     T func = reinterpret_cast<T>(vkGetInstanceProcAddr(instance, name.data()));
+
+    if (func == nullptr) {
+      LOG_ERROR("failed to load vulkan instance function: %s", name.data());
+    }
+
+    return func;
+  }
+
+  template <typename T>
+  T load_device_function(VkDevice device, std::string_view name) {
+    T func = reinterpret_cast<T>(vkGetDeviceProcAddr(device, name.data()));
 
     if (func == nullptr) {
       LOG_ERROR("failed to load vulkan instance function: %s", name.data());
@@ -176,6 +189,9 @@ namespace mau {
 
     // create device
     m_Device = make_handle<VulkanDevice>(m_PhysicalDevice, m_Surface);
+
+    // load functions
+    vkCmdPushDescriptorSetKHR = load_device_function<PFN_vkCmdPushDescriptorSetKHR>(m_Device->GetDevice(), "vkCmdPushDescriptorSetKHR");
 
     // create memory allocator
     CreateVulkanMemoryAllocator();

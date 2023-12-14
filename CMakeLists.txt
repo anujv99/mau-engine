@@ -3,7 +3,7 @@ cmake_minimum_required( VERSION 3.24 )
 project(mau)
 
 set( CMAKE_BUILD_TYPE Debug )
-set( CMAKE_CXX_STANDARD 17 )
+set( CMAKE_CXX_STANDARD 20 )
 set( CMAKE_CXX_STANDARD_REQUIRED ON )
 
 set( CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib )
@@ -19,6 +19,7 @@ set( GLFW_INCLUDE_DIR "thirdparty/glfw/include" )
 set( VMA_INCLUDE_DIR "thirdparty/vma/include" )
 set( IMGUI_INCLUDE_DIR "thirdparty/imgui" )
 set( TRACY_INCLUDE_DIR "thirdparty/tracy/public" )
+set( ASSIMP_INCLUDE_DIR "thirdparty/assimp/include" )
 
 # header only libraries # 
 set( GLM_INCLUDE_DIR  "thirdparty/glm/include"  )
@@ -39,6 +40,10 @@ if ( NOT IS_ABSOLUTE ${TRACY_INCLUDE_DIR} )
   get_filename_component( TRACY_INCLUDE_DIR "${CMAKE_CURRENT_LIST_DIR}/${TRACY_INCLUDE_DIR}" ABSOLUTE )
 endif()
 
+if ( NOT IS_ABSOLUTE ${ASSIMP_INCLUDE_DIR} )
+  get_filename_component( ASSIMP_INCLUDE_DIR "${CMAKE_CURRENT_LIST_DIR}/${ASSIMP_INCLUDE_DIR}" ABSOLUTE )
+endif()
+
 if ( NOT IS_ABSOLUTE ${GLM_INCLUDE_DIR} )
   get_filename_component( GLM_INCLUDE_DIR "${CMAKE_CURRENT_LIST_DIR}/${GLM_INCLUDE_DIR}" ABSOLUTE )
 endif()
@@ -50,6 +55,9 @@ add_subdirectory( thirdparty/glfw )
 add_subdirectory( thirdparty/vma )
 add_subdirectory( thirdparty/imgui )
 add_subdirectory( thirdparty/tracy )
+
+set( BUILD_SHARED_LIBS OFF )
+add_subdirectory( thirdparty/assimp )
 
 # ---------------------------------------------------------- #
 

@@ -4,7 +4,7 @@
 
 namespace mau {
 
-  void UploadUsingStaging(Buffer* dst, void* data) {
+  void UploadUsingStaging(Buffer* dst, const void* data) {
     ASSERT(dst && data);
     Buffer staging_buffer(dst->GetSize(), VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT);
 
@@ -48,6 +48,7 @@ namespace mau {
   }
 
   Buffer::~Buffer() {
+    if (m_MappedMemory) UnMap();
     vmaDestroyBuffer(VulkanState::Ref().GetVulkanMemoryAllocator(), m_Buffer, m_Allocation);
   }
 
@@ -65,7 +66,7 @@ namespace mau {
     }
   }
 
-  VertexBuffer::VertexBuffer(TUint64 buffer_size, void* data):
+  VertexBuffer::VertexBuffer(TUint64 buffer_size, const void* data):
     Buffer(buffer_size, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT, VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT) {
     
     if (data) {
@@ -75,7 +76,7 @@ namespace mau {
 
   VertexBuffer::~VertexBuffer() { }
 
-  IndexBuffer::IndexBuffer(TUint64 buffer_size, void* data):
+  IndexBuffer::IndexBuffer(TUint64 buffer_size, const void* data):
     Buffer(buffer_size, VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT, VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT) {
 
     if (data) {
@@ -84,5 +85,39 @@ namespace mau {
   }
 
   IndexBuffer::~IndexBuffer() { }
+
+  UniformBuffer::UniformBuffer(TUint64 buffer_size, const void* data):
+    Buffer(buffer_size, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT) {
+
+    Map();
+    if (data) {
+      memcpy(m_MappedMemory, data, buffer_size);
+    }
+  }
+
+  UniformBuffer::~UniformBuffer() { }
+
+  void UniformBuffer::Update(const void* data, TUint64 size) {
+    if (m_MappedMemory) {
+      memcpy(m_MappedMemory, data, std::min(size, m_Size));
+      m_IsUpdated = true;
+    }
+  }
+
+  void UniformBuffer::Flush(Handle<CommandBuffer> cmd) {
+    if (m_IsUpdated) {
+      m_IsUpdated = false;
+      // TODO: add pipeline barrier
+    }
+  }
+
+  VkDescriptorBufferInfo UniformBuffer::GetDescriptorInfo() const {
+    VkDescriptorBufferInfo descriptor_info = {};
+    descriptor_info.buffer                 = m_Buffer;
+    descriptor_info.offset                 = 0ui64;
+    descriptor_info.range                  = m_Size;
+
+    return descriptor_info;
+  }
 
 }

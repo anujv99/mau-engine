@@ -28,3 +28,10 @@
     throw GraphicsException(reason);                      \
   }                                                       \
 }
+
+namespace mau {
+
+  // manually loaded functions
+  extern PFN_vkCmdPushDescriptorSetKHR vkCmdPushDescriptorSetKHR;
+
+}

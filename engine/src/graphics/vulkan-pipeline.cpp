@@ -4,7 +4,7 @@
 
 namespace mau {
 
-  Pipeline::Pipeline(Handle<VertexShader> vertex_shader, Handle<FragmentShader> fragment_shader, Handle<Renderpass> renderpass, const InputLayout& input_layout, Handle<PushConstantBase> push_constant) {
+  Pipeline::Pipeline(Handle<VertexShader> vertex_shader, Handle<FragmentShader> fragment_shader, Handle<Renderpass> renderpass, const InputLayout& input_layout, Handle<PushConstantBase> push_constant, const DescriptorLayout& descriptor_layout) {
     VkPipelineShaderStageCreateInfo shader_stages[] = { vertex_shader->GetShaderStageInfo(), fragment_shader->GetShaderStageInfo() };
 
     // vertex input
@@ -112,13 +112,25 @@ namespace mau {
       push_constant_range = push_constant->GetRange();
     }
 
+    // create descriptor set layout
+    if (descriptor_layout.GetBindings().size()) {
+      VkDescriptorSetLayoutCreateInfo descriptor_layout_create_info = {};
+      descriptor_layout_create_info.sType                           = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+      descriptor_layout_create_info.pNext                           = nullptr;
+      descriptor_layout_create_info.flags                           = VK_DESCRIPTOR_SET_LAYOUT_CREATE_PUSH_DESCRIPTOR_BIT_KHR;
+      descriptor_layout_create_info.bindingCount                    = static_cast<uint32_t>(descriptor_layout.GetBindings().size());
+      descriptor_layout_create_info.pBindings                       = descriptor_layout.GetBindings().data();
+
+      VK_CALL(vkCreateDescriptorSetLayout(VulkanState::Ref().GetDevice(), &descriptor_layout_create_info, nullptr, &m_DescriptorSetLayout));
+    }
+
     // create pipeline layout
     VkPipelineLayoutCreateInfo layout_create_info = {};
     layout_create_info.sType                      = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
     layout_create_info.pNext                      = nullptr;
     layout_create_info.flags                      = 0u;
-    layout_create_info.setLayoutCount             = 0u;
-    layout_create_info.pSetLayouts                = nullptr;
+    layout_create_info.setLayoutCount             = m_DescriptorSetLayout != VK_NULL_HANDLE ? 1u : 0u;
+    layout_create_info.pSetLayouts                = m_DescriptorSetLayout != VK_NULL_HANDLE ? &m_DescriptorSetLayout : nullptr;
     layout_create_info.pushConstantRangeCount     = push_constant ? 1 : 0;
     layout_create_info.pPushConstantRanges        = push_constant ? &push_constant_range : nullptr;
 
@@ -149,6 +161,7 @@ namespace mau {
   }
 
   Pipeline::~Pipeline() {
+    if (m_DescriptorSetLayout) vkDestroyDescriptorSetLayout(VulkanState::Ref().GetDevice(), m_DescriptorSetLayout, nullptr);
     if (m_PipelineLayout) vkDestroyPipelineLayout(VulkanState::Ref().GetDevice(), m_PipelineLayout, nullptr);
     if (m_Pipeline) vkDestroyPipeline(VulkanState::Ref().GetDevice(), m_Pipeline, nullptr);
   }
@@ -174,6 +187,21 @@ namespace mau {
     desc.offset                            = offset;
 
     m_AttributeDesc.push_back(desc);
+  }
+
+  DescriptorLayout::DescriptorLayout() { }
+
+  DescriptorLayout::~DescriptorLayout() { }
+
+  void DescriptorLayout::AddDescriptor(VkDescriptorType type, VkShaderStageFlags access_stages, TUint32 binding_index) {
+    VkDescriptorSetLayoutBinding binding = {};
+    binding.binding                      = binding_index;
+    binding.descriptorType               = type;
+    binding.descriptorCount              = 1u;
+    binding.stageFlags                   = access_stages;
+    binding.pImmutableSamplers           = nullptr;
+
+    m_Bindings.push_back(binding);
   }
 
 }

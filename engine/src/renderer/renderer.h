@@ -12,11 +12,16 @@
 #include "../graphics/vulkan-image.h"
 #include "../graphics/vulkan-buffers.h"
 #include "../graphics/vulkan-push-constant.h"
+#include "../scene/mesh.h"
 
 namespace mau {
 
   struct VertexShaderData {
     glm::vec4 color;
+  };
+
+  struct ShaderCameraData {
+    glm::mat4 mvp;
   };
 
   class Renderer: public Singleton<Renderer> {
@@ -43,10 +48,9 @@ namespace mau {
     std::vector<Handle<Fence>>         m_QueueSubmit    = {};
 
     // temp
-    Handle<VertexBuffer>               m_QuadBuffer     = nullptr;
-    Handle<IndexBuffer>                m_QuadIndices    = nullptr;
-
-    Handle<PushConstant<VertexShaderData>> m_PushConstant = nullptr;
+    Handle<Mesh> m_Mesh = nullptr;
+    Handle<PushConstant<VertexShaderData>>             m_PushConstant   = nullptr;
+    Handle<StructuredUniformBuffer<ShaderCameraData>>  m_UniformBuffers = nullptr;
   };
   
 }

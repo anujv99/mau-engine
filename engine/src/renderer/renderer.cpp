@@ -6,12 +6,19 @@
 
 namespace mau {
 
-  void imgui_test(Handle<PushConstant<VertexShaderData>> push_constant) {
+  void imgui_test(Handle<PushConstant<VertexShaderData>> push_constant, Handle<StructuredUniformBuffer<ShaderCameraData>> uniform_buffer) {
     VertexShaderData data = push_constant->GetData();
+    static float rotation = 0;
 
     if (ImGui::Begin("Test Window")) {
       if (ImGui::ColorEdit4("Quad Color", glm::value_ptr(data.color))) {
         push_constant->Update(data);
+      }
+
+      if (ImGui::SliderFloat("Rotation", &rotation, 0, 360)) {
+        uniform_buffer->Update({
+          .mvp = glm::rotate(glm::mat4(1.0f), glm::radians(rotation), glm::vec3(0.0f, 0.0f, 1.0f)),
+        });
       }
     }
     ImGui::End();
@@ -42,9 +49,12 @@ namespace mau {
 
     InputLayout input_layout;
     input_layout.AddBindingDesc(0u, sizeof(glm::vec2));
-    input_layout.AddAttributeDesc(0u, 0u, VK_FORMAT_R32G32_SFLOAT, 0u);
+    input_layout.AddAttributeDesc(0u, 0u, VK_FORMAT_R32G32B32_SFLOAT, 0u);
 
-    m_Pipeline = make_handle<Pipeline>(m_VertexShader, m_FragmentShader, m_Renderpass, input_layout, m_PushConstant);
+    DescriptorLayout descriptor_layout;
+    descriptor_layout.AddDescriptor(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT, 0);
+
+    m_Pipeline = make_handle<Pipeline>(m_VertexShader, m_FragmentShader, m_Renderpass, input_layout, m_PushConstant, descriptor_layout);
 
     // create framebuffers and sync objects
     std::vector<Handle<ImageView>> swapchain_images = swapchain->GetImageViews();
@@ -63,17 +73,8 @@ namespace mau {
     m_CommandBuffers = cmd_pool->AllocateCommandBuffers(static_cast<TUint32>(swapchain_images.size()));
 
     // create vertex/index buffers
-    std::vector<glm::vec2> data = {
-      glm::vec2(-0.5, -0.5),
-      glm::vec2(0.5, 0.5),
-      glm::vec2(-0.5, 0.5),
-      glm::vec2(0.5, -0.5),
-    };
-    m_QuadBuffer = make_handle<VertexBuffer>(data.size() * sizeof(data[0]), data.data());
-
-    TUint32 indices[] = { 0, 1, 2, 0, 3, 1 };
-
-    m_QuadIndices = make_handle<IndexBuffer>(sizeof(indices), indices);
+    String sponza_path = GetAssetFolderPath() + "/assets/models/sponza/sponza.obj";
+    m_Mesh = make_handle<Mesh>(sponza_path);
 
     // init imgui
     ImguiRenderer::Create(window_ptr);
@@ -91,6 +92,11 @@ namespace mau {
         m_Framebuffers.push_back(fbo);
       }
     });
+
+    // create uniform buffers
+    m_UniformBuffers = new StructuredUniformBuffer<ShaderCameraData>({
+      .mvp = glm::mat4(1.0f),
+    });
   }
 
   Renderer::~Renderer() {
@@ -101,7 +107,7 @@ namespace mau {
     MAU_PROFILE_SCOPE("Renderer::StartFrame");
     ImguiRenderer::Ref().StartFrame();
 
-    imgui_test(m_PushConstant);
+    imgui_test(m_PushConstant, m_UniformBuffers);
   }
 
   void Renderer::EndFrame() {
@@ -147,10 +153,23 @@ namespace mau {
       vkCmdSetViewport(cmd->Get(), 0u, 1u, &viewport);
       vkCmdSetScissor(cmd->Get(), 0u, 1u, &scissor);
 
+      // temp
+      VkDescriptorBufferInfo uniform_descriptor_info = m_UniformBuffers->GetDescriptorInfo();
+      VkWriteDescriptorSet write_descriptor_sets = {};
+      write_descriptor_sets.sType                = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+      write_descriptor_sets.pNext                = nullptr;
+      write_descriptor_sets.dstSet               = 0;
+      write_descriptor_sets.dstBinding           = 0;
+      write_descriptor_sets.descriptorCount      = 1;
+      write_descriptor_sets.descriptorType       = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+      write_descriptor_sets.pBufferInfo          = &uniform_descriptor_info;
+
+      vkCmdPushDescriptorSetKHR(cmd->Get(), VK_PIPELINE_BIND_POINT_GRAPHICS, m_Pipeline->GetLayout(), 0, 1, &write_descriptor_sets);
+
       VkDeviceSize offsets[] = { 0ui64 };
-      vkCmdBindVertexBuffers(cmd->Get(), 0u, 1, m_QuadBuffer->Ref(), offsets);
-      vkCmdBindIndexBuffer(cmd->Get(), m_QuadIndices->Get(), 0ui64, VK_INDEX_TYPE_UINT32);
-      vkCmdDrawIndexed(cmd->Get(), 6, 1, 0, 0, 0);
+      vkCmdBindVertexBuffers(cmd->Get(), 0u, 1, m_Mesh->GetVertexBuffer()->Ref(), offsets);
+      vkCmdBindIndexBuffer(cmd->Get(), m_Mesh->GetIndexBuffer()->Get(), 0ui64, VK_INDEX_TYPE_UINT32);
+      vkCmdDrawIndexed(cmd->Get(), m_Mesh->GetIndexCount(), 1, 0, 0, 0);
       vkCmdEndRenderPass(cmd->Get());
     }
 

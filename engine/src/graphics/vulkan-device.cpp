@@ -50,6 +50,11 @@ namespace mau {
       throw GraphicsException("failed to enable swapchain extension");
     }
 
+    // enable push descriptor extension
+    if (!EnableDeviceExtension(VK_KHR_PUSH_DESCRIPTOR_EXTENSION_NAME)) {
+      throw GraphicsException("failed to push descriptor extension");
+    }
+
     std::set<TUint32> queue_indices = { m_GraphicsQueueIndex, m_TransferQueueIndex, m_PresentQueueIndex };
 
     std::vector<VkDeviceQueueCreateInfo> queue_create_info(queue_indices.size());
