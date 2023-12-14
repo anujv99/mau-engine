@@ -50,7 +50,7 @@ namespace mau {
     m_PresentModes.resize(static_cast<size_t>(surface_present_mode_count));
     VK_CALL(vkGetPhysicalDeviceSurfacePresentModesKHR(m_PhysicalDevice, m_Surface, &surface_present_mode_count, m_PresentModes.data()));
 
-    if (m_SurfaceFormats.size() == 0ui64) {
+    if (m_SurfaceFormats.size() == 0u) {
       throw GraphicsException("cannot find any surface format on device");
     }
 

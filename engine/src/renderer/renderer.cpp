@@ -182,7 +182,7 @@ namespace mau {
 
     if (m_DrawScene) {
       m_DrawScene->Each([this, &cmd](Entity entity) -> void {
-        VkDeviceSize offsets[] = { 0ui64 };
+        VkDeviceSize offsets[] = { 0u };
         TransformComponent& transform = entity.Get<TransformComponent>();
         MeshComponent& mesh = entity.Get<MeshComponent>();
 
@@ -198,7 +198,7 @@ namespace mau {
           m_PushConstant->Bind(cmd, m_Pipeline);
 
           vkCmdBindVertexBuffers(cmd->Get(), 0u, 1u, submesh.GetVertexBuffer()->Ref(), offsets);
-          vkCmdBindIndexBuffer(cmd->Get(), submesh.GetIndexBuffer()->Get(), 0ui64, VK_INDEX_TYPE_UINT32);
+          vkCmdBindIndexBuffer(cmd->Get(), submesh.GetIndexBuffer()->Get(), 0u, VK_INDEX_TYPE_UINT32);
           vkCmdDrawIndexed(cmd->Get(), submesh.GetIndexCount(), 1, 0, 0, 0);
         }
       });

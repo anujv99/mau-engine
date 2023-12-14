@@ -17,8 +17,8 @@ namespace mau {
     cmd->Begin(VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT);
 
     VkBufferCopy copy_region = {};
-    copy_region.srcOffset    = 0ui64;
-    copy_region.dstOffset    = 0ui64;
+    copy_region.srcOffset    = 0u;
+    copy_region.dstOffset    = 0u;
     copy_region.size         = dst->GetSize();
     vkCmdCopyBuffer(cmd->Get(), staging_buffer.Get(), dst->Get(), 1u, &copy_region);
 
@@ -77,7 +77,7 @@ namespace mau {
       return m_DeviceAddress;
     }
 
-    if (m_DeviceAddress == 0ui64) {
+    if (m_DeviceAddress == 0u) {
       VkBufferDeviceAddressInfo address_info = {};
       address_info.sType                     = VK_STRUCTURE_TYPE_BUFFER_DEVICE_ADDRESS_INFO;
       address_info.pNext                     = nullptr;
@@ -138,7 +138,7 @@ namespace mau {
   VkDescriptorBufferInfo UniformBuffer::GetDescriptorInfo() const {
     VkDescriptorBufferInfo descriptor_info = {};
     descriptor_info.buffer                 = m_Buffer;
-    descriptor_info.offset                 = 0ui64;
+    descriptor_info.offset                 = 0u;
     descriptor_info.range                  = m_Size;
 
     return descriptor_info;
@@ -187,7 +187,7 @@ namespace mau {
       .maxVertex     = create_info.VertexCount,
       .indexType     = VK_INDEX_TYPE_UINT32,
       .indexData     = index_buffer_address,
-      .transformData = 0ui64,
+      .transformData = 0u,
     };
 
     VkAccelerationStructureGeometryDataKHR geometry_data = {
@@ -240,10 +240,10 @@ namespace mau {
       .pNext         = nullptr,
       .createFlags   = 0u,
       .buffer        = m_BLASBuffer->Get(),
-      .offset        = 0ui64,
+      .offset        = 0u,
       .size          = blas_size_info.accelerationStructureSize,
       .type          = VK_ACCELERATION_STRUCTURE_TYPE_BOTTOM_LEVEL_KHR,
-      .deviceAddress = 0ui64,
+      .deviceAddress = 0u,
     };
 
     VK_CALL(vkCreateAccelerationStructureKHR(VulkanState::Ref().GetDevice(), &blas_create_info, nullptr, &m_BLAS));
@@ -373,10 +373,10 @@ namespace mau {
         .pNext         = nullptr,
         .createFlags   = 0u,
         .buffer        = m_TLASBuffer->Get(),
-        .offset        = 0ui64,
+        .offset        = 0u,
         .size          = tlas_size_info.accelerationStructureSize,
         .type          = VK_ACCELERATION_STRUCTURE_TYPE_TOP_LEVEL_KHR,
-        .deviceAddress = 0ui64,
+        .deviceAddress = 0u,
       };
 
       VK_CALL(vkCreateAccelerationStructureKHR(VulkanState::Ref().GetDevice(), &tlas_create_info, nullptr, &m_TLAS));

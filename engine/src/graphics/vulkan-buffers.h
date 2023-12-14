@@ -24,7 +24,7 @@ namespace mau {
     VmaAllocation   m_Allocation    = VK_NULL_HANDLE;
     void*           m_MappedMemory  = nullptr;
     TUint64         m_Size          = 0u;
-    VkDeviceAddress m_DeviceAddress = 0ui64;
+    VkDeviceAddress m_DeviceAddress = 0u;
   };
 
   class VertexBuffer: public Buffer {
@@ -44,7 +44,7 @@ namespace mau {
     UniformBuffer(TUint64 buffer_size, const void* data = nullptr);
     virtual ~UniformBuffer();
   public:
-    void Update(const void* data, TUint64 size, TUint64 offset = 0ui64);
+    void Update(const void* data, TUint64 size, TUint64 offset = 0u);
     void Flush(Handle<CommandBuffer> cmd);
     VkDescriptorBufferInfo GetDescriptorInfo() const;
   private:

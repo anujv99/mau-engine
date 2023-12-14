@@ -375,7 +375,7 @@ namespace mau {
     create_info.flags                          = 0u;
     create_info.physicalDevice                 = m_PhysicalDevice;
     create_info.device                         = m_Device->GetDevice();
-    create_info.preferredLargeHeapBlockSize    = 0ui64;
+    create_info.preferredLargeHeapBlockSize    = 0u;
     create_info.pAllocationCallbacks           = nullptr;
     create_info.pDeviceMemoryCallbacks         = nullptr;
     create_info.pHeapSizeLimit                 = nullptr;

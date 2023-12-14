@@ -102,7 +102,7 @@ namespace mau {
       m_Instance->RemRef();
 
       if (m_Instance->RefCount() == 0) {
-        HandledObject* base_class = dynamic_cast<T*>(m_Instance);
+        HandledObject* base_class = dynamic_cast<HandledObject*>(m_Instance);
         MAU_FREE(base_class);
       }
 

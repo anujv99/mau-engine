@@ -1,6 +1,7 @@
 #pragma once
 
 #include <engine/types.h>
+#include "graphics/vulkan-buffers.h"
 #include "graphics/vulkan-image.h"
 
 namespace mau {

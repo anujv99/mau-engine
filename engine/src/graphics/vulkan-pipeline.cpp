@@ -271,27 +271,27 @@ namespace mau {
     TUint64 handle_size_aligned = align_up(handle_size, rt_pipeline_properties.shaderGroupHandleAlignment);
 
     m_RayGenRegion = {
-      .deviceAddress = 0ui64,
+      .deviceAddress = 0u,
       .stride        = align_up(handle_size_aligned, rt_pipeline_properties.shaderGroupBaseAlignment),
       .size          = align_up(handle_size_aligned, rt_pipeline_properties.shaderGroupBaseAlignment),
     };
 
     m_RayMissRegion = {
-      .deviceAddress = 0ui64,
+      .deviceAddress = 0u,
       .stride        = handle_size_aligned,
       .size          = align_up(miss_count * handle_size_aligned, rt_pipeline_properties.shaderGroupBaseAlignment),
     };
 
     m_RayClosestHitRegion = {
-      .deviceAddress = 0ui64,
+      .deviceAddress = 0u,
       .stride        = handle_size_aligned,
       .size          = align_up(chit_count * handle_size_aligned, rt_pipeline_properties.shaderGroupBaseAlignment),
     };
 
     m_RayCallRegion = {
-      .deviceAddress = 0ui64,
-      .stride        = 0ui64,
-      .size          = 0ui64,
+      .deviceAddress = 0u,
+      .stride        = 0u,
+      .size          = 0u,
     };
 
     TUint64 data_size = static_cast<TUint64>(handle_count * handle_size);
