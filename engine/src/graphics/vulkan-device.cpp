@@ -95,7 +95,7 @@ namespace mau {
     vkDestroyDevice(m_Device, nullptr);
   }
 
-  bool VulkanDevice::EnableDeviceExtension(std::string_view extension_name) {
+  bool VulkanDevice::EnableDeviceExtension(std::string_view extension_name) noexcept {
     if (m_Device != VK_NULL_HANDLE) {
       LOG_ERROR("cannot enable device extension [%s]: device already created", extension_name.data());
       return false;

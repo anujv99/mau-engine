@@ -104,6 +104,7 @@ namespace mau {
   }
 
   VulkanState::~VulkanState() {
+    m_Swapchain.reset();
     m_Device.reset();
     if (m_Surface) vkDestroySurfaceKHR(m_Instance, m_Surface, nullptr);
     if (m_DebugMessenger) destroy_debug_utils(m_Instance, m_DebugMessenger);
@@ -172,6 +173,9 @@ namespace mau {
 
     // create device
     m_Device = std::make_unique<VulkanDevice>(m_PhysicalDevice, m_Surface);
+
+    // create swapchain
+    m_Swapchain = std::make_unique<VulkanSwapchain>(m_Device->getDevice(), m_PhysicalDevice, m_Surface);
   }
 
   bool VulkanState::EnableInstanceLayer(std::string_view layer_name) noexcept {

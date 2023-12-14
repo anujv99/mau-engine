@@ -9,6 +9,7 @@
 
 #include "common.h"
 #include "vulkan-device.h"
+#include "vulkan-swapchain.h"
 
 namespace mau {
 
@@ -44,7 +45,8 @@ namespace mau {
     VkPhysicalDevice         m_PhysicalDevice = VK_NULL_HANDLE;
 
     // custom wrappers
-    std::unique_ptr<VulkanDevice> m_Device    = nullptr;
+    std::unique_ptr<VulkanDevice>    m_Device    = nullptr;
+    std::unique_ptr<VulkanSwapchain> m_Swapchain = nullptr;
   };
 
 }
