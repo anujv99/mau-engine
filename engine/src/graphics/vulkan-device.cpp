@@ -38,7 +38,7 @@ namespace mau {
     // find all queue indices
     for (size_t i = 0; i < queue_families.size(); i++) {
       m_GraphicsQueueIndex = m_GraphicsQueueIndex == UINT32_MAX && hasQueueFamily(queue_families[i], VK_QUEUE_GRAPHICS_BIT) ? static_cast<TUint32>(i) : m_GraphicsQueueIndex;
-      m_TransferQueueIndex = m_TransferQueueIndex == UINT32_MAX && hasQueueFamily(queue_families[i], VK_QUEUE_TRANSFER_BIT) ? static_cast<TUint32>(i) : m_TransferQueueIndex;
+      m_TransferQueueIndex = (m_TransferQueueIndex == UINT32_MAX || m_TransferQueueIndex == m_GraphicsQueueIndex) && hasQueueFamily(queue_families[i], VK_QUEUE_TRANSFER_BIT) ? static_cast<TUint32>(i) : m_TransferQueueIndex;
 
       VkBool32 present_support = VK_FALSE;
       VK_CALL(vkGetPhysicalDeviceSurfaceSupportKHR(m_PhysicalDevice, i, m_Surface, &present_support));

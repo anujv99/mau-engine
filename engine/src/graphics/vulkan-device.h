@@ -16,7 +16,10 @@ namespace mau {
   public:
     bool EnableDeviceExtension(std::string_view extension_name) noexcept;
 
-    inline VkDevice getDevice() const noexcept { return m_Device; }
+    inline VkDevice GetDevice() const noexcept { return m_Device; }
+    inline TUint32 GetGraphicsQueueIndex() const noexcept { return m_GraphicsQueueIndex; }
+    inline TUint32 GetTransferQueueIndex() const noexcept { return m_TransferQueueIndex; }
+    inline TUint32 GetPresentQueueIndex() const noexcept { return m_PresentQueueIndex; }
   private:
     VkPhysicalDevice         m_PhysicalDevice         = VK_NULL_HANDLE;
     VkSurfaceKHR             m_Surface                = VK_NULL_HANDLE;

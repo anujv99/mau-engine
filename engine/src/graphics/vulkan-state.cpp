@@ -104,6 +104,7 @@ namespace mau {
   }
 
   VulkanState::~VulkanState() {
+    m_CommandPools.clear();
     m_Swapchain.reset();
     m_Device.reset();
     if (m_Surface) vkDestroySurfaceKHR(m_Instance, m_Surface, nullptr);
@@ -175,7 +176,11 @@ namespace mau {
     m_Device = std::make_unique<VulkanDevice>(m_PhysicalDevice, m_Surface);
 
     // create swapchain
-    m_Swapchain = std::make_unique<VulkanSwapchain>(m_Device->getDevice(), m_PhysicalDevice, m_Surface);
+    m_Swapchain = std::make_unique<VulkanSwapchain>(m_Device->GetDevice(), m_PhysicalDevice, m_Surface);
+
+    // pre-create command pools
+    CreateCommandPool(VK_QUEUE_GRAPHICS_BIT);
+    CreateCommandPool(VK_QUEUE_TRANSFER_BIT);
   }
 
   bool VulkanState::EnableInstanceLayer(std::string_view layer_name) noexcept {
@@ -234,6 +239,19 @@ namespace mau {
     m_ValidationSeverity = flags;
   }
 
+  std::weak_ptr<CommandPool> VulkanState::GetCommandPool(VkQueueFlagBits queue_type) {
+    if (m_CommandPools.find(queue_type) != m_CommandPools.end()) {
+      return m_CommandPools.at(queue_type);
+    } else {
+      bool result = CreateCommandPool(queue_type);
+      if (result) {
+        return m_CommandPools.at(queue_type);
+      }
+    }
+
+    return std::weak_ptr<CommandPool>();
+  }
+
   void VulkanState::PickPhysicalDevice() {
     uint32_t physical_device_count = 0u;
     VK_CALL(vkEnumeratePhysicalDevices(m_Instance, &physical_device_count, nullptr));
@@ -265,6 +283,38 @@ namespace mau {
     m_PhysicalDevice = available_physical_devices[static_cast<size_t>(selected_physical_device)];
 
     LOG_INFO("selected physical device: " LOG_COLOR_PINK "%s", m_AvailablePhysicalDevices[static_cast<size_t>(m_SelectedPhysicalDeviceIndex)].deviceName);
+  }
+
+  bool VulkanState::CreateCommandPool(VkQueueFlagBits queue_type) {
+    TUint32 queue_index = UINT32_MAX;
+    TUint32 flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
+
+    if (m_CommandPools.find(queue_type) != m_CommandPools.end()) {
+      LOG_WARN("command pool with queue type %s already exists", string_VkQueueFlagBits(queue_type));
+      return false;
+    }
+
+    switch (queue_type) {
+    case VK_QUEUE_GRAPHICS_BIT:
+      queue_index = m_Device->GetGraphicsQueueIndex();
+      break;
+    case VK_QUEUE_TRANSFER_BIT:
+      queue_index = m_Device->GetTransferQueueIndex();
+      flags |= VK_COMMAND_POOL_CREATE_TRANSIENT_BIT;
+      break;
+    default:
+      LOG_ERROR("cannot create command pool, invalid queue type");
+      return false;
+      break;
+    }
+
+    if (queue_index == UINT32_MAX) {
+      LOG_ERROR("cannot create command pool, failed to find queue index");
+      return false;
+    }
+
+    m_CommandPools[queue_type] = std::make_shared<CommandPool>(m_Device->GetDevice(), queue_index, flags);
+    return true;
   }
 
 }

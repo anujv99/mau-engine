@@ -3,6 +3,8 @@
 #include <vector>
 #include <memory>
 #include <string_view>
+#include <unordered_map>
+#include <string>
 #include <engine/utils/singleton.h>
 #include <engine/enums.h>
 #include <engine/types.h>
@@ -10,6 +12,7 @@
 #include "common.h"
 #include "vulkan-device.h"
 #include "vulkan-swapchain.h"
+#include "vulkan-commands.h"
 
 namespace mau {
 
@@ -24,8 +27,11 @@ namespace mau {
     bool EnableInstanceExtension(std::string_view extension_name) noexcept;
     void SetValidationSeverity(VulkanValidationLogSeverity severity, bool enabled) noexcept;
     void SetValidationSeverity(TUint32 flags) noexcept;
+
+    std::weak_ptr<CommandPool> GetCommandPool(VkQueueFlagBits queue_type);
   private:
     void PickPhysicalDevice();
+    bool CreateCommandPool(VkQueueFlagBits queue_type);
   private:
     bool    m_Validation                  = false;
     TUint32 m_ValidationSeverity          = VulkanValidationLogSeverity::ALL;
@@ -47,6 +53,9 @@ namespace mau {
     // custom wrappers
     std::unique_ptr<VulkanDevice>    m_Device    = nullptr;
     std::unique_ptr<VulkanSwapchain> m_Swapchain = nullptr;
+
+    // command pools
+    std::unordered_map<VkQueueFlagBits, std::shared_ptr<CommandPool>> m_CommandPools = {};
   };
 
 }

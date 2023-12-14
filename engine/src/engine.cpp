@@ -23,6 +23,9 @@ namespace mau {
     VulkanState::Create(MAU_DEBUG);
     VulkanState::Ref().SetValidationSeverity(config.ValidationSeverity);
     VulkanState::Ref().Init(config.ApplicationName, m_Window.getRawWindow());
+
+    // std::weak_ptr<CommandPool> command_pool = VulkanState::Ref().GetCommandPool(VK_QUEUE_GRAPHICS_BIT);
+    // CommandBuffers command_buffers = command_pool.lock()->AllocateCommandBuffers(10);
   };
 
   Engine::~Engine() {
