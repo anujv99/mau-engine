@@ -1,27 +1,9 @@
 #include "vulkan-state.h"
 
-#include <vulkan/vk_enum_string_helper.h>
 #include <GLFW/glfw3.h>
 
 #include <engine/log.h>
-#include <engine/exceptions.h>
 #include <engine/assert.h>
-
-#define VK_CALL(call) {                                   \
-  VkResult ret = call;                                    \
-  if (ret != VK_SUCCESS) {                                \
-    LOG_ERROR(#call " failed: %s", string_VkResult(ret)); \
-    throw GraphicsException(#call "failed");              \
-  }                                                       \
-}
-
-#define VK_CALL_REASON(call, reason) {                    \
-  VkResult ret = call;                                    \
-  if (ret != VK_SUCCESS) {                                \
-    LOG_ERROR(#call " failed: %s", string_VkResult(ret)); \
-    throw GraphicsException(reason);                      \
-  }                                                       \
-}
 
 namespace mau {
 
@@ -122,6 +104,7 @@ namespace mau {
   }
 
   VulkanState::~VulkanState() {
+    m_Device.reset();
     if (m_Surface) vkDestroySurfaceKHR(m_Instance, m_Surface, nullptr);
     if (m_DebugMessenger) destroy_debug_utils(m_Instance, m_DebugMessenger);
     vkDestroyInstance(m_Instance, nullptr);
@@ -183,6 +166,12 @@ namespace mau {
     GLFWwindow* glfw_window = reinterpret_cast<GLFWwindow*>(window);
     VK_CALL_REASON(glfwCreateWindowSurface(m_Instance, glfw_window, nullptr, &m_Surface), "failed to create surface");
     LOG_INFO("vulkan surface created");
+
+    // pick physical device
+    PickPhysicalDevice();
+
+    // create device
+    m_Device = std::make_unique<VulkanDevice>(m_PhysicalDevice, m_Surface);
   }
 
   bool VulkanState::EnableInstanceLayer(std::string_view layer_name) noexcept {
@@ -233,12 +222,45 @@ namespace mau {
     return true;
   }
 
-  void mau::VulkanState::SetValidationSeverity(VulkanValidationLogSeverity severity, bool enabled) noexcept {
+  void VulkanState::SetValidationSeverity(VulkanValidationLogSeverity severity, bool enabled) noexcept {
     m_ValidationSeverity = enabled ? m_ValidationSeverity | severity : m_ValidationSeverity & ~severity;
   }
 
-  void mau::VulkanState::SetValidationSeverity(TUint32 flags) noexcept {
+  void VulkanState::SetValidationSeverity(TUint32 flags) noexcept {
     m_ValidationSeverity = flags;
+  }
+
+  void VulkanState::PickPhysicalDevice() {
+    uint32_t physical_device_count = 0u;
+    VK_CALL(vkEnumeratePhysicalDevices(m_Instance, &physical_device_count, nullptr));
+    std::vector<VkPhysicalDevice> available_physical_devices(static_cast<size_t>(physical_device_count));
+    m_AvailablePhysicalDevices.reserve(static_cast<size_t>(physical_device_count));
+    VK_CALL(vkEnumeratePhysicalDevices(m_Instance, &physical_device_count, available_physical_devices.data()));
+
+    if (physical_device_count == 0u) {
+      throw GraphicsException("no physical device found");
+    }
+
+    TInt32 selected_physical_device = -1;
+
+    for (size_t i = 0; i < available_physical_devices.size(); i++) {
+      VkPhysicalDeviceProperties physical_device_properties = {};
+      vkGetPhysicalDeviceProperties(available_physical_devices[i], &physical_device_properties);
+      m_AvailablePhysicalDevices.push_back(physical_device_properties);
+
+      // just pick the discrete gpu for now
+      if (selected_physical_device == -1 && physical_device_properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU) {
+        selected_physical_device = static_cast<TInt32>(i);
+      }
+    }
+
+    // if not found, pick the first device
+    if (selected_physical_device == -1) selected_physical_device = 0;
+
+    m_SelectedPhysicalDeviceIndex = static_cast<TUint32>(selected_physical_device);
+    m_PhysicalDevice = available_physical_devices[static_cast<size_t>(selected_physical_device)];
+
+    LOG_INFO("selected physical device: " LOG_COLOR_PINK "%s", m_AvailablePhysicalDevices[static_cast<size_t>(m_SelectedPhysicalDeviceIndex)].deviceName);
   }
 
 }

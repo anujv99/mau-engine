@@ -7,13 +7,6 @@
 #define GLFW_CALL(call, reason) {                  \
   int ret = call;                                  \
   if (ret != GLFW_TRUE) {                          \
-    const char* error = nullptr;                   \
-    int err_code = glfwGetError(&error);           \
-    if (err_code != GLFW_NO_ERROR) {               \
-      LOG_FATAL("%s [reason: %s]", reason, error); \
-    } else {                                       \
-      LOG_FATAL("%s [reason: unknown]", reason);   \
-    }                                              \
     throw WindowException(reason);                 \
   }                                                \
 }                                                  \
