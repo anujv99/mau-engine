@@ -3,6 +3,7 @@
 #include <engine/utils/singleton.h>
 #include <engine/window.h>
 #include <engine/engine-config.h>
+#include <engine/enums.h>
 
 namespace mau {
 
@@ -13,6 +14,7 @@ namespace mau {
     ~Engine();
   public:
     void Run() noexcept;
+    void SetVulkanValidationLogSeverity(VulkanValidationLogSeverity severity, bool enabled) noexcept;
   private:
     Window m_Window;
     EngineConfig m_Config;

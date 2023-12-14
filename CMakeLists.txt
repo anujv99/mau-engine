@@ -26,6 +26,9 @@ if ( NOT IS_ABSOLUTE ${GLM_INCLUDE_DIR} )
   get_filename_component( GLM_INCLUDE_DIR "${CMAKE_CURRENT_LIST_DIR}/${GLM_INCLUDE_DIR}" ABSOLUTE )
 endif()
 
+set ( GLFW_BUILD_EXAMPLES OFF )
+set ( GLFW_BUILD_TESTS OFF )
+set ( GLFW_BUILD_DOCS OFF )
 add_subdirectory( thirdparty/glfw )
 
 # ---------------------------------------------------------- #

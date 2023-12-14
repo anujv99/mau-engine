@@ -11,7 +11,7 @@ namespace mau {
     Window(TUint32 width, TUint32 height, std::string_view name);
     ~Window();
   public:
-    inline const void* getRawWindow() const { return m_InternalState; }
+    inline void* getRawWindow() const { return m_InternalState; }
   private:
     bool ShouldClose() const noexcept;
     void PollEvents() const noexcept;

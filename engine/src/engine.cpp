@@ -9,6 +9,7 @@ namespace mau {
     m_Window(config.Width, config.Height, config.WindowName) {
 
     VulkanState::Create(MAU_DEBUG);
+    VulkanState::Ref().SetValidationSeverity(config.ValidationSeverity);
     VulkanState::Ref().Init(config.ApplicationName, m_Window.getRawWindow());
   };
 
@@ -21,6 +22,10 @@ namespace mau {
 
       m_Window.PollEvents();
     }
+  }
+
+  void Engine::SetVulkanValidationLogSeverity(VulkanValidationLogSeverity severity, bool enabled) noexcept {
+    VulkanState::Ref().SetValidationSeverity(severity, enabled);
   }
 
 }

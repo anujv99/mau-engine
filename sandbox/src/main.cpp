@@ -1,4 +1,7 @@
 #include <engine/engine.h>
+#include <engine/enums.h>
+#include <engine/log.h>
+#include <engine/exceptions.h>
 
 using namespace mau;
 
@@ -7,11 +10,21 @@ int main() {
   config.Width = 1280u;
   config.Height = 720u;
   config.WindowName = "Mau Engine";
+  config.ValidationSeverity = VulkanValidationLogSeverity::ERROR | VulkanValidationLogSeverity::WARNING;
 
-  Engine::Create(config);
+  try {
+    Engine::Create(config);
 
-  Engine::Ref().Run();
+    Engine::Ref().Run();
 
-  Engine::Destroy();
+    Engine::Destroy();
+  } catch (GraphicsException e) {
+    LOG_FATAL("%s", e.what().data());
+  } catch (WindowException e) {
+    LOG_FATAL("%s", e.what().data());
+  } catch (std::exception e) {
+    LOG_FATAL("%s", e.what());
+  }
+
   return 0;
 }

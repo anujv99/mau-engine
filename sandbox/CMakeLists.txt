@@ -16,3 +16,4 @@ elseif( CMAKE_BUILD_TYPE STREQUAL "Release" )
   add_compile_definitions( EG_RELEASE NDEBUG )
 endif()
 
+add_compile_definitions( "MAU_MODULE_NAME=\"sandbox\"" )
