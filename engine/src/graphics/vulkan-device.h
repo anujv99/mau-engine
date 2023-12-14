@@ -9,7 +9,9 @@
 
 namespace mau {
 
-  class VulkanDevice {
+  // TODO: create queue class
+
+  class VulkanDevice: public HandledObject {
   public:
     VulkanDevice(VkPhysicalDevice physical_device, VkSurfaceKHR surface);
     ~VulkanDevice();
@@ -20,6 +22,9 @@ namespace mau {
     inline TUint32 GetGraphicsQueueIndex() const noexcept { return m_GraphicsQueueIndex; }
     inline TUint32 GetTransferQueueIndex() const noexcept { return m_TransferQueueIndex; }
     inline TUint32 GetPresentQueueIndex() const noexcept { return m_PresentQueueIndex; }
+    inline VkQueue GetGraphicsQueue() const noexcept { return m_GraphicsQueue; }
+    inline VkQueue GetTransferQueue() const noexcept { return m_TransferQueue; }
+    inline VkQueue GetPresentQueue() const noexcept { return m_PresentQueue; }
   private:
     VkPhysicalDevice         m_PhysicalDevice         = VK_NULL_HANDLE;
     VkSurfaceKHR             m_Surface                = VK_NULL_HANDLE;

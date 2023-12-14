@@ -1,7 +1,6 @@
 #pragma once
 
 #include <vector>
-#include <memory>
 #include <string_view>
 #include <unordered_map>
 #include <string>
@@ -28,10 +27,27 @@ namespace mau {
     void SetValidationSeverity(VulkanValidationLogSeverity severity, bool enabled) noexcept;
     void SetValidationSeverity(TUint32 flags) noexcept;
 
-    std::weak_ptr<CommandPool> GetCommandPool(VkQueueFlagBits queue_type);
+    Handle<CommandPool> GetCommandPool(VkQueueFlagBits queue_type);
+    inline VmaAllocator GetVulkanMemoryAllocator() const { return m_Allocator; }
+    inline VkInstance GetInstance() const { return m_Instance; }
+
+    inline VkDevice GetDevice() const { return m_Device->GetDevice(); }
+    inline Handle<VulkanDevice> GetDeviceHandle() const { return m_Device; }
+    inline VkPhysicalDevice GetPhysicalDevice() const { return m_PhysicalDevice; }
+    inline VkQueue GetGraphicsQueue() const { return m_Device->GetGraphicsQueue(); }
+    inline VkQueue GetPresentQueue() const { return m_Device->GetPresentQueue(); }
+
+    inline VkSwapchainKHR GetSwapchain() const { return m_Swapchain->GetSwapchain(); }
+    inline Handle<VulkanSwapchain> GetSwapchainHandle() const { return m_Swapchain; }
+    inline VkFormat GetSwapchainColorFormat() const { return m_Swapchain->GetColorFormat(); }
+    inline VkFormat GetSwapchainDepthFormat() const { return m_Swapchain->GetDepthFormat(); }
+    inline VkExtent2D GetSwapchainExtent() const { return m_Swapchain->GetExtent(); }
+    inline const std::vector<Handle<ImageView>> GetSwapchainImageViews() const { return m_Swapchain->GetImageViews(); }
+    inline const std::vector<Handle<ImageView>> GetSwapchainDepthImageViews() const { return m_Swapchain->GetDepthImageViews(); }
   private:
     void PickPhysicalDevice();
     bool CreateCommandPool(VkQueueFlagBits queue_type);
+    void CreateVulkanMemoryAllocator();
   private:
     bool    m_Validation                  = false;
     TUint32 m_ValidationSeverity          = VulkanValidationLogSeverity::ALL;
@@ -51,11 +67,14 @@ namespace mau {
     VkPhysicalDevice         m_PhysicalDevice = VK_NULL_HANDLE;
 
     // custom wrappers
-    std::unique_ptr<VulkanDevice>    m_Device    = nullptr;
-    std::unique_ptr<VulkanSwapchain> m_Swapchain = nullptr;
+    Handle<VulkanDevice>    m_Device    = nullptr;
+    Handle<VulkanSwapchain> m_Swapchain = nullptr;
+
+    // vulkan memeory allocator
+    VmaAllocator m_Allocator = VK_NULL_HANDLE;
 
     // command pools
-    std::unordered_map<VkQueueFlagBits, std::shared_ptr<CommandPool>> m_CommandPools = {};
+    std::unordered_map<VkQueueFlagBits, Handle<CommandPool>> m_CommandPools = {};
   };
 
 }

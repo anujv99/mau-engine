@@ -1,4 +1,4 @@
-cmake_minimum_required( VERSION 3.7 )
+cmake_minimum_required( VERSION 3.24 )
 
 project(mau)
 
@@ -10,10 +10,14 @@ set( CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib )
 set( CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib )
 set( CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin )
 
+list( APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake" )
+
 # ---------------------- THIRD PARTY ----------------------- #
 
 # static libraries #
 set( GLFW_INCLUDE_DIR "thirdparty/glfw/include" )
+set( VMA_INCLUDE_DIR "thirdparty/vma/include" )
+set( IMGUI_INCLUDE_DIR "thirdparty/imgui" )
 
 # header only libraries # 
 set( GLM_INCLUDE_DIR  "thirdparty/glm/include"  )
@@ -22,14 +26,24 @@ if ( NOT IS_ABSOLUTE ${GLFW_INCLUDE_DIR} )
   get_filename_component( GLFW_INCLUDE_DIR "${CMAKE_CURRENT_LIST_DIR}/${GLFW_INCLUDE_DIR}" ABSOLUTE )
 endif()
 
+if ( NOT IS_ABSOLUTE ${VMA_INCLUDE_DIR} )
+  get_filename_component( VMA_INCLUDE_DIR "${CMAKE_CURRENT_LIST_DIR}/${VMA_INCLUDE_DIR}" ABSOLUTE )
+endif()
+
+if ( NOT IS_ABSOLUTE ${IMGUI_INCLUDE_DIR} )
+  get_filename_component( IMGUI_INCLUDE_DIR "${CMAKE_CURRENT_LIST_DIR}/${IMGUI_INCLUDE_DIR}" ABSOLUTE )
+endif()
+
 if ( NOT IS_ABSOLUTE ${GLM_INCLUDE_DIR} )
   get_filename_component( GLM_INCLUDE_DIR "${CMAKE_CURRENT_LIST_DIR}/${GLM_INCLUDE_DIR}" ABSOLUTE )
 endif()
 
-set ( GLFW_BUILD_EXAMPLES OFF )
-set ( GLFW_BUILD_TESTS OFF )
-set ( GLFW_BUILD_DOCS OFF )
+set( GLFW_BUILD_EXAMPLES OFF )
+set( GLFW_BUILD_TESTS OFF )
+set( GLFW_BUILD_DOCS OFF )
 add_subdirectory( thirdparty/glfw )
+add_subdirectory( thirdparty/vma )
+add_subdirectory( thirdparty/imgui )
 
 # ---------------------------------------------------------- #
 

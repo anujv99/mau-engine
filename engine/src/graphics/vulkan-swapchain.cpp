@@ -17,6 +17,12 @@ namespace mau {
     DestroySwapchain();
   }
 
+  TUint32 VulkanSwapchain::GetNextImageIndex(Handle<Semaphore> signal) {
+    TUint32 image_index = 0u;
+    VK_CALL(vkAcquireNextImageKHR(m_Device, m_Swapchain, UINT64_MAX, signal->Get(), VK_NULL_HANDLE, &image_index));
+    return image_index;
+  }
+
   void VulkanSwapchain::CreateSwapchain() {
     // get surface capabilities, formtas, present modes
     VK_CALL(vkGetPhysicalDeviceSurfaceCapabilitiesKHR(m_PhysicalDevice, m_Surface, &m_SurfaceCapabilities));
@@ -81,13 +87,42 @@ namespace mau {
     // create image views
     m_SwapchainImageViews.reserve(m_SwapchainImages.size());
     for (const auto& image : m_SwapchainImages) {
-      m_SwapchainImageViews.push_back(std::make_shared<ImageView>(image, m_Format.format, VK_IMAGE_VIEW_TYPE_2D, m_Device));
+      m_SwapchainImageViews.push_back(make_handle<ImageView>(image, m_Format.format, VK_IMAGE_VIEW_TYPE_2D, VK_IMAGE_ASPECT_COLOR_BIT));
+    }
+
+    // create depth images
+    m_DepthFormat = GetDepthFormat(VK_IMAGE_TILING_OPTIMAL);
+    m_DepthImages.reserve(m_SwapchainImages.size());
+    m_DepthImageViews.reserve(m_SwapchainImages.size());
+    for (size_t i = 0; i < m_SwapchainImages.size(); i++) {
+      Handle<Image> depth_image = make_handle<Image>(m_Extent.width, m_Extent.height, 1, 1, 1, VK_IMAGE_TYPE_2D, VK_SAMPLE_COUNT_1_BIT, m_DepthFormat, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT);
+      Handle<ImageView> depth_image_view = make_handle<ImageView>(depth_image, VK_IMAGE_VIEW_TYPE_2D, VK_IMAGE_ASPECT_DEPTH_BIT);
+      m_DepthImages.push_back(depth_image);
+      m_DepthImageViews.push_back(depth_image_view);
     }
 
     LOG_INFO("vulkan swachain created");
   }
 
+  VkFormat VulkanSwapchain::GetDepthFormat(VkImageTiling tiling) {
+    const VkFormat candidates[] = { VK_FORMAT_D32_SFLOAT, VK_FORMAT_D32_SFLOAT_S8_UINT, VK_FORMAT_D24_UNORM_S8_UINT };
+    const VkFormatFeatureFlags features = VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT;
+
+    for (size_t i = 0; i < ARRAY_SIZE(candidates); i++) {
+      const VkFormat format = candidates[i];
+      VkFormatProperties props = {};
+      vkGetPhysicalDeviceFormatProperties(m_PhysicalDevice, format, &props);
+
+      if (tiling == VK_IMAGE_TILING_LINEAR && (props.linearTilingFeatures & features) == features) return format;
+      if (tiling == VK_IMAGE_TILING_OPTIMAL && (props.optimalTilingFeatures & features) == features) return format;
+    }
+
+    return candidates[0];
+  }
+
   void VulkanSwapchain::DestroySwapchain() {
+    m_DepthImageViews.clear();
+    m_DepthImages.clear();
     m_SwapchainImageViews.clear();
     m_SwapchainImages.clear();
     m_SurfaceFormats.clear();

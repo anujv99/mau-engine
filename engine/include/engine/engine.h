@@ -7,6 +7,8 @@
 
 namespace mau {
 
+  std::string GetAssetFolderPath();
+
   class Engine: public Singleton<Engine> {
     friend Singleton<Engine>;
   private:

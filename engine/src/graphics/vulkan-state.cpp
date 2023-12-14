@@ -105,8 +105,9 @@ namespace mau {
 
   VulkanState::~VulkanState() {
     m_CommandPools.clear();
-    m_Swapchain.reset();
-    m_Device.reset();
+    m_Swapchain = nullptr;
+    vmaDestroyAllocator(m_Allocator);
+    m_Device = nullptr;
     if (m_Surface) vkDestroySurfaceKHR(m_Instance, m_Surface, nullptr);
     if (m_DebugMessenger) destroy_debug_utils(m_Instance, m_DebugMessenger);
     vkDestroyInstance(m_Instance, nullptr);
@@ -120,7 +121,7 @@ namespace mau {
     app_info.applicationVersion = VK_MAKE_VERSION(0, 0, 1);
     app_info.pEngineName        = app_name.data();
     app_info.engineVersion      = VK_MAKE_VERSION(0, 0, 1);
-    app_info.apiVersion         = VK_VERSION_1_3;
+    app_info.apiVersion         = VK_API_VERSION_1_3;
 
     VkInstanceCreateInfo create_info    = {};
     create_info.sType                   = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
@@ -173,10 +174,13 @@ namespace mau {
     PickPhysicalDevice();
 
     // create device
-    m_Device = std::make_unique<VulkanDevice>(m_PhysicalDevice, m_Surface);
+    m_Device = make_handle<VulkanDevice>(m_PhysicalDevice, m_Surface);
+
+    // create memory allocator
+    CreateVulkanMemoryAllocator();
 
     // create swapchain
-    m_Swapchain = std::make_unique<VulkanSwapchain>(m_Device->GetDevice(), m_PhysicalDevice, m_Surface);
+    m_Swapchain = make_handle<VulkanSwapchain>(m_Device->GetDevice(), m_PhysicalDevice, m_Surface);
 
     // pre-create command pools
     CreateCommandPool(VK_QUEUE_GRAPHICS_BIT);
@@ -239,7 +243,7 @@ namespace mau {
     m_ValidationSeverity = flags;
   }
 
-  std::weak_ptr<CommandPool> VulkanState::GetCommandPool(VkQueueFlagBits queue_type) {
+  Handle<CommandPool> VulkanState::GetCommandPool(VkQueueFlagBits queue_type) {
     if (m_CommandPools.find(queue_type) != m_CommandPools.end()) {
       return m_CommandPools.at(queue_type);
     } else {
@@ -249,7 +253,7 @@ namespace mau {
       }
     }
 
-    return std::weak_ptr<CommandPool>();
+    return nullptr;
   }
 
   void VulkanState::PickPhysicalDevice() {
@@ -313,8 +317,25 @@ namespace mau {
       return false;
     }
 
-    m_CommandPools[queue_type] = std::make_shared<CommandPool>(m_Device->GetDevice(), queue_index, flags);
+    m_CommandPools[queue_type] = make_handle<CommandPool>(m_Device->GetDevice(), queue_index, flags);
     return true;
+  }
+
+  void VulkanState::CreateVulkanMemoryAllocator() {
+    VmaAllocatorCreateInfo create_info         = {};
+    create_info.flags                          = {};
+    create_info.physicalDevice                 = m_PhysicalDevice;
+    create_info.device                         = m_Device->GetDevice();
+    create_info.preferredLargeHeapBlockSize    = 0ui64;
+    create_info.pAllocationCallbacks           = nullptr;
+    create_info.pDeviceMemoryCallbacks         = nullptr;
+    create_info.pHeapSizeLimit                 = nullptr;
+    create_info.pVulkanFunctions               = nullptr;
+    create_info.instance                       = m_Instance;
+    create_info.vulkanApiVersion               = VK_API_VERSION_1_3;
+    create_info.pTypeExternalMemoryHandleTypes = nullptr;
+
+    VK_CALL(vmaCreateAllocator(&create_info, &m_Allocator));
   }
 
 }

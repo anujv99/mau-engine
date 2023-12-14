@@ -2,18 +2,30 @@
 
 #include <vector>
 #include <engine/types.h>
-#include <memory>
 #include "common.h"
 #include "vulkan-image.h"
+#include "vulkan-sync.h"
 
 namespace mau {
 
-  class VulkanSwapchain {
+  class VulkanSwapchain: public HandledObject {
   public:
     VulkanSwapchain(VkDevice device, VkPhysicalDevice physical_device, VkSurfaceKHR surface);
     ~VulkanSwapchain();
+  public:
+    TUint32 GetNextImageIndex(Handle<Semaphore> signal);
+  public:
+    inline VkSwapchainKHR GetSwapchain() const { return m_Swapchain; }
+    inline const VkSwapchainKHR* Ref() const { return &m_Swapchain; }
+    inline VkFormat GetColorFormat() const { return m_Format.format; }
+    inline VkFormat GetDepthFormat() const { return m_DepthFormat; }
+    inline VkSurfaceCapabilitiesKHR GetSurfaceCapabilities() const { return m_SurfaceCapabilities; }
+    inline VkExtent2D GetExtent() const { return m_Extent; }
+    inline const std::vector<Handle<ImageView>> GetImageViews() const { return m_SwapchainImageViews; }
+    inline const std::vector<Handle<ImageView>> GetDepthImageViews() const { return m_DepthImageViews; }
   private:
     void CreateSwapchain();
+    VkFormat GetDepthFormat(VkImageTiling tiling);
     void DestroySwapchain();
   private:
     VkDevice         m_Device         = VK_NULL_HANDLE;
@@ -28,12 +40,15 @@ namespace mau {
     // TODO: make it configurable
     const VkPresentModeKHR m_PrefferedPresentMode = VK_PRESENT_MODE_MAILBOX_KHR;
 
-    TUint32                                 m_ImageCount          = 0u;
-    VkExtent2D                              m_Extent              = {};
-    VkSurfaceFormatKHR                      m_Format              = {};
-    VkPresentModeKHR                        m_PresentMode         = {};
-    std::vector<VkImage>                    m_SwapchainImages     = {};
-    std::vector<std::shared_ptr<ImageView>> m_SwapchainImageViews = {};
+    TUint32                        m_ImageCount          = 0u;
+    VkExtent2D                     m_Extent              = {};
+    VkSurfaceFormatKHR             m_Format              = {};
+    VkFormat                       m_DepthFormat         = VK_FORMAT_UNDEFINED;
+    VkPresentModeKHR               m_PresentMode         = {};
+    std::vector<VkImage>           m_SwapchainImages     = {};
+    std::vector<Handle<ImageView>> m_SwapchainImageViews = {};
+    std::vector<Handle<Image>>     m_DepthImages         = {};
+    std::vector<Handle<ImageView>> m_DepthImageViews     = {};
   };
 
 }

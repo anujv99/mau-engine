@@ -6,21 +6,29 @@
 
 namespace mau {
 
-  class CommandBuffers {
+  class CommandBuffer: public HandledObject {
     friend class CommandPool;
-    CommandBuffers(VkCommandPool command_pool, VkDevice device, VkCommandBufferLevel level, TUint32 count);
+    CommandBuffer(VkCommandBuffer command_buffer, VkCommandPool m_CommandPool);
   public:
-    ~CommandBuffers();
+    ~CommandBuffer();
+  public:
+    void Begin(VkCommandBufferUsageFlags flags = 0u);
+    void End();
+    void Reset();
+
+    inline VkCommandBuffer Get() const { return m_CommandBuffer; }
+    inline const VkCommandBuffer* Ref() const { return &m_CommandBuffer; }
   private:
-    std::vector<VkCommandBuffer> m_CommandBuffers;
+    VkCommandBuffer m_CommandBuffer;
+    VkCommandPool   m_CommandPool;
   };
 
-  class CommandPool {
+  class CommandPool: public HandledObject {
   public:
     CommandPool(VkDevice device, TUint32 queue_family_index, TUint32 flags);
     ~CommandPool();
   public:
-    CommandBuffers AllocateCommandBuffers(TUint32 count, VkCommandBufferLevel level = VK_COMMAND_BUFFER_LEVEL_PRIMARY);
+    std::vector<Handle<CommandBuffer>> AllocateCommandBuffers(TUint32 count, VkCommandBufferLevel level = VK_COMMAND_BUFFER_LEVEL_PRIMARY);
   private:
     VkDevice m_Device           = VK_NULL_HANDLE;
     VkCommandPool m_CommandPool = VK_NULL_HANDLE;

@@ -3,6 +3,13 @@
 #include <vulkan/vulkan.h>
 #include <vulkan/vk_enum_string_helper.h>
 #include <engine/exceptions.h>
+#include <engine/log.h>
+#include <engine/utils/handle.h>
+
+#define VMA_VULKAN_VERSION 1003000
+#include <vk_mem_alloc.h>
+
+#define ARRAY_SIZE(arr) (sizeof(arr) / sizeof(arr[0]))
 
 #define VK_CALL(call) {                                   \
   VkResult ret = call;                                    \

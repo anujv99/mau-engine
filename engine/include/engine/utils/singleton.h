@@ -17,13 +17,13 @@ namespace mau {
 
   template <class T>
   template <typename... Args>
-  void Singleton<T>::Create(Args... args) {
+  inline void Singleton<T>::Create(Args... args) {
     Destroy();
     m_Instance = new T(args...);
   }
 
   template <class T>
-  void Singleton<T>::Destroy() {
+  inline void Singleton<T>::Destroy() {
     if (m_Instance != nullptr) delete m_Instance;
     m_Instance = nullptr;
   }

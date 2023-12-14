@@ -1,25 +1,35 @@
 #include "vulkan-commands.h"
 
 #include <engine/assert.h>
+#include "vulkan-state.h"
 
 namespace mau {
 
-  CommandBuffers::CommandBuffers(VkCommandPool command_pool, VkDevice device, VkCommandBufferLevel level, TUint32 count) {
-    ASSERT(command_pool != VK_NULL_HANDLE);
-
-    VkCommandBufferAllocateInfo alloc_info = {};
-    alloc_info.sType                       = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-    alloc_info.pNext                       = nullptr;
-    alloc_info.commandPool                 = command_pool;
-    alloc_info.level                       = level;
-    alloc_info.commandBufferCount          = count;
-
-    m_CommandBuffers.resize(count);
-    VK_CALL(vkAllocateCommandBuffers(device, &alloc_info, m_CommandBuffers.data()));
+  CommandBuffer::CommandBuffer(VkCommandBuffer command_buffer, VkCommandPool m_CommandPool): m_CommandBuffer(command_buffer), m_CommandPool(m_CommandPool) {
+    ASSERT(m_CommandBuffer != VK_NULL_HANDLE);
+    ASSERT(m_CommandPool != VK_NULL_HANDLE);
   }
 
-  CommandBuffers::~CommandBuffers() {
-    m_CommandBuffers.clear();
+  CommandBuffer::~CommandBuffer() {
+    vkFreeCommandBuffers(VulkanState::Ref().GetDevice(), m_CommandPool, 1, &m_CommandBuffer);
+  }
+
+  void CommandBuffer::Begin(VkCommandBufferUsageFlags flags) {
+    VkCommandBufferBeginInfo begin_info = {};
+    begin_info.sType                    = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+    begin_info.pNext                    = nullptr;
+    begin_info.flags                    = flags;
+    begin_info.pInheritanceInfo         = nullptr;
+
+    VK_CALL(vkBeginCommandBuffer(m_CommandBuffer, &begin_info));
+  }
+
+  void CommandBuffer::End() {
+    VK_CALL(vkEndCommandBuffer(m_CommandBuffer));
+  }
+
+  void CommandBuffer::Reset() {
+    vkResetCommandBuffer(m_CommandBuffer, 0u);
   }
 
   CommandPool::CommandPool(VkDevice device, TUint32 queue_family_index, TUint32 flags):
@@ -39,8 +49,24 @@ namespace mau {
     vkDestroyCommandPool(m_Device, m_CommandPool, nullptr);
   }
 
-  CommandBuffers CommandPool::AllocateCommandBuffers(TUint32 count, VkCommandBufferLevel level) {
-    return CommandBuffers(m_CommandPool, m_Device, level, count);
+  std::vector<Handle<CommandBuffer>> CommandPool::AllocateCommandBuffers(TUint32 count, VkCommandBufferLevel level) {
+    VkCommandBufferAllocateInfo alloc_info = {};
+    alloc_info.sType                       = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+    alloc_info.pNext                       = nullptr;
+    alloc_info.commandPool                 = m_CommandPool;
+    alloc_info.level                       = level;
+    alloc_info.commandBufferCount          = count;
+
+    std::vector<VkCommandBuffer> vk_command_buffers(static_cast<size_t>(count));
+    std::vector<Handle<CommandBuffer>> command_buffers;
+    command_buffers.reserve(vk_command_buffers.size());
+    VK_CALL(vkAllocateCommandBuffers(m_Device, &alloc_info, vk_command_buffers.data()));
+
+    for (const VkCommandBuffer& buffer : vk_command_buffers) {
+      command_buffers.emplace_back(new CommandBuffer(buffer, m_CommandPool));
+    }
+
+    return command_buffers;
   }
 
 }
