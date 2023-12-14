@@ -7,15 +7,15 @@
 #include <engine/scene/scene.h>
 #include <engine/utils/singleton.h>
 
-#include "../graphics/vulkan-state.h"
-#include "../graphics/vulkan-renderpass.h"
-#include "../graphics/vulkan-shaders.h"
-#include "../graphics/vulkan-pipeline.h"
-#include "../graphics/vulkan-image.h"
-#include "../graphics/vulkan-buffers.h"
-#include "../graphics/vulkan-push-constant.h"
-#include "../scene/mesh.h"
-#include "../scene/camera.h"
+#include "graphics/vulkan-state.h"
+#include "graphics/vulkan-renderpass.h"
+#include "graphics/vulkan-shaders.h"
+#include "graphics/vulkan-pipeline.h"
+#include "graphics/vulkan-image.h"
+#include "graphics/vulkan-buffers.h"
+#include "graphics/vulkan-push-constant.h"
+#include "scene/mesh.h"
+#include "scene/camera.h"
 
 #include "renderer/rendergraph/graph.h"
 #include "renderer/rendergraph/sink.h"
@@ -28,7 +28,15 @@ namespace mau {
     TUint32   material_index;
     TUint32   storage_image_index;
     TUint32   camera_buffer_index;
-    TUint32   padding;
+    TUint32   current_frame;
+    TUint32   accum_image_index;
+
+    TUint32   pad1;
+    TUint32   pad2;
+    TUint32   pad3;
+
+    glm::vec4 dir_light_color;
+    glm::vec4 dir_light_direction;
   };
 
   struct CameraBuffer {
@@ -52,6 +60,7 @@ namespace mau {
     void ImGuiTest(TUint32 idx);
     void CreateViewportBuffers(TUint32 width, TUint32 height);
     void CreateImguiTextures();
+    void UpdateCamera();
   private:
     TUint64    m_CurrentFrame = 0u;
     VkExtent2D m_Extent       = {};
@@ -77,12 +86,15 @@ namespace mau {
     Handle<PushConstant<VertexShaderData>> m_PushConstant = nullptr;
     Handle<StructuredUniformBuffer<CameraBuffer>> m_CameraBuffer = nullptr;
     BufferHandle m_CameraBufferHandle = 0u;
+    std::vector<bool> m_ClearAccumFlag = {};
 
     Sink sink_color = Sink("imgui-viewport-color");
     Sink sink_depth = Sink("imgui-viewport-depth");
+    Sink sink_accum = Sink("rt-accum-buffer");
     Sampler sampler;
     std::vector<void*> imgui_texture_ids = {};
     std::vector<ImageHandle> sink_color_handles = {};
+    std::vector<ImageHandle> sink_accum_handles = {};
 
     Camera m_Camera;
 

@@ -72,16 +72,16 @@ namespace mau {
 
     Renderer::Create(m_Window.getRawWindow());
 
-    String model_path = GetAssetFolderPath() + "assets/models/ABeautifulGame/glTF/ABeautifulGame.gltf";
+    String model_path = GetAssetFolderPath() + "assets/models/Sponza/glTF/Sponza.gltf";
 
     Handle<Mesh> mesh = make_handle<Mesh>(model_path);
 
     m_Scene = make_handle<Scene>();
     Entity bag = m_Scene->CreateEntity("Bag");
 
-    // TransformComponent& transform = bag.Get<TransformComponent>();
-    // transform.Position = glm::vec3(0.0f, -1.31f, 4.46f);
-    // transform.Rotation = glm::vec3(0.0f, glm::radians(180.0f), 0.0f);
+    TransformComponent& transform = bag.Get<TransformComponent>();
+    transform.Position = glm::vec3(0.0f, 0.0f, 2.0f);
+    transform.Rotation = glm::vec3(0.0f, 2.853, 0.0f);
 
     bag.Add<MeshComponent>(mesh);
   };
@@ -103,6 +103,12 @@ namespace mau {
     while (!m_Window.ShouldClose()) {
       MAU_FRAME_MARK();
       MAU_PROFILE_SCOPE("Engine::Loop");
+
+      // set updated to false
+      m_Scene->Each([](Entity entity) -> void {
+        TransformComponent& transform = entity.Get<TransformComponent>();
+        if (transform.Updated) transform.Updated = false;
+      });
 
       Renderer::Ref().StartFrame();
 
@@ -153,8 +159,8 @@ namespace mau {
         if (is_selected) {
           TransformComponent& transform = entity.Get<TransformComponent>();
 
-          ImGui::DragFloat3("Position", &transform.Position[0], 0.01f);
-          ImGui::DragFloat3("Rotation", &transform.Rotation[0], 0.01f);
+          if (ImGui::DragFloat3("Position", &transform.Position[0], 0.01f)) transform.Updated = true;
+          if (ImGui::DragFloat3("Rotation", &transform.Rotation[0], 0.01f)) transform.Updated = true;
         }
       });
 

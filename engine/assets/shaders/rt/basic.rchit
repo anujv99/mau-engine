@@ -1,3 +1,5 @@
+// vim: set ft=glsl:
+
 #version 460
 
 #include "common/limits.glsl"
@@ -48,8 +50,8 @@ layout (set = 5, binding = 0, std140) uniform ObjectDescUniformBuffer {
 
 void main() {
   if (gl_InstanceCustomIndexEXT < 0 || gl_InstanceCustomIndexEXT >= MAX_MODELS) {
-	ray_payload.color = DEBUG_COLOR;
-	return;
+	  ray_payload.material.albedo = DEBUG_COLOR;
+	  return;
   }
 
   ObjectDesc desc = object_desc.desc[gl_InstanceCustomIndexEXT];
@@ -78,10 +80,10 @@ void main() {
   vec3 color = DEBUG_COLOR;
 
   if (material.Diffuse != UINT32_MAX) {
-	color = texture(tex_sampler[nonuniformEXT(material.Diffuse)], tex_coord).rgb;
+	  color = texture(tex_sampler[nonuniformEXT(material.Diffuse)], tex_coord).rgb;
   }
 
-  ray_payload.color    = color;
-  ray_payload.normal   = world_nrm;
-  ray_payload.distance = gl_RayTmaxEXT;
+  ray_payload.material.albedo = color;
+  ray_payload.normal          = world_nrm;
+  ray_payload.distance        = gl_RayTmaxEXT;
 }

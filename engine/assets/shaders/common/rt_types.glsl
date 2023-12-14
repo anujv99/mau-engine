@@ -1,6 +1,11 @@
 
+struct HitMaterial {
+  vec3 albedo;
+};
+
 struct RayPayload {
-  vec3  color;
-  vec3  normal;
-  float distance;
+  vec3        ray_dir;
+  HitMaterial material;
+  vec3        normal;
+  float       distance;
 };

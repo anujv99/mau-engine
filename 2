@@ -35,12 +35,12 @@ namespace mau {
 
   void glfw_key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
     // TODO: dispatch events
-    key_state[key] = action != GLFW_RELEASE;
+    key_state[key] = action == GLFW_PRESS;
   }
 
   void glfw_mouse_callback(GLFWwindow* window, int button, int action, int mods) {
     // TODO: dispatch events
-    mouse_state[button] = action != GLFW_RELEASE;
+    mouse_state[button] = action == GLFW_PRESS;
   }
 
   void glfw_mouse_move_callback(GLFWwindow* window, double xpos, double ypos) {
@@ -49,8 +49,7 @@ namespace mau {
   }
 
   void glfw_mouse_scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
-    // TODO: dispatch events
-    mouse_scroll = { static_cast<float>(xoffset), static_cast<float>(yoffset) };
+    mouse_scroll = { static_cast<float>(xoffset), static_cast<float>(xoffset) };
   }
 
   void update_input() {
@@ -77,6 +76,7 @@ namespace mau {
   }
 
   float Input::GetMouseScroll() {
+    LOG_INFO("%f", mouse_scroll.y);
     return mouse_scroll.y;
   }
 
@@ -128,8 +128,8 @@ namespace mau {
   }
 
   void Window::PollEvents() const noexcept {
-    update_input();
     glfwPollEvents();
+    update_input();
   }
 
 }
