@@ -9,6 +9,12 @@
 
 namespace mau {
 
+  struct Vertex {
+    glm::vec3 pos;
+    glm::vec3 normal;
+    glm::vec2 tex;
+  };
+
   Mesh::Mesh(const String& filename) {
     Assimp::Importer importer;
     const aiScene* scene = importer.ReadFile(filename, aiProcess_Triangulate);
@@ -18,22 +24,30 @@ namespace mau {
       return;
     }
 
-    std::vector<glm::vec3> vertices = {};
+    std::vector<Vertex> vertices = {};
     std::vector<TUint32> indices = {};
 
-    auto process_mesh = [&](aiMesh* mesh) -> void {
+    auto process_mesh = [&](aiMesh* mesh, TUint32 index_offset) -> void {
       for (TUint32 i = 0; i < mesh->mNumVertices; i++) {
-        glm::vec3 pos;
-        pos.x = mesh->mVertices[i].x;
-        pos.y = mesh->mVertices[i].y;
-        pos.z = mesh->mVertices[i].z;
-        vertices.push_back(pos);
+        Vertex vert;
+        vert.pos.x = mesh->mVertices[i].x;
+        vert.pos.y = mesh->mVertices[i].y; 
+        vert.pos.z = mesh->mVertices[i].z;
+
+        vert.normal.x = mesh->mNormals[i].x;
+        vert.normal.y = mesh->mNormals[i].y;
+        vert.normal.z = mesh->mNormals[i].z;
+
+        vert.tex.x = mesh->mTextureCoords[0][i].x;
+        vert.tex.y = mesh->mTextureCoords[0][i].y;
+
+        vertices.push_back(vert);
       }
 
       for (TUint32 i = 0; i < mesh->mNumFaces; i++) {
         aiFace* face = &(mesh->mFaces[i]);
         for (TUint32 j = 0; j < face->mNumIndices; j++) {
-          indices.push_back(face->mIndices[j]);
+          indices.push_back(index_offset + face->mIndices[j]);
         }
       }
     };
@@ -41,7 +55,7 @@ namespace mau {
     std::function<void(aiNode*)> process_node = [&](aiNode* node) -> void {
       for (TUint32 i = 0; i < node->mNumMeshes; i++) {
         aiMesh* mesh = scene->mMeshes[node->mMeshes[i]];
-        process_mesh(mesh);
+        process_mesh(mesh, static_cast<TUint32>(vertices.size()));
       }
 
       for (TUint32 i = 0; i < node->mNumChildren; i++) {

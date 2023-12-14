@@ -13,6 +13,7 @@
 #include "../graphics/vulkan-buffers.h"
 #include "../graphics/vulkan-push-constant.h"
 #include "../scene/mesh.h"
+#include "../scene/camera.h"
 
 namespace mau {
 
@@ -49,8 +50,11 @@ namespace mau {
 
     // temp
     Handle<Mesh> m_Mesh = nullptr;
+    Handle<Texture> m_Texture = nullptr;
     Handle<PushConstant<VertexShaderData>>             m_PushConstant   = nullptr;
     Handle<StructuredUniformBuffer<ShaderCameraData>>  m_UniformBuffers = nullptr;
+
+    Camera m_Camera;
   };
   
 }

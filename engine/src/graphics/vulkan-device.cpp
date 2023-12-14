@@ -17,6 +17,8 @@ namespace mau {
     vkGetPhysicalDeviceFeatures(m_PhysicalDevice, &m_PhysicalDeviceFeatures);
     memset(&m_EnabledDeviceFeatures, 0, sizeof(m_EnabledDeviceFeatures));
 
+    m_EnabledDeviceFeatures.samplerAnisotropy = VK_TRUE;
+
     // get layers
     uint32_t physical_device_layer_count = 0u;
     VK_CALL(vkEnumerateDeviceLayerProperties(m_PhysicalDevice, &physical_device_layer_count, nullptr));

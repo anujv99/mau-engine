@@ -45,6 +45,7 @@ namespace mau {
     inline VkExtent2D GetSwapchainExtent() const { return m_Swapchain->GetExtent(); }
     inline const std::vector<Handle<ImageView>> GetSwapchainImageViews() const { return m_Swapchain->GetImageViews(); }
     inline const std::vector<Handle<ImageView>> GetSwapchainDepthImageViews() const { return m_Swapchain->GetDepthImageViews(); }
+    inline VkPhysicalDeviceProperties GetPhysicalDeviceProperties() const { return m_PhysicalDeviceProperties; }
 
     inline TracyVkCtx GetTracyCtx() const { return m_TracyContext; }
   private:
@@ -66,10 +67,11 @@ namespace mau {
     std::vector<VkPhysicalDeviceProperties> m_AvailablePhysicalDevices;
 
     // vulkan handles
-    VkInstance               m_Instance       = VK_NULL_HANDLE;
-    VkDebugUtilsMessengerEXT m_DebugMessenger = VK_NULL_HANDLE;
-    VkSurfaceKHR             m_Surface        = VK_NULL_HANDLE;
-    VkPhysicalDevice         m_PhysicalDevice = VK_NULL_HANDLE;
+    VkInstance                 m_Instance                 = VK_NULL_HANDLE;
+    VkDebugUtilsMessengerEXT   m_DebugMessenger           = VK_NULL_HANDLE;
+    VkSurfaceKHR               m_Surface                  = VK_NULL_HANDLE;
+    VkPhysicalDevice           m_PhysicalDevice           = VK_NULL_HANDLE;
+    VkPhysicalDeviceProperties m_PhysicalDeviceProperties = {};
 
     // custom wrappers
     Handle<VulkanDevice>    m_Device    = nullptr;

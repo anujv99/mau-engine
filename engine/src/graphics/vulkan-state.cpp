@@ -305,6 +305,7 @@ namespace mau {
 
     m_SelectedPhysicalDeviceIndex = static_cast<TUint32>(selected_physical_device);
     m_PhysicalDevice = available_physical_devices[static_cast<size_t>(selected_physical_device)];
+    vkGetPhysicalDeviceProperties(m_PhysicalDevice, &m_PhysicalDeviceProperties);
 
     LOG_INFO("selected physical device: " LOG_COLOR_PINK "%s", m_AvailablePhysicalDevices[static_cast<size_t>(m_SelectedPhysicalDeviceIndex)].deviceName);
   }

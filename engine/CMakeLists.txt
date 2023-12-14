@@ -10,13 +10,14 @@ file( GLOB_RECURSE project_header_files include/*.* )
 
 add_library( engine STATIC ${project_source_files} ${project_header_files} )
 
-target_include_directories( engine PRIVATE "include"
+target_include_directories( engine PRIVATE "include" "src"
   ${GLFW_INCLUDE_DIR}
   ${VMA_INCLUDE_DIR}
   ${GLM_INCLUDE_DIR}
   ${IMGUI_INCLUDE_DIR}
   ${TRACY_INCLUDE_DIR}
   ${ASSIMP_INCLUDE_DIR}
+  ${STB_INCLUDE_DIR}
   ${Vulkan_INCLUDE_DIR}
   ${Shaderc_INCLUDE_DIR}
 )

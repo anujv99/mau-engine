@@ -2,22 +2,21 @@
 
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
-#include "imgui_renderer.h"
+#include "imgui-renderer.h"
 
 namespace mau {
 
-  void imgui_test(Handle<PushConstant<VertexShaderData>> push_constant, Handle<StructuredUniformBuffer<ShaderCameraData>> uniform_buffer) {
+  void imgui_test(Handle<PushConstant<VertexShaderData>> push_constant, Handle<StructuredUniformBuffer<ShaderCameraData>> uniform_buffer, Camera* camera, VkExtent2D extent) {
     VertexShaderData data = push_constant->GetData();
-    static float rotation = 0;
 
     if (ImGui::Begin("Test Window")) {
       if (ImGui::ColorEdit4("Quad Color", glm::value_ptr(data.color))) {
         push_constant->Update(data);
       }
 
-      if (ImGui::SliderFloat("Rotation", &rotation, 0, 360)) {
+      if (ImGui::DragFloat3("Position", &camera->Position[0])) {
         uniform_buffer->Update({
-          .mvp = glm::rotate(glm::mat4(1.0f), glm::radians(rotation), glm::vec3(0.0f, 0.0f, 1.0f)),
+          .mvp = camera->GetMVP(glm::vec2(static_cast<float>(extent.width), static_cast<float>(extent.height))),
         });
       }
     }
@@ -48,11 +47,14 @@ namespace mau {
     m_FragmentShader = make_handle<FragmentShader>(GetAssetFolderPath() + "shaders/basic_fragment.glsl");
 
     InputLayout input_layout;
-    input_layout.AddBindingDesc(0u, sizeof(glm::vec2));
+    input_layout.AddBindingDesc(0u, (sizeof(glm::vec3) + sizeof(glm::vec3) + sizeof(glm::vec2)));
     input_layout.AddAttributeDesc(0u, 0u, VK_FORMAT_R32G32B32_SFLOAT, 0u);
+    input_layout.AddAttributeDesc(1u, 0u, VK_FORMAT_R32G32B32_SFLOAT, sizeof(glm::vec3));
+    input_layout.AddAttributeDesc(2u, 0u, VK_FORMAT_R32G32_SFLOAT, sizeof(glm::vec3) + sizeof(glm::vec3));
 
     DescriptorLayout descriptor_layout;
-    descriptor_layout.AddDescriptor(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT, 0);
+    descriptor_layout.AddDescriptor(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT, 0u);
+    descriptor_layout.AddDescriptor(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT, 1u);
 
     m_Pipeline = make_handle<Pipeline>(m_VertexShader, m_FragmentShader, m_Renderpass, input_layout, m_PushConstant, descriptor_layout);
 
@@ -73,8 +75,9 @@ namespace mau {
     m_CommandBuffers = cmd_pool->AllocateCommandBuffers(static_cast<TUint32>(swapchain_images.size()));
 
     // create vertex/index buffers
-    String sponza_path = GetAssetFolderPath() + "/assets/models/sponza/sponza.obj";
-    m_Mesh = make_handle<Mesh>(sponza_path);
+    String model_path = GetAssetFolderPath() + "assets/models/backpack/backpack.obj";
+    m_Mesh = make_handle<Mesh>(model_path);
+    m_Texture = make_handle<Texture>(GetAssetFolderPath() + "assets/models/backpack/diffuse.jpg");
 
     // init imgui
     ImguiRenderer::Create(window_ptr);
@@ -95,7 +98,7 @@ namespace mau {
 
     // create uniform buffers
     m_UniformBuffers = new StructuredUniformBuffer<ShaderCameraData>({
-      .mvp = glm::mat4(1.0f),
+      .mvp = m_Camera.GetMVP(glm::vec2(static_cast<float>(m_Extent.width), static_cast<float>(m_Extent.height))),
     });
   }
 
@@ -107,7 +110,7 @@ namespace mau {
     MAU_PROFILE_SCOPE("Renderer::StartFrame");
     ImguiRenderer::Ref().StartFrame();
 
-    imgui_test(m_PushConstant, m_UniformBuffers);
+    imgui_test(m_PushConstant, m_UniformBuffers, &m_Camera, m_Extent);
   }
 
   void Renderer::EndFrame() {
@@ -145,7 +148,7 @@ namespace mau {
       MAU_GPU_ZONE(cmd->Get(), "Renderer::RenderQuad");
       m_Renderpass->Begin(cmd, m_Framebuffers[idx], { { 0, 0 }, m_Extent });
 
-      VkViewport viewport = { 0.0f, 0.0f, static_cast<float>(m_Extent.width), static_cast<float>(m_Extent.height), 0.0f, 1.0f };
+      VkViewport viewport = { 0.0f, static_cast<float>(m_Extent.height), static_cast<float>(m_Extent.width), static_cast<float>(m_Extent.height) * -1.0f, 0.0f, 1.0f};
       VkRect2D scissor = { { 0, 0 }, m_Extent };
 
       m_PushConstant->Bind(cmd, m_Pipeline);
@@ -155,19 +158,28 @@ namespace mau {
 
       // temp
       VkDescriptorBufferInfo uniform_descriptor_info = m_UniformBuffers->GetDescriptorInfo();
-      VkWriteDescriptorSet write_descriptor_sets = {};
-      write_descriptor_sets.sType                = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-      write_descriptor_sets.pNext                = nullptr;
-      write_descriptor_sets.dstSet               = 0;
-      write_descriptor_sets.dstBinding           = 0;
-      write_descriptor_sets.descriptorCount      = 1;
-      write_descriptor_sets.descriptorType       = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-      write_descriptor_sets.pBufferInfo          = &uniform_descriptor_info;
+      VkWriteDescriptorSet write_descriptor_sets[2] = {};
+      write_descriptor_sets[0].sType                = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+      write_descriptor_sets[0].pNext                = nullptr;
+      write_descriptor_sets[0].dstSet               = 0;
+      write_descriptor_sets[0].dstBinding           = 0;
+      write_descriptor_sets[0].descriptorCount      = 1u;
+      write_descriptor_sets[0].descriptorType       = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+      write_descriptor_sets[0].pBufferInfo          = &uniform_descriptor_info;
 
-      vkCmdPushDescriptorSetKHR(cmd->Get(), VK_PIPELINE_BIND_POINT_GRAPHICS, m_Pipeline->GetLayout(), 0, 1, &write_descriptor_sets);
+      VkDescriptorImageInfo image_descriptor_info = m_Texture->GetDescriptorInfo();
+      write_descriptor_sets[1].sType                = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+      write_descriptor_sets[1].pNext                = nullptr;
+      write_descriptor_sets[1].dstSet               = 0;
+      write_descriptor_sets[1].dstBinding           = 1u;
+      write_descriptor_sets[1].descriptorCount      = 1u;
+      write_descriptor_sets[1].descriptorType       = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+      write_descriptor_sets[1].pImageInfo           = &image_descriptor_info;
+
+      vkCmdPushDescriptorSetKHR(cmd->Get(), VK_PIPELINE_BIND_POINT_GRAPHICS, m_Pipeline->GetLayout(), 0, 2, write_descriptor_sets);
 
       VkDeviceSize offsets[] = { 0ui64 };
-      vkCmdBindVertexBuffers(cmd->Get(), 0u, 1, m_Mesh->GetVertexBuffer()->Ref(), offsets);
+      vkCmdBindVertexBuffers(cmd->Get(), 0u, 1u, m_Mesh->GetVertexBuffer()->Ref(), offsets);
       vkCmdBindIndexBuffer(cmd->Get(), m_Mesh->GetIndexBuffer()->Get(), 0ui64, VK_INDEX_TYPE_UINT32);
       vkCmdDrawIndexed(cmd->Get(), m_Mesh->GetIndexCount(), 1, 0, 0, 0);
       vkCmdEndRenderPass(cmd->Get());
@@ -175,7 +187,6 @@ namespace mau {
 
     {
       MAU_GPU_ZONE(cmd->Get(), "Renderer::ImGui");
-
       ImguiRenderer::Ref().EndFrame(cmd, idx);
     }
 

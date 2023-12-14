@@ -51,7 +51,30 @@ namespace mau {
     void CreateFramebuffer(std::vector<VkImageView> image_views, VkRenderPass renderpass, TUint32 width, TUint32 height);
   private:
     VkFramebuffer m_Framebuffer;
+  };
 
+  // image sampler
+  class Sampler: public HandledObject {
+  public:
+    Sampler();
+    ~Sampler();
+  public:
+    inline VkSampler Get() const { return m_Sampler; }
+  private:
+    VkSampler m_Sampler = VK_NULL_HANDLE;
+  };
+
+  // texture 2d
+  class Texture: public HandledObject {
+  public:
+    Texture(const String& image_path);
+    ~Texture() = default;
+  public:
+    VkDescriptorImageInfo GetDescriptorInfo() const;
+  private:
+    Handle<Image>     m_Image     = nullptr;
+    Handle<ImageView> m_ImageView = nullptr;
+    Sampler           m_Sampler;
   };
 
 }
