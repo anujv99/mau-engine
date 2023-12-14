@@ -81,7 +81,7 @@ namespace mau {
     device_create_info.ppEnabledExtensionNames = m_DeviceExtensions.data();
     device_create_info.pEnabledFeatures        = &m_EnabledDeviceFeatures;
 
-    VK_CALL(vkCreateDevice(m_PhysicalDevice, &device_create_info, nullptr, &m_Device), "failed to create logical device");
+    VK_CALL_REASON(vkCreateDevice(m_PhysicalDevice, &device_create_info, nullptr, &m_Device), "failed to create logical device");
 
     // get queue handles
     vkGetDeviceQueue(m_Device, m_GraphicsQueueIndex, 0, &m_GraphicsQueue);
