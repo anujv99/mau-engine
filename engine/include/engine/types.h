@@ -24,4 +24,7 @@ namespace mau {
 
   typedef int32_t  TInt32;
 
+  typedef float    TFloat32;
+  typedef double   TFloat64;
+
 }

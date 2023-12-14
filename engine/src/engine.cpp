@@ -5,43 +5,14 @@
 #include <imgui.h>
 #include <engine/log.h>
 #include <engine/profiler.h>
+#include <engine/input/input.h>
 
+#include "context/imgui-context.h"
 #include "renderer/renderer.h"
 #include "graphics/vulkan-bindless.h"
 #include "scene/internal-components.h"
-#include "graphics/vulkan-features.h"
 
 namespace mau {
-
-  // temp
-  void imgui_fps_overlay(uint32_t framerate) {
-    static int location = 1;
-    ImGuiIO& io = ImGui::GetIO();
-    ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoNav;
-
-    const float PAD = 10.0f;
-    const ImGuiViewport* viewport = ImGui::GetMainViewport();
-    ImVec2 work_pos = viewport->WorkPos; // Use work area to avoid menu-bar/task-bar, if any!
-    ImVec2 work_size = viewport->WorkSize;
-    ImVec2 window_pos, window_pos_pivot;
-    window_pos.x = (location & 1) ? (work_pos.x + work_size.x - PAD) : (work_pos.x + PAD);
-    window_pos.y = (location & 2) ? (work_pos.y + work_size.y - PAD) : (work_pos.y + PAD);
-    window_pos_pivot.x = (location & 1) ? 1.0f : 0.0f;
-    window_pos_pivot.y = (location & 2) ? 1.0f : 0.0f;
-    ImGui::SetNextWindowPos(window_pos, ImGuiCond_Always, window_pos_pivot);
-    window_flags |= ImGuiWindowFlags_NoMove;
-
-    bool open = true;
-    if (ImGui::Begin("Example: Simple overlay", &open, window_flags))
-    {
-      ImGui::Text("Metrics");
-      ImGui::Separator();
-      float dt = io.DeltaTime * 1000.0f;
-      ImGui::Text("Delta Time: %.5fms", io.DeltaTime * 1000.0f);
-      ImGui::Text("FPS:        %d", (int)framerate);
-    }
-    ImGui::End();
-  }
 
   EngineConfig validate_config(const EngineConfig& config) {
     EngineConfig output_config = config;
@@ -58,6 +29,8 @@ namespace mau {
     m_Config(validate_config(config)),
     m_Window(config.Width, config.Height, config.WindowName) {
 
+    m_Window.RegisterEventCallback(BIND_EVENT_FN(Engine::OnEvent));
+
     #ifdef MAU_DEBUG
       bool enable_validation = true;
     #else
@@ -66,11 +39,11 @@ namespace mau {
 
     VulkanState::Create(enable_validation);
     VulkanState::Ref().SetValidationSeverity(config.ValidationSeverity);
-    VulkanState::Ref().Init(config.ApplicationName, m_Window.getRawWindow());
+    VulkanState::Ref().Init(config.ApplicationName, m_Window.GetRawWindow());
 
     VulkanBindless::Create();
 
-    Renderer::Create(m_Window.getRawWindow());
+    Renderer::Create(m_Window.GetRawWindow());
 
     String model_path = GetAssetFolderPath() + "assets/models/Sponza/glTF/Sponza.gltf";
 
@@ -114,11 +87,11 @@ namespace mau {
 
       Renderer::Ref().SubmitScene(m_Scene);
 
-      imgui_fps_overlay(last_second_framerate);
       ImGuiSceneList();
 
       Renderer::Ref().EndFrame();
       
+      Input::OnUpdate();
       m_Window.PollEvents();
 
       // framerate
@@ -168,6 +141,11 @@ namespace mau {
     ImGui::End();
 
     // ImGui::ShowDemoWindow();
+  }
+
+  void Engine::OnEvent(Event& e) {
+    ImGuiContext::Ref().OnEvent(e);
+    Input::OnEvent(e);
   }
 
   std::string GetAssetFolderPath() {

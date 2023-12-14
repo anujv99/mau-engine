@@ -1,19 +1,20 @@
 #include "renderer.h"
 
-#include <algorithm>
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <backends/imgui_impl_vulkan.h>
 #include <engine/input/input.h>
 
+#include "context/imgui-context.h"
 #include "glm/geometric.hpp"
-#include "imgui-renderer.h"
 #include "graphics/vulkan-bindless.h"
 #include "graphics/vulkan-features.h"
 #include "imgui.h"
+#include "imgui_internal.h"
 #include "renderer/rendergraph/passes/lambertian-pass.h"
 #include "renderer/rendergraph/passes/imgui-pass.h"
 #include "scene/internal-components.h"
+#include "context/imgui-context.h"
 
 namespace mau
 {
@@ -71,7 +72,7 @@ namespace mau
     m_Rendergraph->Build(sinks);
 
     // init imgui
-    ImguiRenderer::Create(window_ptr, imgui_pass->GetRenderpass());
+    ImGuiContext::Create(window_ptr, imgui_pass->GetRenderpass());
     CreateImguiTextures();
 
     // create pipeline
@@ -133,14 +134,14 @@ namespace mau
 
   Renderer::~Renderer()
   {
-    ImguiRenderer::Destroy();
+    ImGuiContext::Destroy();
   }
 
   void Renderer::StartFrame()
   {
     MAU_PROFILE_SCOPE("Renderer::StartFrame");
     UpdateCamera();
-    ImguiRenderer::Ref().StartFrame();
+    ImGuiContext::Ref().StartFrame();
   }
 
   void Renderer::EndFrame()
@@ -295,21 +296,26 @@ namespace mau
   }
 
   void Renderer::UpdateCamera() {
+    bool updated = false;
     const float sensitivity = 0.1f;
     const float mouse_sensitivity = 0.003f;
     const glm::vec3 right = glm::cross(m_Camera.Up, m_Camera.Direction);
 
     if (Input::IsKeyDown(MAU_KEY_W)) {
       m_Camera.Position += m_Camera.Direction * sensitivity;
+      updated = true;
     }
     if (Input::IsKeyDown(MAU_KEY_S)) {
       m_Camera.Position -= m_Camera.Direction * sensitivity;
+      updated = true;
     }
     if (Input::IsKeyDown(MAU_KEY_A)) {
       m_Camera.Position += right * sensitivity;
+      updated = true;
     }
     if (Input::IsKeyDown(MAU_KEY_D)) {
       m_Camera.Position -= right * sensitivity;
+      updated = true;
     }
 
     if (Input::IsMouseDown(MAU_MOUSE_BUTTON_LEFT)) {
@@ -318,8 +324,18 @@ namespace mau
         m_Camera.Up * -mouse_offset.y * mouse_sensitivity +
         right * -mouse_offset.x * mouse_sensitivity;
       m_Camera.Direction = glm::normalize(m_Camera.Direction + offset);
+      updated = true;
     }
-    m_Camera.Position += m_Camera.Direction * Input::GetMouseScroll();
+    const float scroll = Input::GetMouseScroll();
+    if (scroll != 0.0f) {
+      m_Camera.Position += m_Camera.Direction * scroll;
+      updated = true;
+    }
+    
+    if (updated) {
+      for (size_t i = 0; i < m_ClearAccumFlag.size(); i++)
+        m_ClearAccumFlag[i] = true;
+    }
   }
 
   void Renderer::RecordCommandBuffer(TUint64 idx)
@@ -378,6 +394,9 @@ namespace mau
 
     if (ImGui::Begin("Viewport", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoCollapse))
     {
+      const bool viewport_hovered = ImGui::IsWindowHovered();
+      ImGuiContext::Ref().BlockEvents(!viewport_hovered);
+
       const ImVec2 viewport_size = ImVec2(m_ImGuiViewportWidth, m_ImGuiViewportHeight);
       ImVec2 avail_size = ImGui::GetContentRegionAvail();
 

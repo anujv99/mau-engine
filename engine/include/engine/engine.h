@@ -1,5 +1,6 @@
 #pragma once
 
+#include <engine/events/event.h>
 #include <engine/utils/singleton.h>
 #include <engine/window.h>
 #include <engine/engine-config.h>
@@ -20,6 +21,7 @@ namespace mau {
     void SetVulkanValidationLogSeverity(VulkanValidationLogSeverity severity, bool enabled) noexcept;
   private:
     void ImGuiSceneList();
+    void OnEvent(Event& event);
   private:
     Window m_Window;
     EngineConfig m_Config;

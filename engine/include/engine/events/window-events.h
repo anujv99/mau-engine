@@ -6,14 +6,16 @@
 namespace mau {
 
   class WindowCloseEvent: public Event {
-  REGISTER_EVENT_TYPE(EventType::WINDOW_CLOSE);
+    REGISTER_EVENT_TYPE(EventType::WINDOW_CLOSE);
+    REGISTER_EVENT_LOG("WindowCloseEvent", "closed");
   public:
     WindowCloseEvent(): Event(EventType::WINDOW_CLOSE) { };
     ~WindowCloseEvent() = default;
   };
 
   class WindowResizeEvent: public Event {
-  REGISTER_EVENT_TYPE(EventType::WINDOW_RESIZE);
+    REGISTER_EVENT_TYPE(EventType::WINDOW_RESIZE);
+    REGISTER_EVENT_LOG("WindowResizeEvent", "width: %d, height: %d", m_Width, m_Height);
   public:
     WindowResizeEvent(TUint32 width, TUint32 height):
       Event(EventType::WINDOW_RESIZE), m_Width(width), m_Height(height) { };
