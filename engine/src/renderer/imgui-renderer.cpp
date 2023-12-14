@@ -7,37 +7,19 @@
 
 namespace mau {
 
-  ImguiRenderer::ImguiRenderer(void* window) {
+  ImguiRenderer::ImguiRenderer(void* window, Handle<Renderpass> renderpass) {
     Handle<VulkanSwapchain> swapchain = VulkanState::Ref().GetSwapchainHandle();
     Handle<VulkanDevice> device = VulkanState::Ref().GetDeviceHandle();
 
-    // create renderpass
-    Handle<Image> swapchain_image = swapchain->GetImages()[0];
-
-    m_Renderpass = make_handle<Renderpass>();
-    LoadStoreOp op;
-    op.LoadOp = VK_ATTACHMENT_LOAD_OP_LOAD;
-    m_Renderpass->AddColorAttachment(swapchain_image->GetFormat(), swapchain_image->GetSamples(), op, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR);
-    m_Renderpass->Build(VK_PIPELINE_BIND_POINT_GRAPHICS, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, VK_ACCESS_NONE, VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT);
-
-    // create framebuffers
-    std::vector<Handle<ImageView>> swapchain_images = swapchain->GetImageViews();
-    m_Extent = swapchain->GetExtent();
-    for (size_t i = 0; i < swapchain_images.size(); i++) {
-      std::vector<Handle<ImageView>> image = { swapchain_images[i] };
-      Handle<Framebuffer> fbo = make_handle<Framebuffer>(image, m_Renderpass, m_Extent.width, m_Extent.height);
-      m_Framebuffers.push_back(fbo);
-    }
-
     // init imgui
     VkDescriptorPoolSize imgui_pool_sizes[] = {
-      { VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1 },
+      { VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1000u },
     };
     VkDescriptorPoolCreateInfo descriptor_create_info = {};
     descriptor_create_info.sType                      = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
     descriptor_create_info.pNext                      = nullptr;
     descriptor_create_info.flags                      = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
-    descriptor_create_info.maxSets                    = 1u;
+    descriptor_create_info.maxSets                    = 1000u;
     descriptor_create_info.poolSizeCount              = static_cast<uint32_t>(ARRAY_SIZE(imgui_pool_sizes));
     descriptor_create_info.pPoolSizes                 = imgui_pool_sizes;
 
@@ -59,9 +41,12 @@ namespace mau {
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
 
+    ImGuiIO& io = ImGui::GetIO();
+    io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+
     GLFWwindow* glfw_window = reinterpret_cast<GLFWwindow*>(window);
     ImGui_ImplGlfw_InitForVulkan(glfw_window, true);
-    ImGui_ImplVulkan_Init(&init_info, m_Renderpass->Get());
+    ImGui_ImplVulkan_Init(&init_info, renderpass->Get());
 
     Handle<CommandPool> pool = VulkanState::Ref().GetCommandPool(VK_QUEUE_GRAPHICS_BIT);
     Handle<CommandBuffer> command_buffer = pool->AllocateCommandBuffers(1)[0];
@@ -76,26 +61,9 @@ namespace mau {
     vkDeviceWaitIdle(device->GetDevice());
 
     ImGui_ImplVulkan_DestroyFontUploadObjects();
-
-    // recreate framebuffers on window resize
-    swapchain->RegisterSwapchainCreateCallbackFunc([this]() -> void {
-      Handle<VulkanSwapchain> swapchain = VulkanState::Ref().GetSwapchainHandle();
-      auto new_swapchain_images = swapchain->GetImageViews();
-      auto new_swapchain_depth_images = swapchain->GetDepthImageViews();
-      m_Extent = swapchain->GetExtent();
-      m_Framebuffers.clear();
-
-      for (size_t i = 0; i < new_swapchain_images.size(); i++) {
-        std::vector<Handle<ImageView>> image = { new_swapchain_images[i] };
-        Handle<Framebuffer> fbo = make_handle<Framebuffer>(image, m_Renderpass, m_Extent.width, m_Extent.height);
-        m_Framebuffers.push_back(fbo);
-      }
-      });
   }
 
   ImguiRenderer::~ImguiRenderer() {
-    m_Framebuffers.clear();
-    m_Renderpass = nullptr;
     vkDestroyDescriptorPool(VulkanState::Ref().GetDevice(), m_DescriptorPool, nullptr);
     ImGui_ImplVulkan_Shutdown();
     ImGui_ImplGlfw_Shutdown();
@@ -106,14 +74,34 @@ namespace mau {
     ImGui_ImplVulkan_NewFrame();
     ImGui_ImplGlfw_NewFrame();
     ImGui::NewFrame();
+    ImGuiDockspace();
+    ImGui::ShowDemoWindow();
   }
 
-  void ImguiRenderer::EndFrame(Handle<CommandBuffer> cmd, TUint64 idx) {
-    m_Renderpass->Begin(cmd, m_Framebuffers[idx], { { 0, 0 }, m_Extent });
+  void ImguiRenderer::ImGuiDockspace() {
+    // dockspace
+    ImGuiDockNodeFlags dockspace_flags = ImGuiDockNodeFlags_None | ImGuiDockNodeFlags_PassthruCentralNode;
+    ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoBackground;
 
-    ImGui::Render();
-    ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), cmd->Get());
-    vkCmdEndRenderPass(cmd->Get());
+    // make dockspace fullscreen
+    const ImGuiViewport* viewport = ImGui::GetMainViewport();
+    ImGui::SetNextWindowPos(viewport->WorkPos);
+    ImGui::SetNextWindowSize(viewport->WorkSize);
+    ImGui::SetNextWindowViewport(viewport->ID);
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
+    window_flags |= ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove;
+    window_flags |= ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus;
+
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
+    ImGui::Begin("Mau Dockspace", nullptr, window_flags);
+    ImGui::PopStyleVar();
+    ImGui::PopStyleVar(2);
+
+    ImGuiID dockspace_id = ImGui::GetID("Mau Dockspace Id");
+    ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f), dockspace_flags);
+
+    ImGui::End();
   }
 
 }

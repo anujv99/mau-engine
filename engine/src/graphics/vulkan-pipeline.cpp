@@ -53,7 +53,7 @@ namespace mau {
     raster_state.rasterizerDiscardEnable                = VK_FALSE;
     raster_state.polygonMode                            = VK_POLYGON_MODE_FILL;
     raster_state.cullMode                               = VK_CULL_MODE_BACK_BIT;
-    raster_state.frontFace                              = VK_FRONT_FACE_CLOCKWISE;
+    raster_state.frontFace                              = VK_FRONT_FACE_COUNTER_CLOCKWISE;
     raster_state.depthBiasEnable                        = VK_FALSE;
     raster_state.depthBiasConstantFactor                = 0.0f;
     raster_state.depthBiasClamp                         = 0.0f;
@@ -101,7 +101,7 @@ namespace mau {
     depth_stencil_state.sType                                 = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
     depth_stencil_state.pNext                                 = nullptr;
     depth_stencil_state.flags                                 = 0u;
-    depth_stencil_state.depthTestEnable                       = VK_FALSE;
+    depth_stencil_state.depthTestEnable                       = VK_TRUE;
     depth_stencil_state.depthWriteEnable                      = VK_TRUE;
     depth_stencil_state.depthCompareOp                        = VK_COMPARE_OP_LESS;
     depth_stencil_state.depthBoundsTestEnable                 = VK_FALSE;

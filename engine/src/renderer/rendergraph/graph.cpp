@@ -12,7 +12,7 @@ namespace mau {
     m_Passes.push_back(pass);
   }
 
-  void RenderGraph::Build() {
+  void RenderGraph::Build(const std::vector<Sink>& global_sinks) {
     m_GlobalSinks.clear();
 
     Handle<VulkanSwapchain> swapchain = VulkanState::Ref().GetSwapchainHandle();
@@ -37,11 +37,15 @@ namespace mau {
     m_GlobalSinks.insert(std::make_pair(backbuffer.GetName(), backbuffer));
     m_GlobalSinks.insert(std::make_pair(depthbuffer.GetName(), depthbuffer));
 
+    for (const auto& sink : global_sinks) {
+      m_GlobalSinks.insert(std::make_pair(sink.GetName(), sink));
+    }
+
     // setup passes
     for (auto& pass : m_Passes) {
       pass->Build(m_GlobalSinks, static_cast<TUint32>(swapchain_images.size()));
 
-      const UnorderedMap<String, Sink> pass_sinks = pass->GetSinks();
+      const UnorderedMap<String, Sink>& pass_sinks = pass->GetSinks();
       
       for (auto& sink : pass_sinks) {
         m_GlobalSinks.insert(std::make_pair(sink.first, sink.second));

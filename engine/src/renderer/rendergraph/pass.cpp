@@ -19,6 +19,21 @@ namespace mau {
       it->second = sinks.at(source.first);
     }
 
+    for (auto& sink : m_Sinks) {
+      // check if sink just connect source resources
+      if (sink.second.IsConnecting()) {
+        const String& source_name = sink.second.GetInputSourceName();
+        if (!m_Sources.contains(source_name)) {
+          LOG_ERROR("cannot find source with name [%s] for sink [%s]", source_name.c_str(), sink.first.c_str());
+          return false;
+        }
+
+        // connect source resources with sink
+        const Source& source = m_Sources.at(source_name);
+        sink.second.AssignResources(source.GetResources());
+      }
+    }
+    
     return PostBuild(swapchain_image_count);
   }
 
@@ -31,13 +46,13 @@ namespace mau {
     m_Sources.insert(std::make_pair(name, Source(name)));
   }
 
-  void Pass::RegisterSink(const String& name) {
+  void Pass::RegisterSink(const String& input_source, const String& name) {
     if (m_Sinks.contains(name)) {
       LOG_WARN("sink with name [%s] already exists in pass [%s]", name.c_str(), m_Name.c_str());
       return;
     }
 
-    m_Sinks.insert(std::make_pair(name, Sink(name)));
+    m_Sinks.insert(std::make_pair(name, Sink(input_source, name)));
   }
   
 }

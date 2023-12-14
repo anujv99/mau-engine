@@ -1,4 +1,7 @@
-#version 460 core
+#version 460
+#pragma shader_stage(fragment)
+
+#include "common/limits.glsl"
 
 layout (location = 0) out vec4 out_color;
 

@@ -6,6 +6,7 @@
 #include <sstream>
 #include <engine/log.h>
 #include <engine/types.h>
+#include <engine/engine.h>
 #include "vulkan-state.h"
 
 namespace mau {
@@ -22,11 +23,56 @@ namespace mau {
     return buffer.str();
   }
 
+  class IncluderInterface: public shaderc::CompileOptions::IncluderInterface {
+  public:
+    IncluderInterface() = default;
+    ~IncluderInterface() = default;
+  public:
+    virtual shaderc_include_result* GetInclude(
+      const char* requested_source,
+      shaderc_include_type type,
+      const char* requesting_source,
+      size_t include_depth) override {
+      
+      String include_path = GetAssetFolderPath() + "shaders/" + requested_source;
+      char* include_path_str = nullptr;
+      MAU_ALLOC_ARRAY(include_path_str, char, include_path.size() + 1);
+      memcpy(include_path_str, (include_path + "\0").c_str(), include_path.size() + 1);
+
+      String file_content = read_file(include_path);
+      char* file_content_str = nullptr;
+      MAU_ALLOC_ARRAY(file_content_str, char, file_content.size() + 1);
+      memcpy(file_content_str, (file_content + "\0").c_str(), file_content.size() + 1);
+
+      shaderc_include_result* result = nullptr;
+      MAU_ALLOC(result, shaderc_include_result);
+      result->source_name            = include_path_str;
+      result->source_name_length     = include_path.size();
+      result->content                = file_content_str;
+      result->content_length         = file_content.size();
+      result->user_data              = nullptr;
+
+      return result;
+    }
+
+    virtual void ReleaseInclude(shaderc_include_result* data) override {
+      if (data) {
+        MAU_FREE_ARRAY(data->source_name);
+        MAU_FREE_ARRAY(data->content);
+        MAU_FREE(data);
+      }
+    }
+  };
+
   std::vector<TUint32> compile_shader(shaderc::Compiler& compiler, shaderc_shader_kind kind, std::string_view file_path) {
     std::string raw = read_file(file_path);
     if (raw.empty()) return std::vector<TUint32>();
 
-    shaderc::SpvCompilationResult result = compiler.CompileGlslToSpv(raw, kind, file_path.data());
+    shaderc::CompileOptions options;
+    auto includer = std::unique_ptr<shaderc::CompileOptions::IncluderInterface>(new IncluderInterface());
+    options.SetIncluder(std::move(includer));
+
+    shaderc::SpvCompilationResult result = compiler.CompileGlslToSpv(raw, kind, file_path.data(), options);
 
     if (result.GetCompilationStatus() != shaderc_compilation_status_success) {
       LOG_ERROR("%s", result.GetErrorMessage().c_str());

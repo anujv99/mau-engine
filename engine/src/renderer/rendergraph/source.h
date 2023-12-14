@@ -2,14 +2,16 @@
 
 #include <engine/assert.h>
 #include "resources.h"
-#include "sink.h"
 
 namespace mau {
 
+  class Sink;
+
   class Source {
+    friend class Sink;
   public:
     Source(const String& name): m_Name(name) { }
-    Source(const Sink& sink): m_Name(sink.m_Name), m_Resources(sink.m_Resources) { }
+    Source(const Sink& sink);
     ~Source() { }
   public:
     inline const String& GetName() const { return m_Name; }

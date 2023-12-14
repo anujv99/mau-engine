@@ -7,8 +7,8 @@ using namespace mau;
 
 int main() {
   EngineConfig config;
-  config.Width = 1280u;
-  config.Height = 720u;
+  config.Width  = 1920u;
+  config.Height = 1080u;
   config.FramesInFlight = 3u;
   config.WindowName = "Mau Engine";
   config.ValidationSeverity = VulkanValidationLogSeverity::ERROR | VulkanValidationLogSeverity::WARNING;

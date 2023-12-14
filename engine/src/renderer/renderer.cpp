@@ -2,51 +2,14 @@
 
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#include <backends/imgui_impl_vulkan.h>
+
 #include "imgui-renderer.h"
 #include "graphics/vulkan-bindless.h"
 #include "renderer/rendergraph/passes/lambertian-pass.h"
+#include "renderer/rendergraph/passes/imgui-pass.h"
 
 namespace mau {
-
-  void imgui_test(Handle<PushConstant<VertexShaderData>> push_constant, Handle<StructuredUniformBuffer<ShaderData>> uniform_buffer, Camera* camera, VkExtent2D extent) {
-    VertexShaderData data = push_constant->GetData();
-    static glm::vec3 model_pos(0.0f);
-    static glm::vec3 model_rot(0.0f);
-
-    if (ImGui::Begin("Test Window")) {
-      if (ImGui::ColorEdit4("Quad Color", glm::value_ptr(data.color))) {
-        push_constant->Update(data);
-      }
-
-      if (ImGui::DragFloat3("Position", &camera->Position[0])) {
-        data.mvp = camera->GetMVP(glm::vec2(static_cast<float>(extent.width), static_cast<float>(extent.height)));
-        push_constant->Update(data);
-      }
-
-      if (ImGui::DragFloat3("Model Position", &model_pos[0])) {
-        glm::mat4 model = glm::translate(glm::mat4(1.0f), model_pos);
-        model = glm::rotate(model, model_rot.x, glm::vec3(1.0f, 0.0f, 0.0f));
-        model = glm::rotate(model, model_rot.y, glm::vec3(0.0f, 1.0f, 0.0f));
-        model = glm::rotate(model, model_rot.z, glm::vec3(0.0f, 0.0f, 1.0f));
-
-        uniform_buffer->Update({
-          .model = model,
-        });
-      }
-
-      if (ImGui::DragFloat3("Model Rotation", &model_rot[0])) {
-        glm::mat4 model = glm::translate(glm::mat4(1.0f), model_pos);
-        model = glm::rotate(model, model_rot.x, glm::vec3(1.0f, 0.0f, 0.0f));
-        model = glm::rotate(model, model_rot.y, glm::vec3(0.0f, 1.0f, 0.0f));
-        model = glm::rotate(model, model_rot.z, glm::vec3(0.0f, 0.0f, 1.0f));
-
-        uniform_buffer->Update({
-          .model = model,
-        });
-      }
-    }
-    ImGui::End();
-  }
 
   Renderer::Renderer(void* window_ptr) {
     Handle<CommandPool> cmd_pool = VulkanState::Ref().GetCommandPool(VK_QUEUE_GRAPHICS_BIT);
@@ -64,17 +27,28 @@ namespace mau {
     const BufferHandle buffer_handle = VulkanBindless::Ref().AddBuffer(m_UniformBuffer);
 
     // init push constant
+    m_Camera.Position.z = -5.0f;
+
     VertexShaderData push_constant;
     push_constant.color = glm::vec4(1.0f, 0.0f, 0.0f, 1.0f);
-    push_constant.mvp = m_Camera.GetMVP(glm::vec2(static_cast<float>(m_Extent.width), static_cast<float>(m_Extent.height)));
+    push_constant.mvp = m_Camera.GetMVP(glm::vec2(static_cast<float>(m_ImGuiViewportWidth), static_cast<float>(m_ImGuiViewportHeight)));
     push_constant.ubo_index = buffer_handle;
     m_PushConstant = make_handle<PushConstant<VertexShaderData>>(push_constant);
 
     // create rendergraph
+    CreateViewportBuffers(m_ImGuiViewportWidth, m_ImGuiViewportHeight);
+    std::vector<Sink> sinks = { sink_color, sink_depth };
+
     m_Rendergraph = make_handle<RenderGraph>();
     Handle<LambertianPass> pass = make_handle<LambertianPass>();
+    Handle<ImGuiPass> imgui_pass = make_handle<ImGuiPass>();
     m_Rendergraph->AddPass(pass);
-    m_Rendergraph->Build();
+    m_Rendergraph->AddPass(imgui_pass);
+    m_Rendergraph->Build(sinks);
+
+    // init imgui
+    ImguiRenderer::Create(window_ptr, imgui_pass->GetRenderpass());
+    CreateImguiTextures();
 
     // create pipeline
     m_VertexShader = make_handle<VertexShader>(GetAssetFolderPath() + "shaders/basic_vertex.glsl");
@@ -107,12 +81,10 @@ namespace mau {
 
     m_TextureHandle = VulkanBindless::Ref().AddTexture(m_Texture);
 
-    // init imgui
-    ImguiRenderer::Create(window_ptr);
-
     // recreate framebuffers on window resize
     swapchain->RegisterSwapchainCreateCallbackFunc([this]() -> void {
-      m_Rendergraph->Build();
+      std::vector<Sink> sinks = { sink_color, sink_depth };
+      m_Rendergraph->Build(sinks);
       Handle<VulkanSwapchain> swapchain = VulkanState::Ref().GetSwapchainHandle();
       m_Extent = swapchain->GetExtent();
     });
@@ -125,8 +97,6 @@ namespace mau {
   void Renderer::StartFrame() {
     MAU_PROFILE_SCOPE("Renderer::StartFrame");
     ImguiRenderer::Ref().StartFrame();
-
-    imgui_test(m_PushConstant, m_UniformBuffer, &m_Camera, m_Extent);
   }
 
   void Renderer::EndFrame() {
@@ -141,6 +111,25 @@ namespace mau {
     Handle<Semaphore> render_finished = m_RenderFinished[m_CurrentFrame];
     TUint32 image_index = swapchain->GetNextImageIndex(image_available);
     queue_submit->Reset();
+
+    // recreate render target on viewport resize
+    if (m_CurrentViewportWidth != m_ImGuiViewportWidth || m_CurrentViewportHeight != m_ImGuiViewportHeight) {
+      m_ImGuiViewportWidth = m_CurrentViewportWidth;
+      m_ImGuiViewportHeight = m_CurrentViewportHeight;
+
+      vkDeviceWaitIdle(device->GetDevice());
+
+      CreateViewportBuffers(m_ImGuiViewportWidth, m_ImGuiViewportHeight);
+      CreateImguiTextures();
+      std::vector<Sink> sinks = { sink_color, sink_depth };
+      m_Rendergraph->Build(sinks);
+
+      VertexShaderData data = m_PushConstant->GetData();
+      data.mvp = m_Camera.GetMVP(glm::vec2(static_cast<float>(m_ImGuiViewportWidth), static_cast<float>(m_ImGuiViewportHeight)));
+      m_PushConstant->Update(data);
+    }
+
+    ImGuiTest(image_index);
 
     RecordCommandBuffer(static_cast<TUint64>(image_index));
 
@@ -173,18 +162,92 @@ namespace mau {
     cmd->Reset();
     cmd->Begin();
 
-    {
-      MAU_GPU_ZONE(cmd->Get(), "Renderer::RenderQuad");
-      m_Rendergraph->Execute(cmd, idx);
-    }
-
-    {
-      MAU_GPU_ZONE(cmd->Get(), "Renderer::ImGui");
-      ImguiRenderer::Ref().EndFrame(cmd, idx);
-    }
+    m_Rendergraph->Execute(cmd, idx);
 
     MAU_GPU_COLLECT(cmd->Get());
     cmd->End();
+  }
+
+  void Renderer::ImGuiTest(TUint32 idx) {
+    VertexShaderData data = m_PushConstant->GetData();
+    static glm::vec3 model_pos(0.0f);
+    static glm::vec3 model_rot(0.0f);
+
+    model_rot.y += 0.0001f;
+
+    if (ImGui::Begin("Test Window")) {
+      if (ImGui::ColorEdit4("Quad Color", glm::value_ptr(data.color))) {
+        m_PushConstant->Update(data);
+      }
+
+      if (ImGui::DragFloat3("Position", &m_Camera.Position[0])) {
+        data.mvp = m_Camera.GetMVP(glm::vec2(static_cast<float>(m_ImGuiViewportWidth), static_cast<float>(m_ImGuiViewportHeight)));
+        m_PushConstant->Update(data);
+      }
+
+      ImGui::DragFloat3("Model Position", &model_pos[0]);
+      ImGui::DragFloat3("Model Rotation", &model_rot[0]);
+
+      glm::mat4 model = glm::translate(glm::mat4(1.0f), model_pos);
+      model = glm::rotate(model, model_rot.x, glm::vec3(1.0f, 0.0f, 0.0f));
+      model = glm::rotate(model, model_rot.y, glm::vec3(0.0f, 1.0f, 0.0f));
+      model = glm::rotate(model, model_rot.z, glm::vec3(0.0f, 0.0f, 1.0f));
+
+      m_UniformBuffer->Update({
+        .model = model,
+      });
+    }
+    ImGui::End();
+
+    if (ImGui::Begin("Viewport", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoCollapse)) {
+      const ImVec2 viewport_size = ImVec2(m_ImGuiViewportWidth, m_ImGuiViewportHeight);
+      ImVec2 avail_size = ImGui::GetContentRegionAvail();
+
+      m_CurrentViewportWidth  = static_cast<TUint32>(avail_size.x);
+      m_CurrentViewportHeight = static_cast<TUint32>(avail_size.y);
+
+      ImGui::Image(imgui_texture_ids[idx], viewport_size);
+    }
+    ImGui::End();
+  }
+
+  void Renderer::CreateViewportBuffers(TUint32 width, TUint32 height) {
+    const VkFormat color_format = VulkanState::Ref().GetSwapchainColorFormat();
+    const VkFormat depth_format = VulkanState::Ref().GetSwapchainDepthFormat();
+    const TUint64  image_count  = VulkanState::Ref().GetSwapchainImageViews().size();
+
+    std::vector<Handle<Resource>> color_images = {};
+    std::vector<Handle<Resource>> depth_images = {};
+
+    for (TUint64 i = 0; i < image_count; i++) {
+      Handle<Image> color = make_handle<Image>(width, height, 1, 1, 1, VK_IMAGE_TYPE_2D, VK_SAMPLE_COUNT_1_BIT, color_format, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT);
+      Handle<ImageView> color_view = make_handle<ImageView>(color, VK_IMAGE_VIEW_TYPE_2D, VK_IMAGE_ASPECT_COLOR_BIT);
+
+      Handle<Image> depth = make_handle<Image>(width, height, 1, 1, 1, VK_IMAGE_TYPE_2D, VK_SAMPLE_COUNT_1_BIT, depth_format, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT);
+      Handle<ImageView> depth_view = make_handle<ImageView>(depth, VK_IMAGE_VIEW_TYPE_2D, VK_IMAGE_ASPECT_DEPTH_BIT);
+
+      color_images.push_back(make_handle<ImageResource>(color, color_view));
+      depth_images.push_back(make_handle<ImageResource>(depth, depth_view));
+    }
+
+    sink_color.AssignResources(color_images);
+    sink_depth.AssignResources(depth_images);
+  }
+
+  void Renderer::CreateImguiTextures() {
+    for (const auto& texture : imgui_texture_ids) {
+      ImGui_ImplVulkan_RemoveTexture(reinterpret_cast<VkDescriptorSet>(texture));
+    }
+
+    const TUint64 image_count = VulkanState::Ref().GetSwapchainImageViews().size();
+    imgui_texture_ids.clear();
+
+    for (TUint64 i = 0; i < image_count; i++) {
+      Handle<ImageResource> resource = sink_color.GetResource(i);
+
+      ImTextureID texture_id = ImGui_ImplVulkan_AddTexture(sampler.Get(), resource->GetImageView()->GetImageView(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+      imgui_texture_ids.push_back(reinterpret_cast<void*>(texture_id));
+    }
   }
 
 }

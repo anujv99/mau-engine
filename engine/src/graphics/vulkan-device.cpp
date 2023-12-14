@@ -21,19 +21,21 @@ namespace mau {
 
     // enable descriptor indexing
     // TODO: check before enabling
-    VkPhysicalDeviceDescriptorIndexingFeatures descriptor_indexing_features    = {};
-    descriptor_indexing_features.sType                                         = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_INDEXING_FEATURES;
-    descriptor_indexing_features.shaderSampledImageArrayNonUniformIndexing     = VK_TRUE;
-    descriptor_indexing_features.descriptorBindingSampledImageUpdateAfterBind  = VK_TRUE;
-    descriptor_indexing_features.shaderUniformBufferArrayNonUniformIndexing    = VK_TRUE;
-    descriptor_indexing_features.descriptorBindingUniformBufferUpdateAfterBind = VK_TRUE;
-    descriptor_indexing_features.shaderStorageBufferArrayNonUniformIndexing    = VK_TRUE;
-    descriptor_indexing_features.descriptorBindingStorageBufferUpdateAfterBind = VK_TRUE;
-    descriptor_indexing_features.descriptorBindingPartiallyBound               = VK_TRUE;
+    VkPhysicalDeviceVulkan12Features vulkan12_features              = {};
+    vulkan12_features.sType                                         = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES;
+    vulkan12_features.pNext                                         = nullptr;
+    vulkan12_features.descriptorIndexing                            = VK_TRUE;
+    vulkan12_features.shaderSampledImageArrayNonUniformIndexing     = VK_TRUE;
+    vulkan12_features.descriptorBindingSampledImageUpdateAfterBind  = VK_TRUE;
+    vulkan12_features.shaderUniformBufferArrayNonUniformIndexing    = VK_TRUE;
+    vulkan12_features.descriptorBindingUniformBufferUpdateAfterBind = VK_TRUE;
+    vulkan12_features.shaderStorageBufferArrayNonUniformIndexing    = VK_TRUE;
+    vulkan12_features.descriptorBindingStorageBufferUpdateAfterBind = VK_TRUE;
+    vulkan12_features.descriptorBindingPartiallyBound               = VK_TRUE;
 
     VkPhysicalDeviceFeatures2 physical_device_features_2 = {};
     physical_device_features_2.sType                     = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
-    physical_device_features_2.pNext                     = &descriptor_indexing_features;
+    physical_device_features_2.pNext                     = &vulkan12_features;
     physical_device_features_2.features                  = m_EnabledDeviceFeatures;
 
     // get layers

@@ -16,6 +16,7 @@
 #include "../scene/camera.h"
 
 #include "renderer/rendergraph/graph.h"
+#include "renderer/rendergraph/sink.h"
 
 namespace mau {
 
@@ -39,6 +40,9 @@ namespace mau {
     void Render(Handle<CommandBuffer> cmd, TUint32 frame_index);
   private:
     void RecordCommandBuffer(TUint64 idx);
+    void ImGuiTest(TUint32 idx);
+    void CreateViewportBuffers(TUint32 width, TUint32 height);
+    void CreateImguiTextures();
   private:
     TUint64    m_CurrentFrame = 0u;
     VkExtent2D m_Extent       = {};
@@ -60,7 +64,18 @@ namespace mau {
     Handle<PushConstant<VertexShaderData>> m_PushConstant = nullptr;
     Handle<StructuredUniformBuffer<ShaderData>> m_UniformBuffer = nullptr;
 
+    Sink sink_color = Sink("imgui-viewport-color");
+    Sink sink_depth = Sink("imgui-viewport-depth");
+    Sampler sampler;
+    std::vector<void*> imgui_texture_ids = {};
+
     Camera m_Camera;
+
+    TUint32 m_ImGuiViewportWidth  = 800u;
+    TUint32 m_ImGuiViewportHeight = 600u;
+
+    TUint32 m_CurrentViewportWidth  = 800u;
+    TUint32 m_CurrentViewportHeight = 600u;
   };
   
 }
