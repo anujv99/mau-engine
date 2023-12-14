@@ -5,8 +5,24 @@
 #include "vulkan-shaders.h"
 #include "vulkan-renderpass.h"
 #include "vulkan-push-constant.h"
+#include "vulkan-buffers.h"
 
 namespace mau {
+
+  struct RTPipelineCreateInfo {
+    Handle<RTClosestHitShader>    ClosestHit;
+    Handle<RTRayGenShader>        RayGen;
+    Handle<RTMissShader>          Miss;
+    Handle<PushConstantBase>      PushConstant;
+    Vector<VkDescriptorSetLayout> DescriptorLayouts;
+  };
+
+  struct RTSBTRegion {
+    VkStridedDeviceAddressRegionKHR RayGen;
+    VkStridedDeviceAddressRegionKHR RayMiss;
+    VkStridedDeviceAddressRegionKHR RayClosestHit;
+    VkStridedDeviceAddressRegionKHR RayCall;
+  };
 
   class InputLayout {
   public:
@@ -31,8 +47,30 @@ namespace mau {
     inline VkPipeline Get() const { return m_Pipeline; }
     inline VkPipelineLayout GetLayout() const { return m_PipelineLayout; }
   private:
-    VkPipeline            m_Pipeline            = VK_NULL_HANDLE;
-    VkPipelineLayout      m_PipelineLayout      = VK_NULL_HANDLE;
+    VkPipeline       m_Pipeline       = VK_NULL_HANDLE;
+    VkPipelineLayout m_PipelineLayout = VK_NULL_HANDLE;
+  };
+
+  class RTPipeline : public HandledObject {
+  public:
+    RTPipeline(const RTPipelineCreateInfo& create_info);
+    ~RTPipeline();
+  public:
+    inline VkPipeline Get() const { return m_Pipeline; }
+    inline VkPipelineLayout GetLayout() const { return m_PipelineLayout; }
+
+    RTSBTRegion GetSBTRegion() const;
+  private:
+    void CreateShaderBindingTable();
+  private:
+    VkPipeline       m_Pipeline       = VK_NULL_HANDLE;
+    VkPipelineLayout m_PipelineLayout = VK_NULL_HANDLE;
+
+    Handle<Buffer>                  m_SBTBuffer           = nullptr;
+    VkStridedDeviceAddressRegionKHR m_RayGenRegion        = {};
+    VkStridedDeviceAddressRegionKHR m_RayMissRegion       = {};
+    VkStridedDeviceAddressRegionKHR m_RayClosestHitRegion = {};
+    VkStridedDeviceAddressRegionKHR m_RayCallRegion       = {};
   };
 
 }

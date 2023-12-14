@@ -18,6 +18,7 @@ namespace mau {
   template <typename T>
   using Vector = std::vector<T>;
 
+  typedef uint8_t  TUint8;
   typedef uint32_t TUint32;
   typedef uint64_t TUint64;
 

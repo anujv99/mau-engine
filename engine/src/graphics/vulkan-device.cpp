@@ -19,11 +19,21 @@ namespace mau {
 
     m_EnabledDeviceFeatures.samplerAnisotropy = VK_TRUE;
 
-    // enable descriptor indexing
     // TODO: check before enabling
+    VkPhysicalDeviceAccelerationStructureFeaturesKHR accel_features = {};
+    accel_features.sType                                            = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ACCELERATION_STRUCTURE_FEATURES_KHR;
+    accel_features.pNext                                            = nullptr;
+    accel_features.accelerationStructure                            = VK_TRUE;
+
+    VkPhysicalDeviceRayTracingPipelineFeaturesKHR rt_features       = {};
+    rt_features.pNext                                               = &accel_features;
+    rt_features.sType                                               = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_TRACING_PIPELINE_FEATURES_KHR;
+    rt_features.rayTracingPipeline                                  = VK_TRUE;
+
+    // enable descriptor indexing
     VkPhysicalDeviceVulkan12Features vulkan12_features              = {};
     vulkan12_features.sType                                         = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES;
-    vulkan12_features.pNext                                         = nullptr;
+    vulkan12_features.pNext                                         = &rt_features;
     vulkan12_features.runtimeDescriptorArray                        = VK_TRUE;
     vulkan12_features.descriptorIndexing                            = VK_TRUE;
     vulkan12_features.shaderSampledImageArrayNonUniformIndexing     = VK_TRUE;
@@ -33,6 +43,9 @@ namespace mau {
     vulkan12_features.shaderStorageBufferArrayNonUniformIndexing    = VK_TRUE;
     vulkan12_features.descriptorBindingStorageBufferUpdateAfterBind = VK_TRUE;
     vulkan12_features.descriptorBindingPartiallyBound               = VK_TRUE;
+
+    // buffer device address
+    vulkan12_features.bufferDeviceAddress                           = VK_TRUE;
 
     VkPhysicalDeviceFeatures2 physical_device_features_2 = {};
     physical_device_features_2.sType                     = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
@@ -71,6 +84,10 @@ namespace mau {
     if (!EnableDeviceExtension(VK_KHR_SWAPCHAIN_EXTENSION_NAME)) {
       throw GraphicsException("failed to enable swapchain extension");
     }
+
+    EnableDeviceExtension(VK_KHR_DEFERRED_HOST_OPERATIONS_EXTENSION_NAME);
+    EnableDeviceExtension(VK_KHR_ACCELERATION_STRUCTURE_EXTENSION_NAME);
+    EnableDeviceExtension(VK_KHR_RAY_TRACING_PIPELINE_EXTENSION_NAME);
 
     std::set<TUint32> queue_indices = { m_GraphicsQueueIndex, m_TransferQueueIndex, m_PresentQueueIndex };
 

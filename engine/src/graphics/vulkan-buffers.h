@@ -1,5 +1,6 @@
 #pragma once
 
+#include <glm/glm.hpp>
 #include "common.h"
 
 namespace mau {
@@ -13,15 +14,17 @@ namespace mau {
   public:
     void* Map();
     void UnMap();
+    VkDeviceAddress GetDeviceAddress();
 
     inline VkBuffer Get() const { return m_Buffer; }
     inline const VkBuffer* Ref() const { return &m_Buffer; }
     inline TUint64 GetSize() const { return m_Size; }
   protected:
-    VkBuffer      m_Buffer       = VK_NULL_HANDLE;
-    VmaAllocation m_Allocation   = VK_NULL_HANDLE;
-    void*         m_MappedMemory = nullptr;
-    TUint64       m_Size         = 0u;
+    VkBuffer        m_Buffer        = VK_NULL_HANDLE;
+    VmaAllocation   m_Allocation    = VK_NULL_HANDLE;
+    void*           m_MappedMemory  = nullptr;
+    TUint64         m_Size          = 0u;
+    VkDeviceAddress m_DeviceAddress = 0ui64;
   };
 
   class VertexBuffer: public Buffer {
@@ -46,6 +49,37 @@ namespace mau {
     VkDescriptorBufferInfo GetDescriptorInfo() const;
   private:
     bool m_IsUpdated = false;
+  };
+
+  // acceleration structure for ray tracing
+
+  struct AccelerationBufferCreateInfo {
+    Handle<VertexBuffer> Vertices       = nullptr;
+    Handle<IndexBuffer>  Indices        = nullptr;
+    TUint32              VertexSize     = 0u;
+    TUint32              PositionOffset = 0u;
+    TUint32              VertexCount    = 0u;
+    TUint32              IndexCount     = 0u;
+  };
+
+  class AccelerationBuffer : public HandledObject {
+  public:
+    AccelerationBuffer(const AccelerationBufferCreateInfo& create_info);
+    ~AccelerationBuffer();
+  public:
+    void UpdateTransform(const glm::mat4& transform, Handle<CommandBuffer> cmd);
+  public:
+    inline VkAccelerationStructureKHR GetTLAS() const { return m_TLAS; }
+  private:
+    void BuildBLAS(const AccelerationBufferCreateInfo& create_info);
+    void BuildTLAS(Handle<CommandBuffer> cmd = nullptr, bool update = false, glm::mat4 transform = glm::mat4(1.0f));
+  private:
+    Handle<Buffer>             m_BLASBuffer        = nullptr;
+    VkAccelerationStructureKHR m_BLAS              = VK_NULL_HANDLE;
+    Handle<Buffer>             m_TLASBuffer        = nullptr;
+    Handle<Buffer>             m_InstanceBuffer    = nullptr;
+    Handle<Buffer>             m_TLASScratchBuffer = nullptr;
+    VkAccelerationStructureKHR m_TLAS              = VK_NULL_HANDLE;
   };
 
   // templated uniform buffer

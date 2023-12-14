@@ -24,10 +24,28 @@ namespace mau {
     ~VertexShader() = default;
   };
 
-  class FragmentShader : public Shader {
+  class FragmentShader: public Shader {
   public:
     FragmentShader(std::string_view shader_path);
     ~FragmentShader() = default;
+  };
+
+  class RTClosestHitShader: public Shader {
+  public:
+    RTClosestHitShader(std::string_view shader_path);
+    ~RTClosestHitShader() = default;
+  };
+
+  class RTRayGenShader: public Shader {
+  public:
+    RTRayGenShader(std::string_view shader_path);
+    ~RTRayGenShader() = default;
+  };
+
+  class RTMissShader: public Shader {
+  public:
+    RTMissShader(std::string_view shader_path);
+    ~RTMissShader() = default;
   };
 
 }

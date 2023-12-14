@@ -116,8 +116,14 @@ namespace mau {
     return shader_stage_info;
   }
   
-  VertexShader::VertexShader(std::string_view shader_path): Shader(shader_path, shaderc_glsl_vertex_shader, VK_SHADER_STAGE_VERTEX_BIT) {}
+  VertexShader::VertexShader(std::string_view shader_path): Shader(shader_path, shaderc_glsl_vertex_shader, VK_SHADER_STAGE_VERTEX_BIT) { }
 
-  FragmentShader::FragmentShader(std::string_view shader_path): Shader(shader_path, shaderc_glsl_fragment_shader, VK_SHADER_STAGE_FRAGMENT_BIT) {}
+  FragmentShader::FragmentShader(std::string_view shader_path): Shader(shader_path, shaderc_glsl_fragment_shader, VK_SHADER_STAGE_FRAGMENT_BIT) { }
+
+  RTClosestHitShader::RTClosestHitShader(std::string_view shader_path): Shader(shader_path, shaderc_glsl_closesthit_shader, VK_SHADER_STAGE_CLOSEST_HIT_BIT_KHR) { }
+  
+  RTRayGenShader::RTRayGenShader(std::string_view shader_path): Shader(shader_path, shaderc_glsl_raygen_shader, VK_SHADER_STAGE_RAYGEN_BIT_KHR) { }
+  
+  RTMissShader::RTMissShader(std::string_view shader_path): Shader(shader_path, shaderc_glsl_miss_shader, VK_SHADER_STAGE_MISS_BIT_KHR) { }
 
 }

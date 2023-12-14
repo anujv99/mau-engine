@@ -18,11 +18,13 @@ namespace mau {
     inline Handle<IndexBuffer> GetIndexBuffer() const { return m_Indices; }
     inline TUint32 GetIndexCount() const { return m_IndexCount; }
     inline Handle<Material> GetMaterial() const { return m_Material; }
+    inline Handle<AccelerationBuffer> GetAccel() const { return m_Accel; }
   private:
-    Handle<VertexBuffer> m_Vertices   = nullptr;
-    Handle<IndexBuffer>  m_Indices    = nullptr;
-    Handle<Material>     m_Material   = nullptr;
-    TUint32              m_IndexCount = 0u;
+    Handle<VertexBuffer>       m_Vertices   = nullptr;
+    Handle<IndexBuffer>        m_Indices    = nullptr;
+    Handle<AccelerationBuffer> m_Accel      = nullptr;
+    Handle<Material>           m_Material   = nullptr;
+    TUint32                    m_IndexCount = 0u;
   };
 
   class Mesh: public HandledObject {

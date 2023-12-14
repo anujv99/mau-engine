@@ -17,6 +17,9 @@ layout (push_constant) uniform Constants {
   vec4 color;
   mat4 mvp;
   uint material_index;
+  uint rt_storage_index;
+  uint camera_buffer_index;
+  uint padding;
 } push_constant;
 
 void main() {

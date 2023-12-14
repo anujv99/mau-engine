@@ -26,7 +26,7 @@ namespace mau {
 
   VkPushConstantRange PushConstantBase::GetRange() const {
     VkPushConstantRange range = {};
-    range.stageFlags          = VK_SHADER_STAGE_VERTEX_BIT;
+    range.stageFlags          = VK_SHADER_STAGE_ALL;
     range.offset              = 0u;
     range.size                = static_cast<uint32_t>(m_Size);
 
@@ -35,6 +35,10 @@ namespace mau {
 
   void PushConstantBase::Bind(Handle<CommandBuffer> cmd, Handle<Pipeline> pipeline) const {
     vkCmdPushConstants(cmd->Get(), pipeline->GetLayout(), VK_SHADER_STAGE_VERTEX_BIT, 0u, m_Size, m_Data);
+  }
+
+  void PushConstantBase::Bind(Handle<CommandBuffer> cmd, Handle<RTPipeline> pipeline) const {
+    vkCmdPushConstants(cmd->Get(), pipeline->GetLayout(), VK_SHADER_STAGE_ALL, 0u, m_Size, m_Data);
   }
 
   void PushConstantBase::SetData(const void* const data, TUint64 size) {

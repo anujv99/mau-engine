@@ -26,6 +26,15 @@ namespace mau {
     glm::vec4 color;
     glm::mat4 mvp;
     TUint32   material_index;
+    TUint32   storage_image_index;
+    TUint32   camera_buffer_index;
+    TUint32   padding;
+  };
+
+  struct CameraBuffer {
+    glm::mat4 view_proj;
+    glm::mat4 view_inverse;
+    glm::mat4 proj_inverse;
   };
 
   class Renderer: public Singleton<Renderer> {
@@ -36,6 +45,7 @@ namespace mau {
     void StartFrame();
     void EndFrame();
     void Render(Handle<CommandBuffer> cmd, TUint32 frame_index);
+    void RenderRT(Handle<CommandBuffer> cmd, TUint32 frame_index);
     void SubmitScene(Handle<Scene> scene) { m_DrawScene = scene; }
   private:
     void RecordCommandBuffer(TUint64 idx);
@@ -54,16 +64,25 @@ namespace mau {
     std::vector<Handle<Semaphore>>     m_RenderFinished = {};
     std::vector<Handle<Fence>>         m_QueueSubmit    = {};
 
+    // rt
+    Handle<RTClosestHitShader>         m_RTCHit         = nullptr;
+    Handle<RTMissShader>               m_RTMiss         = nullptr;
+    Handle<RTRayGenShader>             m_RTGen          = nullptr;
+    Handle<RTPipeline>                 m_RTPipeline     = nullptr;
+
     Handle<RenderGraph>                m_Rendergraph    = nullptr;
 
     // temp
     Handle<Scene>                          m_DrawScene    = nullptr;
     Handle<PushConstant<VertexShaderData>> m_PushConstant = nullptr;
+    Handle<StructuredUniformBuffer<CameraBuffer>> m_CameraBuffer = nullptr;
+    BufferHandle m_CameraBufferHandle = 0u;
 
     Sink sink_color = Sink("imgui-viewport-color");
     Sink sink_depth = Sink("imgui-viewport-depth");
     Sampler sampler;
     std::vector<void*> imgui_texture_ids = {};
+    std::vector<ImageHandle> sink_color_handles = {};
 
     Camera m_Camera;
 

@@ -7,17 +7,31 @@
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
 #include <glm/glm.hpp>
+#include "graphics/vulkan-bindless.h"
 
 namespace mau {
-
-  SubMesh::SubMesh(Handle<VertexBuffer> vertex_buffer, Handle<IndexBuffer> index_buffer, TUint32 index_count, Handle<Material> material):
-    m_Vertices(vertex_buffer), m_Indices(index_buffer), m_IndexCount(index_count), m_Material(material) { }
 
   struct Vertex {
     glm::vec3 pos;
     glm::vec3 normal;
     glm::vec2 tex;
   };
+
+  SubMesh::SubMesh(Handle<VertexBuffer> vertex_buffer, Handle<IndexBuffer> index_buffer, TUint32 index_count, Handle<Material> material):
+    m_Vertices(vertex_buffer), m_Indices(index_buffer), m_IndexCount(index_count), m_Material(material) {
+    
+    AccelerationBufferCreateInfo create_info = {
+      .Vertices       = vertex_buffer,
+      .Indices        = index_buffer,
+      .VertexSize     = sizeof(Vertex),
+      .PositionOffset = offsetof(Vertex, pos),
+      .VertexCount    = static_cast<TUint32>(vertex_buffer->GetSize() / sizeof(Vertex)),
+      .IndexCount     = index_count,
+    };
+
+    m_Accel = make_handle<AccelerationBuffer>(create_info);
+    VulkanBindless::Ref().AddAccelerationStructure(m_Accel);
+  }
 
   Mesh::Mesh(const String& filename) {
     Assimp::Importer importer;
@@ -45,7 +59,7 @@ namespace mau {
       }
 
       VertexData& data = submeshes.at(material_index);
-      const TUint32 vertex_offset = static_cast<TUint32>(data.indices.size());
+      const TUint32 vertex_offset = static_cast<TUint32>(data.vertices.size());
 
       for (TUint32 i = 0; i < mesh->mNumVertices; i++) {
         Vertex vert;
@@ -57,8 +71,11 @@ namespace mau {
         vert.normal.y = mesh->mNormals[i].y;
         vert.normal.z = mesh->mNormals[i].z;
 
-        vert.tex.x = mesh->mTextureCoords[0][i].x;
-        vert.tex.y = mesh->mTextureCoords[0][i].y;
+
+        if (mesh->mTextureCoords[0]) {
+          vert.tex.x = mesh->mTextureCoords[0][i].x;
+          vert.tex.y = 1.0f - mesh->mTextureCoords[0][i].y;
+        }
 
         data.vertices.push_back(vert);
       }

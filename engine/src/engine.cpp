@@ -9,6 +9,7 @@
 #include "renderer/renderer.h"
 #include "graphics/vulkan-bindless.h"
 #include "scene/internal-components.h"
+#include "graphics/vulkan-features.h"
 
 namespace mau {
 
@@ -71,7 +72,7 @@ namespace mau {
 
     Renderer::Create(m_Window.getRawWindow());
 
-    String model_path = GetAssetFolderPath() + "assets/models/Sponza/glTF/Sponza.gltf";
+    String model_path = GetAssetFolderPath() + "assets/models/BoomBoxWithAxes/glTF/BoomBoxWithAxes.gltf";
 
     Handle<Mesh> mesh = make_handle<Mesh>(model_path);
 
@@ -148,8 +149,8 @@ namespace mau {
         if (is_selected) {
           TransformComponent& transform = entity.Get<TransformComponent>();
 
-          ImGui::DragFloat3("Position", &transform.Position[0]);
-          ImGui::DragFloat3("Rotation", &transform.Rotation[0]);
+          ImGui::DragFloat3("Position", &transform.Position[0], 0.01f);
+          ImGui::DragFloat3("Rotation", &transform.Rotation[0], 0.01f);
         }
       });
 

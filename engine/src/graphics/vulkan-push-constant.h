@@ -8,6 +8,7 @@ namespace mau {
 
   class CommandBuffer;
   class Pipeline;
+  class RTPipeline;
 
   class PushConstantBase: public HandledObject {
   public:
@@ -16,6 +17,7 @@ namespace mau {
   public:
     VkPushConstantRange GetRange() const;
     void Bind(Handle<CommandBuffer> cmd, Handle<Pipeline> pipeline) const;
+    void Bind(Handle<CommandBuffer> cmd, Handle<RTPipeline> pipeline) const;
   protected:
     void SetData(const void* const data, TUint64 size);
     void SetData(const void* const data);

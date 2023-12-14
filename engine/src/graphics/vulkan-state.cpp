@@ -5,9 +5,21 @@
 #include <engine/log.h>
 #include <engine/assert.h>
 
+#include "vulkan-features.h"
+
+#define LOAD_INSTANCE_FUNCTION(name) name = load_instance_function<PFN_##name>(m_Instance, #name)
+#define LOAD_DEVICE_FUNCTION(name) name = load_device_function<PFN_##name>(m_Device->GetDevice(), #name)
+
 namespace mau {
 
-  PFN_vkCmdPushDescriptorSetKHR vkCmdPushDescriptorSetKHR = nullptr;
+  PFN_vkGetAccelerationStructureDeviceAddressKHR vkGetAccelerationStructureDeviceAddressKHR = nullptr;
+  PFN_vkGetAccelerationStructureBuildSizesKHR    vkGetAccelerationStructureBuildSizesKHR    = nullptr;
+  PFN_vkCreateAccelerationStructureKHR           vkCreateAccelerationStructureKHR           = nullptr;
+  PFN_vkDestroyAccelerationStructureKHR          vkDestroyAccelerationStructureKHR          = nullptr;
+  PFN_vkCmdBuildAccelerationStructuresKHR        vkCmdBuildAccelerationStructuresKHR        = nullptr;
+  PFN_vkCreateRayTracingPipelinesKHR             vkCreateRayTracingPipelinesKHR             = nullptr;
+  PFN_vkCmdTraceRaysKHR                          vkCmdTraceRaysKHR                          = nullptr;
+  PFN_vkGetRayTracingShaderGroupHandlesKHR       vkGetRayTracingShaderGroupHandlesKHR       = nullptr;
 
   static VKAPI_ATTR VkBool32 VKAPI_CALL debug_callback(
     VkDebugUtilsMessageSeverityFlagBitsEXT message_severity,
@@ -61,7 +73,7 @@ namespace mau {
     T func = reinterpret_cast<T>(vkGetDeviceProcAddr(device, name.data()));
 
     if (func == nullptr) {
-      LOG_ERROR("failed to load vulkan instance function: %s", name.data());
+      LOG_ERROR("failed to load vulkan device function: %s", name.data());
     }
 
     return func;
@@ -202,6 +214,18 @@ namespace mau {
 
     // init tracy
     InitTracy();
+
+    // load functions
+    if (VulkanFeatures::IsRtEnabled()) {
+      LOAD_DEVICE_FUNCTION(vkGetAccelerationStructureDeviceAddressKHR);
+      LOAD_DEVICE_FUNCTION(vkGetAccelerationStructureBuildSizesKHR);
+      LOAD_DEVICE_FUNCTION(vkCreateAccelerationStructureKHR);
+      LOAD_DEVICE_FUNCTION(vkDestroyAccelerationStructureKHR);
+      LOAD_DEVICE_FUNCTION(vkCmdBuildAccelerationStructuresKHR);
+      LOAD_DEVICE_FUNCTION(vkCreateRayTracingPipelinesKHR);
+      LOAD_DEVICE_FUNCTION(vkCmdTraceRaysKHR);
+      LOAD_DEVICE_FUNCTION(vkGetRayTracingShaderGroupHandlesKHR);
+    }
   }
 
   bool VulkanState::EnableInstanceLayer(std::string_view layer_name) noexcept {
@@ -302,7 +326,14 @@ namespace mau {
 
     m_SelectedPhysicalDeviceIndex = static_cast<TUint32>(selected_physical_device);
     m_PhysicalDevice = available_physical_devices[static_cast<size_t>(selected_physical_device)];
-    vkGetPhysicalDeviceProperties(m_PhysicalDevice, &m_PhysicalDeviceProperties);
+
+    m_RTPipelineProperties.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_TRACING_PIPELINE_PROPERTIES_KHR;
+    VkPhysicalDeviceProperties2 selected_physical_device_properties2 = {
+      .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2,
+      .pNext = &m_RTPipelineProperties,
+    };
+    vkGetPhysicalDeviceProperties2(m_PhysicalDevice, &selected_physical_device_properties2);
+    m_PhysicalDeviceProperties = selected_physical_device_properties2.properties;
 
     LOG_INFO("selected physical device: " LOG_COLOR_PINK "%s", m_AvailablePhysicalDevices[static_cast<size_t>(m_SelectedPhysicalDeviceIndex)].deviceName);
   }
@@ -341,7 +372,7 @@ namespace mau {
 
   void VulkanState::CreateVulkanMemoryAllocator() {
     VmaAllocatorCreateInfo create_info         = {};
-    create_info.flags                          = {};
+    create_info.flags                          = 0u;
     create_info.physicalDevice                 = m_PhysicalDevice;
     create_info.device                         = m_Device->GetDevice();
     create_info.preferredLargeHeapBlockSize    = 0ui64;
@@ -352,6 +383,10 @@ namespace mau {
     create_info.instance                       = m_Instance;
     create_info.vulkanApiVersion               = VK_API_VERSION_1_3;
     create_info.pTypeExternalMemoryHandleTypes = nullptr;
+
+    if (VulkanFeatures::IsBufferDeviceAddressEnabled()) {
+      create_info.flags |= VMA_ALLOCATOR_CREATE_BUFFER_DEVICE_ADDRESS_BIT;
+    }
 
     VK_CALL(vmaCreateAllocator(&create_info, &m_Allocator));
   }

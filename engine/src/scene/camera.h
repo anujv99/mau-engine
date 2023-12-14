@@ -9,6 +9,8 @@ namespace mau {
     Camera() = default;
     ~Camera() = default;
   public:
+    glm::mat4 GetView() const;
+    glm::mat4 GetProj(glm::vec2 window_size) const;
     glm::mat4 GetMVP(glm::vec2 window_size) const;
   public:
     glm::vec3 Position  = glm::vec3(0.0f);

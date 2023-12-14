@@ -2,6 +2,7 @@
 
 #include "renderer/renderer.h"
 #include "graphics/vulkan-state.h"
+#include "graphics/vulkan-features.h"
 
 namespace mau {
 
@@ -93,13 +94,20 @@ namespace mau {
       .extent = { m_Width, m_Height },
     };
 
-    m_Renderpass->Begin(cmd, m_Framebuffers[frame_index], area);
-    vkCmdSetViewport(cmd->Get(), 0u, 1u, &viewport);
-    vkCmdSetScissor(cmd->Get(), 0u, 1u, &scissor);
+    if (VulkanFeatures::IsRtEnabled()) {
+      vkCmdSetViewport(cmd->Get(), 0u, 1u, &viewport);
+      vkCmdSetScissor(cmd->Get(), 0u, 1u, &scissor);
 
-    Renderer::Ref().Render(cmd, frame_index);
+      Renderer::Ref().RenderRT(cmd, frame_index);
+    } else {
+      m_Renderpass->Begin(cmd, m_Framebuffers[frame_index], area);
+      vkCmdSetViewport(cmd->Get(), 0u, 1u, &viewport);
+      vkCmdSetScissor(cmd->Get(), 0u, 1u, &scissor);
 
-    m_Renderpass->End(cmd);
+      Renderer::Ref().Render(cmd, frame_index);
+
+      m_Renderpass->End(cmd);
+    }
   }
 
 }

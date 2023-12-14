@@ -27,6 +27,8 @@ namespace mau {
     TUint32               m_Width       = 0u;
     TUint32               m_Height      = 0u;
   };
+  
+  void TransitionImageLayout(Handle<CommandBuffer> cmd, Handle<Image> image, VkImageLayout old_layout, VkImageLayout new_layout);
 
   // image view
   class ImageView: public HandledObject {

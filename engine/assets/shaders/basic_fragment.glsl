@@ -8,6 +8,9 @@
 struct GPUMaterial {
   uint Diffuse;
   uint Normal;
+
+  uint pad1;
+  uint pad2;
 };
 
 layout (location = 0) out vec4 out_color;

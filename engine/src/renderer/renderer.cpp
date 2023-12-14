@@ -6,6 +6,7 @@
 
 #include "imgui-renderer.h"
 #include "graphics/vulkan-bindless.h"
+#include "graphics/vulkan-features.h"
 #include "renderer/rendergraph/passes/lambertian-pass.h"
 #include "renderer/rendergraph/passes/imgui-pass.h"
 #include "scene/internal-components.h"
@@ -29,12 +30,23 @@ namespace mau {
     Handle<Image> swapchain_image = swapchain->GetImages()[0];
     Handle<Image> depth_image = swapchain->GetDepthImages()[0];
 
+    // init camera uniform buffer
+    const glm::vec2 window_size = glm::vec2(static_cast<float>(m_ImGuiViewportWidth), static_cast<float>(m_ImGuiViewportHeight));
+    CameraBuffer buff = {
+      .view_proj = m_Camera.GetMVP(window_size),
+      .view_inverse = glm::inverse(m_Camera.GetView()),
+      .proj_inverse = glm::inverse(m_Camera.GetProj(window_size)),
+    };
+    m_CameraBuffer = make_handle<StructuredUniformBuffer<CameraBuffer>>(std::move(buff));
+    m_CameraBufferHandle = VulkanBindless::Ref().AddBuffer(m_CameraBuffer);
+
     // init push constant
-    m_Camera.Position.z = -5.0f;
+    m_Camera.Position.z = -0.05f;
 
     VertexShaderData push_constant;
     push_constant.color = glm::vec4(1.0f, 0.0f, 0.0f, 1.0f);
     push_constant.mvp = m_Camera.GetMVP(glm::vec2(static_cast<float>(m_ImGuiViewportWidth), static_cast<float>(m_ImGuiViewportHeight)));
+    push_constant.camera_buffer_index = m_CameraBufferHandle;
     m_PushConstant = make_handle<PushConstant<VertexShaderData>>(push_constant);
 
     // create rendergraph
@@ -63,6 +75,22 @@ namespace mau {
     input_layout.AddAttributeDesc(2u, 0u, VK_FORMAT_R32G32_SFLOAT, sizeof(glm::vec3) + sizeof(glm::vec3));
 
     m_Pipeline = make_handle<Pipeline>(m_VertexShader, m_FragmentShader, pass->GetRenderpass(), input_layout, m_PushConstant, VulkanBindless::Ref().GetDescriptorLayout(), VK_SAMPLE_COUNT_4_BIT);
+
+    if (VulkanFeatures::IsRtEnabled()) {
+      m_RTCHit = make_handle<RTClosestHitShader>(GetAssetFolderPath() + "shaders/rt/basic.rchit");
+      m_RTGen = make_handle<RTRayGenShader>(GetAssetFolderPath() + "shaders/rt/basic.rgen");
+      m_RTMiss = make_handle<RTMissShader>(GetAssetFolderPath() + "shaders/rt/basic.rmiss");
+
+      RTPipelineCreateInfo rt_pipeline_info = {
+        .ClosestHit        = m_RTCHit,
+        .RayGen            = m_RTGen,
+        .Miss              = m_RTMiss,
+        .PushConstant      = m_PushConstant,
+        .DescriptorLayouts = VulkanBindless::Ref().GetDescriptorLayout(),
+      };
+
+      m_RTPipeline = make_handle<RTPipeline>(rt_pipeline_info);
+    }
 
     // create framebuffers and sync objects
     std::vector<Handle<ImageView>> swapchain_images = swapchain->GetImageViews();
@@ -138,6 +166,14 @@ namespace mau {
   }
 
   void Renderer::Render(Handle<CommandBuffer> cmd, TUint32 frame_index) {
+    const glm::vec2 window_size = glm::vec2(static_cast<float>(m_ImGuiViewportWidth), static_cast<float>(m_ImGuiViewportHeight));
+    CameraBuffer buff = {
+      .view_proj = m_Camera.GetMVP(window_size),
+      .view_inverse = glm::inverse(m_Camera.GetView()),
+      .proj_inverse = glm::inverse(m_Camera.GetProj(window_size)),
+    };
+    m_CameraBuffer->Update(std::move(buff));
+
     m_PushConstant->Bind(cmd, m_Pipeline);
     vkCmdBindPipeline(cmd->Get(), VK_PIPELINE_BIND_POINT_GRAPHICS, m_Pipeline->Get());
 
@@ -153,18 +189,66 @@ namespace mau {
         glm::mat4 mvp = m_Camera.GetMVP(glm::vec2(static_cast<float>(m_ImGuiViewportWidth), static_cast<float>(m_ImGuiViewportHeight))) * getModelMatrix(transform);
         for (const auto& submesh : mesh.MeshObject->GetSubMeshes()) {
           m_PushConstant->Update({
-            .color         = m_PushConstant->GetData().color,
-            .mvp           = mvp,
+            .color = m_PushConstant->GetData().color,
+            .mvp = mvp,
             .material_index = submesh.GetMaterial() ? submesh.GetMaterial()->GetMaterialHandle() : UINT32_MAX,
+            .storage_image_index = UINT32_MAX,
+            .camera_buffer_index = m_CameraBufferHandle,
           });
           m_PushConstant->Bind(cmd, m_Pipeline);
- 
+
           vkCmdBindVertexBuffers(cmd->Get(), 0u, 1u, submesh.GetVertexBuffer()->Ref(), offsets);
           vkCmdBindIndexBuffer(cmd->Get(), submesh.GetIndexBuffer()->Get(), 0ui64, VK_INDEX_TYPE_UINT32);
           vkCmdDrawIndexed(cmd->Get(), submesh.GetIndexCount(), 1, 0, 0, 0);
         }
       });
     }
+    m_DrawScene = nullptr;
+  }
+
+  void Renderer::RenderRT(Handle<CommandBuffer> cmd, TUint32 frame_index) {
+    const glm::vec2 window_size = glm::vec2(static_cast<float>(m_ImGuiViewportWidth), static_cast<float>(m_ImGuiViewportHeight));
+    CameraBuffer buff = {
+      .view_proj = m_Camera.GetMVP(window_size),
+      .view_inverse = glm::inverse(m_Camera.GetView()),
+      .proj_inverse = glm::inverse(m_Camera.GetProj(window_size)),
+    };
+    m_CameraBuffer->Update(std::move(buff));
+
+    vkCmdBindPipeline(cmd->Get(), VK_PIPELINE_BIND_POINT_RAY_TRACING_KHR, m_RTPipeline->Get());
+
+    const std::vector<VkDescriptorSet>& sets = VulkanBindless::Ref().GetDescriptorSet();
+    vkCmdBindDescriptorSets(cmd->Get(), VK_PIPELINE_BIND_POINT_RAY_TRACING_KHR, m_RTPipeline->GetLayout(), 0u, static_cast<TUint32>(sets.size()), sets.data(), 0u, nullptr);
+
+    glm::mat4 mvp = m_Camera.GetMVP(glm::vec2(static_cast<float>(m_ImGuiViewportWidth), static_cast<float>(m_ImGuiViewportHeight)));
+    m_PushConstant->Update({
+      .color          = m_PushConstant->GetData().color,
+      .mvp            = mvp,
+      .material_index = 0u,
+      .storage_image_index = sink_color_handles[frame_index],
+      .camera_buffer_index = m_CameraBufferHandle,
+    });
+    m_PushConstant->Bind(cmd, m_RTPipeline);
+
+    if (m_DrawScene) {
+      m_DrawScene->Each([this, &cmd](Entity entity) -> void {
+        TransformComponent& transform = entity.Get<TransformComponent>();
+        MeshComponent& mesh = entity.Get<MeshComponent>();
+
+        glm::mat4 model = getModelMatrix(transform);
+        for (const auto& submesh : mesh.MeshObject->GetSubMeshes()) {
+          submesh.GetAccel()->UpdateTransform(model, cmd);
+        }
+      });
+
+      RTSBTRegion region = m_RTPipeline->GetSBTRegion();
+      vkCmdTraceRaysKHR(cmd->Get(), &region.RayGen, &region.RayMiss, &region.RayClosestHit, &region.RayCall, m_ImGuiViewportWidth, m_ImGuiViewportHeight, 1);
+
+      Handle<ImageResource> current_image = sink_color.GetResource(frame_index);
+
+      TransitionImageLayout(cmd, current_image->GetImage(), VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+    }
+
     m_DrawScene = nullptr;
   }
 
@@ -218,6 +302,8 @@ namespace mau {
   }
 
   void Renderer::CreateViewportBuffers(TUint32 width, TUint32 height) {
+    sink_color_handles.clear();
+
     const VkFormat color_format = VulkanState::Ref().GetSwapchainColorFormat();
     const VkFormat depth_format = VulkanState::Ref().GetSwapchainDepthFormat();
     const TUint64  image_count  = VulkanState::Ref().GetSwapchainImageViews().size();
@@ -226,7 +312,7 @@ namespace mau {
     std::vector<Handle<Resource>> depth_images = {};
 
     for (TUint64 i = 0; i < image_count; i++) {
-      Handle<Image> color = make_handle<Image>(width, height, 1, 1, 1, VK_IMAGE_TYPE_2D, VK_SAMPLE_COUNT_1_BIT, color_format, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT);
+      Handle<Image> color = make_handle<Image>(width, height, 1, 1, 1, VK_IMAGE_TYPE_2D, VK_SAMPLE_COUNT_1_BIT, color_format, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_STORAGE_BIT);
       Handle<ImageView> color_view = make_handle<ImageView>(color, VK_IMAGE_VIEW_TYPE_2D, VK_IMAGE_ASPECT_COLOR_BIT);
 
       Handle<Image> depth = make_handle<Image>(width, height, 1, 1, 1, VK_IMAGE_TYPE_2D, VK_SAMPLE_COUNT_1_BIT, depth_format, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT);
@@ -234,6 +320,10 @@ namespace mau {
 
       color_images.push_back(make_handle<ImageResource>(color, color_view));
       depth_images.push_back(make_handle<ImageResource>(depth, depth_view));
+
+      if (VulkanFeatures::IsRtEnabled()) {
+        sink_color_handles.push_back(VulkanBindless::Ref().AddStorageImage(color_view));
+      }
     }
 
     sink_color.AssignResources(color_images);

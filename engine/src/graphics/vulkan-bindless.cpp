@@ -8,9 +8,11 @@ namespace mau {
   VkDescriptorType get_descriptor_type(BindlessDescriptorType type) {
     switch (type)
     {
-    case mau::BindlessDescriptorType::UNIFORM:  return VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-    case mau::BindlessDescriptorType::TEXTURE:  return VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-    case mau::BindlessDescriptorType::MATERIAL: return VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+    case mau::BindlessDescriptorType::UNIFORM:                return VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+    case mau::BindlessDescriptorType::TEXTURE:                return VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    case mau::BindlessDescriptorType::MATERIAL:               return VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+    case mau::BindlessDescriptorType::STORAGE_IMAGE:          return VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
+    case mau::BindlessDescriptorType::ACCELERATION_STRUCTURE: return VK_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_KHR;
     default:
       break;
     }
@@ -25,6 +27,8 @@ namespace mau {
       { BindlessDescriptorType::UNIFORM, m_DescriptorCount },
       { BindlessDescriptorType::TEXTURE, m_DescriptorCount },
       { BindlessDescriptorType::MATERIAL, 1 },
+      { BindlessDescriptorType::STORAGE_IMAGE, m_DescriptorCount },
+      { BindlessDescriptorType::ACCELERATION_STRUCTURE, m_DescriptorCount },
     };
 
     // create descriptor pool
@@ -137,6 +141,63 @@ namespace mau {
   MaterialHandle VulkanBindless::AddMaterial(const GPUMaterial& material) {
     MaterialHandle handle = m_CurrentMaterialIndex++;
     m_MaterialBuffer->UpdateIndex(material, handle);
+    return handle;
+  }
+
+  ImageHandle VulkanBindless::AddStorageImage(const Handle<ImageView>& image_view) {
+    const TUint32 storage_image_set_index = m_DescriptorIndexMap[BindlessDescriptorType::STORAGE_IMAGE];
+    const VkDescriptorSet storage_image_set = m_DescriptorSets[storage_image_set_index];
+    ASSERT(storage_image_set);
+
+    ImageHandle handle = m_CurrentImageIndex++;
+
+    VkDescriptorImageInfo image_descriptor_info = {
+      .sampler     = VK_NULL_HANDLE,
+      .imageView   = image_view->GetImageView(),
+      .imageLayout = VK_IMAGE_LAYOUT_GENERAL,
+    };
+
+    VkWriteDescriptorSet write_descriptor_set   = {};
+    write_descriptor_set.sType                  = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    write_descriptor_set.pNext                  = nullptr;
+    write_descriptor_set.dstSet                 = storage_image_set;
+    write_descriptor_set.dstBinding             = 0u;
+    write_descriptor_set.dstArrayElement        = handle;
+    write_descriptor_set.descriptorCount        = 1u;
+    write_descriptor_set.descriptorType         = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
+    write_descriptor_set.pImageInfo             = &image_descriptor_info;
+
+    vkUpdateDescriptorSets(VulkanState::Ref().GetDevice(), 1u, &write_descriptor_set, 0u, nullptr);
+
+    return handle;
+  }
+
+  AccelerationStructureHandle VulkanBindless::AddAccelerationStructure(const Handle<AccelerationBuffer>& accel_struct) {
+    const TUint32 accel_struct_set_index = m_DescriptorIndexMap[BindlessDescriptorType::ACCELERATION_STRUCTURE];
+    const VkDescriptorSet accel_struct_set = m_DescriptorSets[accel_struct_set_index];
+    ASSERT(accel_struct_set);
+
+    AccelerationStructureHandle handle = m_CurrentAccelStructIndex++;
+
+    VkAccelerationStructureKHR tlas = accel_struct->GetTLAS();
+    VkWriteDescriptorSetAccelerationStructureKHR accel_struct_descriptor_info = {
+      .sType                      = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET_ACCELERATION_STRUCTURE_KHR,
+      .pNext                      = nullptr,
+      .accelerationStructureCount = 1u,
+      .pAccelerationStructures    = &tlas,
+    };
+
+    VkWriteDescriptorSet write_descriptor_set   = {};
+    write_descriptor_set.sType                  = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    write_descriptor_set.pNext                  = &accel_struct_descriptor_info;
+    write_descriptor_set.dstSet                 = accel_struct_set;
+    write_descriptor_set.dstBinding             = 0u;
+    write_descriptor_set.dstArrayElement        = handle;
+    write_descriptor_set.descriptorCount        = 1u;
+    write_descriptor_set.descriptorType         = VK_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_KHR;
+
+    vkUpdateDescriptorSets(VulkanState::Ref().GetDevice(), 1u, &write_descriptor_set, 0u, nullptr);
+
     return handle;
   }
 

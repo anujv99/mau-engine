@@ -31,15 +31,31 @@
 
 namespace mau {
 
-  using TextureHandle  = TUint32;
-  using BufferHandle   = TUint32;
-  using MaterialHandle = TUint32;
+  extern PFN_vkGetAccelerationStructureDeviceAddressKHR vkGetAccelerationStructureDeviceAddressKHR;
+  extern PFN_vkGetAccelerationStructureBuildSizesKHR    vkGetAccelerationStructureBuildSizesKHR;
+  extern PFN_vkCreateAccelerationStructureKHR           vkCreateAccelerationStructureKHR;
+  extern PFN_vkDestroyAccelerationStructureKHR          vkDestroyAccelerationStructureKHR;
+  extern PFN_vkCmdBuildAccelerationStructuresKHR        vkCmdBuildAccelerationStructuresKHR;
+  extern PFN_vkCreateRayTracingPipelinesKHR             vkCreateRayTracingPipelinesKHR;
+  extern PFN_vkCmdTraceRaysKHR                          vkCmdTraceRaysKHR;
+  extern PFN_vkGetRayTracingShaderGroupHandlesKHR       vkGetRayTracingShaderGroupHandlesKHR;
+
+  using TextureHandle               = TUint32;
+  using BufferHandle                = TUint32;
+  using MaterialHandle              = TUint32;
+  using ImageHandle                 = TUint32;
+  using AccelerationStructureHandle = TUint32;
 
   struct GPUMaterial {
     TextureHandle Diffuse = UINT32_MAX;
     TextureHandle Normal  = UINT32_MAX;
 
-    float padding[2];
+    TUint32 padding[2];
   };
+
+  template <class integral>
+  constexpr integral align_up(integral x, size_t a) noexcept {
+    return integral((x + (integral(a) - 1)) & ~integral(a - 1));
+  }
 
 }

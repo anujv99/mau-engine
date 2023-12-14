@@ -47,6 +47,8 @@ namespace mau {
     inline const std::vector<Handle<ImageView>> GetSwapchainDepthImageViews() const { return m_Swapchain->GetDepthImageViews(); }
     inline VkPhysicalDeviceProperties GetPhysicalDeviceProperties() const { return m_PhysicalDeviceProperties; }
 
+    inline VkPhysicalDeviceRayTracingPipelinePropertiesKHR GetRTPipelineProperties() const { return m_RTPipelineProperties; }
+
     inline TracyVkCtx GetTracyCtx() const { return m_TracyContext; }
   private:
     void PickPhysicalDevice();
@@ -72,6 +74,9 @@ namespace mau {
     VkSurfaceKHR               m_Surface                  = VK_NULL_HANDLE;
     VkPhysicalDevice           m_PhysicalDevice           = VK_NULL_HANDLE;
     VkPhysicalDeviceProperties m_PhysicalDeviceProperties = {};
+
+    // extension properties
+    VkPhysicalDeviceRayTracingPipelinePropertiesKHR m_RTPipelineProperties = {};
 
     // custom wrappers
     Handle<VulkanDevice>    m_Device    = nullptr;
