@@ -57,6 +57,17 @@ namespace mau {
     m_ClearValues.push_back(clear_value);
   }
 
+  void Renderpass::SetResolveAttachment(VkFormat format, VkSampleCountFlagBits samples, LoadStoreOp op, VkImageLayout initial_layout, VkImageLayout final_layout) {
+    AttachmentDescription desc = build_attachment_description(format, samples, op, initial_layout, final_layout, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, m_AttachmentCount++);
+    m_Attachments.push_back(desc.Description);
+    m_ResolveAttachmentRef = desc.Reference;
+    m_HasResolveAttachment = true;
+
+    VkClearValue clear_value = {};
+    clear_value.color = { 0.0f, 0.0f, 0.0f, 0.0f };
+    m_ClearValues.push_back(clear_value);
+  }
+
   void Renderpass::Build(VkPipelineBindPoint bind_point, VkPipelineStageFlags src_stage_mask, VkPipelineStageFlags dst_stage_mask, VkAccessFlags src_access_mask, VkAccessFlags dst_access_mask) {
     ASSERT(m_Renderpass == VK_NULL_HANDLE);
 
@@ -67,7 +78,7 @@ namespace mau {
     subpass.pInputAttachments       = nullptr;
     subpass.colorAttachmentCount    = static_cast<uint32_t>(m_ColorAttachmentsRef.size());
     subpass.pColorAttachments       = m_ColorAttachmentsRef.data();
-    subpass.pResolveAttachments     = nullptr;
+    subpass.pResolveAttachments     = m_HasResolveAttachment ? &m_ResolveAttachmentRef : nullptr;
     subpass.pDepthStencilAttachment = m_HasDepthAttachment ? &m_DepthAttachmentRef : nullptr;
     subpass.preserveAttachmentCount = 0u;
     subpass.pPreserveAttachments    = nullptr;

@@ -69,6 +69,7 @@ namespace mau {
     if (raw.empty()) return std::vector<TUint32>();
 
     shaderc::CompileOptions options;
+    options.SetTargetSpirv(shaderc_spirv_version_1_4);
     auto includer = std::unique_ptr<shaderc::CompileOptions::IncluderInterface>(new IncluderInterface());
     options.SetIncluder(std::move(includer));
 

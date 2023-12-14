@@ -41,7 +41,7 @@ namespace mau {
     UniformBuffer(TUint64 buffer_size, const void* data = nullptr);
     virtual ~UniformBuffer();
   public:
-    void Update(const void* data, TUint64 size);
+    void Update(const void* data, TUint64 size, TUint64 offset = 0ui64);
     void Flush(Handle<CommandBuffer> cmd);
     VkDescriptorBufferInfo GetDescriptorInfo() const;
   private:
@@ -54,14 +54,21 @@ namespace mau {
   class StructuredUniformBuffer: public UniformBuffer {
   public:
     StructuredUniformBuffer(const T&& data);
+    StructuredUniformBuffer(TUint32 array_size);
     StructuredUniformBuffer();
     ~StructuredUniformBuffer();
   public:
     void Update(const T&& data);
+    void UpdateIndex(const T& data, TUint32 index);
+  private:
+    const TUint32 m_ArraySize = 1u;
   };
 
   template<typename T>
-  inline StructuredUniformBuffer<T>::StructuredUniformBuffer(const T&& data): UniformBuffer(sizeof(T), &data) { }
+  inline StructuredUniformBuffer<T>::StructuredUniformBuffer(const T&& data): m_ArraySize(1u), UniformBuffer(sizeof(T), &data) { }
+
+  template<typename T>
+  inline StructuredUniformBuffer<T>::StructuredUniformBuffer(TUint32 array_size): m_ArraySize(array_size), UniformBuffer(sizeof(T) * static_cast<size_t>(array_size)) { }
 
   template<typename T>
   inline StructuredUniformBuffer<T>::StructuredUniformBuffer(): UniformBuffer(sizeof(T), nullptr) { }
@@ -72,6 +79,12 @@ namespace mau {
   template<typename T>
   inline void StructuredUniformBuffer<T>::Update(const T&& data) {
     UniformBuffer::Update(&data, sizeof(T));
+  }
+
+  template<typename T>
+  inline void StructuredUniformBuffer<T>::UpdateIndex(const T& data, TUint32 index) {
+    ASSERT(index < m_ArraySize);
+    UniformBuffer::Update(&data, sizeof(T), index * sizeof(T));
   }
 
 }

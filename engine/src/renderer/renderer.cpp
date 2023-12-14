@@ -8,8 +8,18 @@
 #include "graphics/vulkan-bindless.h"
 #include "renderer/rendergraph/passes/lambertian-pass.h"
 #include "renderer/rendergraph/passes/imgui-pass.h"
+#include "scene/internal-components.h"
 
 namespace mau {
+
+  glm::mat4 getModelMatrix(const TransformComponent& transform) {
+    glm::mat4 model = glm::translate(glm::mat4(1.0f), transform.Position);
+    model = glm::rotate(model, transform.Rotation.x, glm::vec3(1.0f, 0.0f, 0.0f));
+    model = glm::rotate(model, transform.Rotation.y, glm::vec3(0.0f, 1.0f, 0.0f));
+    model = glm::rotate(model, transform.Rotation.z, glm::vec3(0.0f, 0.0f, 1.0f));
+
+    return model;
+  }
 
   Renderer::Renderer(void* window_ptr) {
     Handle<CommandPool> cmd_pool = VulkanState::Ref().GetCommandPool(VK_QUEUE_GRAPHICS_BIT);
@@ -19,20 +29,12 @@ namespace mau {
     Handle<Image> swapchain_image = swapchain->GetImages()[0];
     Handle<Image> depth_image = swapchain->GetDepthImages()[0];
 
-    // init uniform buffer
-    ShaderData model_data;
-    model_data.model = glm::mat4(1.0f);
-    m_UniformBuffer = make_handle<StructuredUniformBuffer<ShaderData>>();
-    m_UniformBuffer->Update(std::move(model_data));
-    const BufferHandle buffer_handle = VulkanBindless::Ref().AddBuffer(m_UniformBuffer);
-
     // init push constant
     m_Camera.Position.z = -5.0f;
 
     VertexShaderData push_constant;
     push_constant.color = glm::vec4(1.0f, 0.0f, 0.0f, 1.0f);
     push_constant.mvp = m_Camera.GetMVP(glm::vec2(static_cast<float>(m_ImGuiViewportWidth), static_cast<float>(m_ImGuiViewportHeight)));
-    push_constant.ubo_index = buffer_handle;
     m_PushConstant = make_handle<PushConstant<VertexShaderData>>(push_constant);
 
     // create rendergraph
@@ -60,7 +62,7 @@ namespace mau {
     input_layout.AddAttributeDesc(1u, 0u, VK_FORMAT_R32G32B32_SFLOAT, sizeof(glm::vec3));
     input_layout.AddAttributeDesc(2u, 0u, VK_FORMAT_R32G32_SFLOAT, sizeof(glm::vec3) + sizeof(glm::vec3));
 
-    m_Pipeline = make_handle<Pipeline>(m_VertexShader, m_FragmentShader, pass->GetRenderpass(), input_layout, m_PushConstant, VulkanBindless::Ref().GetDescriptorLayout());
+    m_Pipeline = make_handle<Pipeline>(m_VertexShader, m_FragmentShader, pass->GetRenderpass(), input_layout, m_PushConstant, VulkanBindless::Ref().GetDescriptorLayout(), VK_SAMPLE_COUNT_4_BIT);
 
     // create framebuffers and sync objects
     std::vector<Handle<ImageView>> swapchain_images = swapchain->GetImageViews();
@@ -73,13 +75,6 @@ namespace mau {
 
     // allocate command buffers
     m_CommandBuffers = cmd_pool->AllocateCommandBuffers(static_cast<TUint32>(swapchain_images.size()));
-
-    // create vertex/index buffers
-    String model_path = GetAssetFolderPath() + "assets/models/backpack/backpack.obj";
-    m_Mesh = make_handle<Mesh>(model_path);
-    m_Texture = make_handle<Texture>(GetAssetFolderPath() + "assets/models/backpack/diffuse.jpg");
-
-    m_TextureHandle = VulkanBindless::Ref().AddTexture(m_Texture);
 
     // recreate framebuffers on window resize
     swapchain->RegisterSwapchainCreateCallbackFunc([this]() -> void {
@@ -149,10 +144,28 @@ namespace mau {
     const std::vector<VkDescriptorSet>& sets = VulkanBindless::Ref().GetDescriptorSet();
     vkCmdBindDescriptorSets(cmd->Get(), VK_PIPELINE_BIND_POINT_GRAPHICS, m_Pipeline->GetLayout(), 0u, static_cast<TUint32>(sets.size()), sets.data(), 0u, nullptr);
 
-    VkDeviceSize offsets[] = { 0ui64 };
-    vkCmdBindVertexBuffers(cmd->Get(), 0u, 1u, m_Mesh->GetVertexBuffer()->Ref(), offsets);
-    vkCmdBindIndexBuffer(cmd->Get(), m_Mesh->GetIndexBuffer()->Get(), 0ui64, VK_INDEX_TYPE_UINT32);
-    vkCmdDrawIndexed(cmd->Get(), m_Mesh->GetIndexCount(), 1, 0, 0, 0);
+    if (m_DrawScene) {
+      m_DrawScene->Each([this, &cmd](Entity entity) -> void {
+        VkDeviceSize offsets[] = { 0ui64 };
+        TransformComponent& transform = entity.Get<TransformComponent>();
+        MeshComponent& mesh = entity.Get<MeshComponent>();
+
+        glm::mat4 mvp = m_Camera.GetMVP(glm::vec2(static_cast<float>(m_ImGuiViewportWidth), static_cast<float>(m_ImGuiViewportHeight))) * getModelMatrix(transform);
+        for (const auto& submesh : mesh.MeshObject->GetSubMeshes()) {
+          m_PushConstant->Update({
+            .color         = m_PushConstant->GetData().color,
+            .mvp           = mvp,
+            .material_index = submesh.GetMaterial() ? submesh.GetMaterial()->GetMaterialHandle() : UINT32_MAX,
+          });
+          m_PushConstant->Bind(cmd, m_Pipeline);
+ 
+          vkCmdBindVertexBuffers(cmd->Get(), 0u, 1u, submesh.GetVertexBuffer()->Ref(), offsets);
+          vkCmdBindIndexBuffer(cmd->Get(), submesh.GetIndexBuffer()->Get(), 0ui64, VK_INDEX_TYPE_UINT32);
+          vkCmdDrawIndexed(cmd->Get(), submesh.GetIndexCount(), 1, 0, 0, 0);
+        }
+      });
+    }
+    m_DrawScene = nullptr;
   }
 
   void Renderer::RecordCommandBuffer(TUint64 idx) {
@@ -180,10 +193,7 @@ namespace mau {
         m_PushConstant->Update(data);
       }
 
-      if (ImGui::DragFloat3("Position", &m_Camera.Position[0])) {
-        data.mvp = m_Camera.GetMVP(glm::vec2(static_cast<float>(m_ImGuiViewportWidth), static_cast<float>(m_ImGuiViewportHeight)));
-        m_PushConstant->Update(data);
-      }
+      ImGui::DragFloat3("Position", &m_Camera.Position[0]);
 
       ImGui::DragFloat3("Model Position", &model_pos[0]);
       ImGui::DragFloat3("Model Rotation", &model_rot[0]);
@@ -192,10 +202,6 @@ namespace mau {
       model = glm::rotate(model, model_rot.x, glm::vec3(1.0f, 0.0f, 0.0f));
       model = glm::rotate(model, model_rot.y, glm::vec3(0.0f, 1.0f, 0.0f));
       model = glm::rotate(model, model_rot.z, glm::vec3(0.0f, 0.0f, 1.0f));
-
-      m_UniformBuffer->Update({
-        .model = model,
-      });
     }
     ImGui::End();
 

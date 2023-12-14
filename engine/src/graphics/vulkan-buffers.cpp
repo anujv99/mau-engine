@@ -97,9 +97,10 @@ namespace mau {
 
   UniformBuffer::~UniformBuffer() { }
 
-  void UniformBuffer::Update(const void* data, TUint64 size) {
+  void UniformBuffer::Update(const void* data, TUint64 size, TUint64 offset) {
     if (m_MappedMemory) {
-      memcpy(m_MappedMemory, data, std::min(size, m_Size));
+      char* dst = reinterpret_cast<char*>(m_MappedMemory);
+      memcpy(reinterpret_cast<void*>(dst + offset), data, size);
       m_IsUpdated = true;
     }
   }

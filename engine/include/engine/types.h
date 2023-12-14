@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <string>
 #include <unordered_map>
+#include <Vector>
 
 namespace mau {
 
@@ -13,6 +14,9 @@ namespace mau {
 
   template <typename Key, typename Value>
   using UnorderedMap = std::unordered_map<Key, Value>;
+
+  template <typename T>
+  using Vector = std::vector<T>;
 
   typedef uint32_t TUint32;
   typedef uint64_t TUint64;

@@ -5,10 +5,26 @@
 
 namespace mau {
 
+  VkDescriptorType get_descriptor_type(BindlessDescriptorType type) {
+    switch (type)
+    {
+    case mau::BindlessDescriptorType::UNIFORM:  return VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+    case mau::BindlessDescriptorType::TEXTURE:  return VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    case mau::BindlessDescriptorType::MATERIAL: return VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+    default:
+      break;
+    }
+
+    ASSERT(false);
+    return VK_DESCRIPTOR_TYPE_MAX_ENUM;
+  }
+
   VulkanBindless::VulkanBindless() {
-    const VkDescriptorType descriptor_types[] = {
-      VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
-      VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+    // [type, count]
+    const std::tuple<BindlessDescriptorType, TUint32> descriptor_types[] = {
+      { BindlessDescriptorType::UNIFORM, m_DescriptorCount },
+      { BindlessDescriptorType::TEXTURE, m_DescriptorCount },
+      { BindlessDescriptorType::MATERIAL, 1 },
     };
 
     // create descriptor pool
@@ -16,8 +32,8 @@ namespace mau {
 
     for (size_t i = 0; i < ARRAY_SIZE(descriptor_types); i++) {
       pool_sizes[i] = {
-        .type            = descriptor_types[i],
-        .descriptorCount = m_DescriptorCount,
+        .type            = get_descriptor_type(std::get<0>(descriptor_types[i])),
+        .descriptorCount = std::get<1>(descriptor_types[i]),
       };
     }
 
@@ -35,10 +51,12 @@ namespace mau {
     // create descriptor sets, since only last binding can have dynamic size
     // we create separate sets for each descriptor type
     for (size_t i = 0; i < ARRAY_SIZE(descriptor_types); i++) {
+      const BindlessDescriptorType type = std::get<0>(descriptor_types[i]);
+
       VkDescriptorSetLayoutBinding binding = {
         .binding            = 0u,
-        .descriptorType     = descriptor_types[i],
-        .descriptorCount    = m_DescriptorCount,
+        .descriptorType     = get_descriptor_type(type),
+        .descriptorCount    = std::get<1>(descriptor_types[i]),
         .stageFlags         = VK_SHADER_STAGE_ALL,
         .pImmutableSamplers = nullptr,
       };
@@ -74,10 +92,12 @@ namespace mau {
 
       VK_CALL(vkAllocateDescriptorSets(VulkanState::Ref().GetDevice(), &alloc_info, &descriptor_set));
 
-      m_DescriptorIndexMap.insert(std::make_pair(descriptor_types[i], static_cast<TUint32>(i)));
+      m_DescriptorIndexMap.insert(std::make_pair(type, static_cast<TUint32>(i)));
       m_DescriptorLayouts.push_back(descriptor_layout);
       m_DescriptorSets.push_back(descriptor_set);
     }
+
+    SetupMaterialBuffer();
   }
 
   VulkanBindless::~VulkanBindless() {
@@ -88,7 +108,7 @@ namespace mau {
   }
 
   TextureHandle VulkanBindless::AddTexture(const Handle<Texture>& texture) {
-    const TUint32 sampler_set_index = m_DescriptorIndexMap[VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER];
+    const TUint32 sampler_set_index = m_DescriptorIndexMap[BindlessDescriptorType::TEXTURE];
     const VkDescriptorSet sampler_set = m_DescriptorSets[sampler_set_index];
     ASSERT(sampler_set);
 
@@ -111,11 +131,21 @@ namespace mau {
   }
 
   BufferHandle VulkanBindless::AddBuffer(const Handle<UniformBuffer>& buffer) {
-    const TUint32 buffer_set_index = m_DescriptorIndexMap[VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER];
+    return AddBufferInternal(buffer, BindlessDescriptorType::UNIFORM, m_CurrentBufferIndex++);
+  }
+
+  MaterialHandle VulkanBindless::AddMaterial(const GPUMaterial& material) {
+    MaterialHandle handle = m_CurrentMaterialIndex++;
+    m_MaterialBuffer->UpdateIndex(material, handle);
+    return handle;
+  }
+
+  BufferHandle VulkanBindless::AddBufferInternal(const Handle<UniformBuffer>& buffer, BindlessDescriptorType type, TUint32 array_index) {
+    const TUint32 buffer_set_index = m_DescriptorIndexMap[type];
     const VkDescriptorSet buffer_set = m_DescriptorSets[buffer_set_index];
     ASSERT(buffer_set);
 
-    BufferHandle handle = m_CurrentBufferIndex++;
+    BufferHandle handle = array_index;
 
     VkDescriptorBufferInfo buffer_descriptor_info = buffer->GetDescriptorInfo();
     VkWriteDescriptorSet write_descriptor_set   = {};
@@ -131,6 +161,11 @@ namespace mau {
     vkUpdateDescriptorSets(VulkanState::Ref().GetDevice(), 1u, &write_descriptor_set, 0u, nullptr);
 
     return handle;
+  }
+
+  void VulkanBindless::SetupMaterialBuffer() {
+    m_MaterialBuffer = make_handle<StructuredUniformBuffer<GPUMaterial>>(m_DescriptorCount);
+    AddBufferInternal(m_MaterialBuffer, BindlessDescriptorType::MATERIAL, 0);
   }
 
 }

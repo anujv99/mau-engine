@@ -18,6 +18,7 @@ target_include_directories( engine PRIVATE "include" "src"
   ${TRACY_INCLUDE_DIR}
   ${ASSIMP_INCLUDE_DIR}
   ${STB_INCLUDE_DIR}
+  ${ENTT_INCLUDE_DIR}
   ${Vulkan_INCLUDE_DIR}
   ${Shaderc_INCLUDE_DIR}
 )

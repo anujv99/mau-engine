@@ -75,7 +75,6 @@ namespace mau {
     ImGui_ImplGlfw_NewFrame();
     ImGui::NewFrame();
     ImGuiDockspace();
-    ImGui::ShowDemoWindow();
   }
 
   void ImguiRenderer::ImGuiDockspace() {

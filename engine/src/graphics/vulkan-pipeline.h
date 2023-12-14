@@ -25,7 +25,7 @@ namespace mau {
 
   class Pipeline: public HandledObject {
   public:
-    Pipeline(Handle<VertexShader> vertex_shader, Handle<FragmentShader> fragment_shader, Handle<Renderpass> renderpass, const InputLayout& input_layout, Handle<PushConstantBase> push_constant = nullptr, const std::vector<VkDescriptorSetLayout>& descriptor_layouts = {});
+    Pipeline(Handle<VertexShader> vertex_shader, Handle<FragmentShader> fragment_shader, Handle<Renderpass> renderpass, const InputLayout& input_layout, Handle<PushConstantBase> push_constant = nullptr, const std::vector<VkDescriptorSetLayout>& descriptor_layouts = {}, const VkSampleCountFlagBits& sample_count = VK_SAMPLE_COUNT_1_BIT);
     ~Pipeline();
   public:
     inline VkPipeline Get() const { return m_Pipeline; }

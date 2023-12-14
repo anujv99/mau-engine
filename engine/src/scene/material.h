@@ -1,18 +1,25 @@
 #pragma once
 
 #include <engine/types.h>
-#include "../graphics/vulkan-image.h"
+#include "graphics/vulkan-image.h"
 
 namespace mau {
 
-  class Material: HandledObject {
+  struct MaterialCreateInfo {
+    String DiffuseMap;
+    String NormalMap;
+  };
+
+  class Material: public HandledObject {
   public:
-		Material(const String&& texture_path);
+		Material(const MaterialCreateInfo& create_info);
 		~Material() = default;
+  public:
+    inline MaterialHandle GetMaterialHandle() const { return m_MaterialHandle; }
   private:
-		Handle<Image>     m_Image     = nullptr;
-		Handle<ImageView> m_ImageView = nullptr;
-		Handle<Sampler>   m_Sampler   = nullptr;
+    Handle<Texture> m_Diffuse        = nullptr;
+    Handle<Texture> m_Normal         = nullptr;
+    MaterialHandle  m_MaterialHandle = UINT32_MAX;
   };
 
 }

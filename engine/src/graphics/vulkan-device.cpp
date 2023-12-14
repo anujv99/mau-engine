@@ -24,6 +24,7 @@ namespace mau {
     VkPhysicalDeviceVulkan12Features vulkan12_features              = {};
     vulkan12_features.sType                                         = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES;
     vulkan12_features.pNext                                         = nullptr;
+    vulkan12_features.runtimeDescriptorArray                        = VK_TRUE;
     vulkan12_features.descriptorIndexing                            = VK_TRUE;
     vulkan12_features.shaderSampledImageArrayNonUniformIndexing     = VK_TRUE;
     vulkan12_features.descriptorBindingSampledImageUpdateAfterBind  = VK_TRUE;

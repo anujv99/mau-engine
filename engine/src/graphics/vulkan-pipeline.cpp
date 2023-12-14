@@ -4,7 +4,7 @@
 
 namespace mau {
 
-  Pipeline::Pipeline(Handle<VertexShader> vertex_shader, Handle<FragmentShader> fragment_shader, Handle<Renderpass> renderpass, const InputLayout& input_layout, Handle<PushConstantBase> push_constant, const std::vector<VkDescriptorSetLayout>& descriptor_layouts) {
+  Pipeline::Pipeline(Handle<VertexShader> vertex_shader, Handle<FragmentShader> fragment_shader, Handle<Renderpass> renderpass, const InputLayout& input_layout, Handle<PushConstantBase> push_constant, const std::vector<VkDescriptorSetLayout>& descriptor_layouts, const VkSampleCountFlagBits& sample_count) {
     VkPipelineShaderStageCreateInfo shader_stages[] = { vertex_shader->GetShaderStageInfo(), fragment_shader->GetShaderStageInfo() };
 
     // vertex input
@@ -65,7 +65,7 @@ namespace mau {
     multisample_state.sType                                = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
     multisample_state.pNext                                = nullptr;
     multisample_state.flags                                = 0u;
-    multisample_state.rasterizationSamples                 = VK_SAMPLE_COUNT_1_BIT;
+    multisample_state.rasterizationSamples                 = sample_count;
     multisample_state.sampleShadingEnable                  = VK_FALSE;
     multisample_state.minSampleShading                     = 1.0f;
     multisample_state.pSampleMask                          = nullptr;

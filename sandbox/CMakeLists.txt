@@ -6,7 +6,12 @@ file( GLOB_RECURSE project_header_files include/*.* )
 
 add_executable( sandbox ${project_source_files} ${project_header_files} )
 
-target_include_directories( sandbox PRIVATE ${GLM_INCLUDE_DIR} ${TRACY_INCLUDE_DIR} ${ENGINE_INCLUDE_DIR} )
+target_include_directories( sandbox PRIVATE
+  ${GLM_INCLUDE_DIR}
+  ${ENTT_INCLUDE_DIR}
+  ${TRACY_INCLUDE_DIR}
+  ${ENGINE_INCLUDE_DIR}
+)
 
 target_link_libraries( sandbox PRIVATE engine )
 

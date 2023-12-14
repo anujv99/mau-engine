@@ -31,7 +31,15 @@
 
 namespace mau {
 
-  using TextureHandle = TUint32;
-  using BufferHandle  = TUint32;
+  using TextureHandle  = TUint32;
+  using BufferHandle   = TUint32;
+  using MaterialHandle = TUint32;
+
+  struct GPUMaterial {
+    TextureHandle Diffuse = UINT32_MAX;
+    TextureHandle Normal  = UINT32_MAX;
+
+    float padding[2];
+  };
 
 }

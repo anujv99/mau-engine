@@ -25,6 +25,7 @@ namespace mau {
   public:
     void AddColorAttachment(VkFormat format, VkSampleCountFlagBits samples, LoadStoreOp op, VkImageLayout initial_layout, VkImageLayout final_layout);
     void SetDepthAttachment(VkFormat format, VkSampleCountFlagBits samples, LoadStoreOp op, VkImageLayout initial_layout, VkImageLayout final_layout);
+    void SetResolveAttachment(VkFormat format, VkSampleCountFlagBits samples, LoadStoreOp op, VkImageLayout initial_layout, VkImageLayout final_layout);
 
     void Build(VkPipelineBindPoint bind_point, VkPipelineStageFlags src_stage_mask, VkPipelineStageFlags dst_stage_mask, VkAccessFlags src_access_mask, VkAccessFlags dst_access_mask);
     void Begin(Handle<CommandBuffer> cmd, Handle<Framebuffer> framebuffer, VkRect2D area);
@@ -32,14 +33,16 @@ namespace mau {
 
     inline VkRenderPass Get() const { return m_Renderpass; }
   private:
-    VkRenderPass m_Renderpass         = VK_NULL_HANDLE;
-    TUint32      m_AttachmentCount    = 0u;
-    bool         m_HasDepthAttachment = false;
+    VkRenderPass m_Renderpass           = VK_NULL_HANDLE;
+    TUint32      m_AttachmentCount      = 0u;
+    bool         m_HasDepthAttachment   = false;
+    bool         m_HasResolveAttachment = false;
 
-    std::vector<VkAttachmentDescription> m_Attachments         = {};
-    std::vector<VkClearValue>            m_ClearValues         = {};
-    std::vector<VkAttachmentReference>   m_ColorAttachmentsRef = {};
-    VkAttachmentReference                m_DepthAttachmentRef  = {};
+    std::vector<VkAttachmentDescription> m_Attachments          = {};
+    std::vector<VkClearValue>            m_ClearValues          = {};
+    std::vector<VkAttachmentReference>   m_ColorAttachmentsRef  = {};
+    VkAttachmentReference                m_DepthAttachmentRef   = {};
+    VkAttachmentReference                m_ResolveAttachmentRef = {};
   };
 
 }

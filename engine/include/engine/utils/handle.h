@@ -1,6 +1,8 @@
 #pragma once
 
 #include <utility>
+#include <functional>
+
 #include <engine/assert.h>
 #include <engine/types.h>
 #include <engine/memory.h>
@@ -108,7 +110,7 @@ namespace mau {
     }
   }
 
-  template <class T, class... Args>
+  template <class T, typename... Args>
   Handle<T> make_handle(Args... args) {
     T* ptr = nullptr;
     MAU_ALLOC(ptr, T, std::forward<Args>(args)...);

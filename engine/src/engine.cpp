@@ -8,12 +8,13 @@
 
 #include "renderer/renderer.h"
 #include "graphics/vulkan-bindless.h"
+#include "scene/internal-components.h"
 
 namespace mau {
 
   // temp
   void imgui_fps_overlay(uint32_t framerate) {
-    static int location = 0;
+    static int location = 1;
     ImGuiIO& io = ImGui::GetIO();
     ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoNav;
 
@@ -69,9 +70,19 @@ namespace mau {
     VulkanBindless::Create();
 
     Renderer::Create(m_Window.getRawWindow());
+
+    String model_path = GetAssetFolderPath() + "assets/models/Sponza/glTF/Sponza.gltf";
+
+    Handle<Mesh> mesh = make_handle<Mesh>(model_path);
+
+    m_Scene = make_handle<Scene>();
+    Entity bag = m_Scene->CreateEntity("Bag");
+
+    bag.Add<MeshComponent>(mesh);
   };
 
   Engine::~Engine() {
+    m_Scene = nullptr;
     Renderer::Destroy();
     VulkanBindless::Destroy();
     VulkanState::Destroy();
@@ -90,7 +101,10 @@ namespace mau {
 
       Renderer::Ref().StartFrame();
 
+      Renderer::Ref().SubmitScene(m_Scene);
+
       imgui_fps_overlay(last_second_framerate);
+      ImGuiSceneList();
 
       Renderer::Ref().EndFrame();
       
@@ -116,6 +130,33 @@ namespace mau {
 
   void Engine::SetVulkanValidationLogSeverity(VulkanValidationLogSeverity severity, bool enabled) noexcept {
     VulkanState::Ref().SetValidationSeverity(severity, enabled);
+  }
+
+  void Engine::ImGuiSceneList() {
+    static entt::entity selected_entity;
+
+    if (ImGui::Begin("Scene List")) {
+      
+      m_Scene->Each([](Entity entity) -> void {
+        NameComponent& name = entity.Get<NameComponent>();
+        const bool is_selected = selected_entity == entity.GetId();
+
+        if (ImGui::Selectable(name.Name.c_str(), is_selected)) {
+          selected_entity = entity.GetId();
+        }
+
+        if (is_selected) {
+          TransformComponent& transform = entity.Get<TransformComponent>();
+
+          ImGui::DragFloat3("Position", &transform.Position[0]);
+          ImGui::DragFloat3("Rotation", &transform.Rotation[0]);
+        }
+      });
+
+    }
+    ImGui::End();
+
+    // ImGui::ShowDemoWindow();
   }
 
   std::string GetAssetFolderPath() {

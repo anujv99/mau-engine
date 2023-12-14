@@ -24,6 +24,7 @@ set( ASSIMP_INCLUDE_DIR "thirdparty/assimp/include" )
 # header only libraries # 
 set( GLM_INCLUDE_DIR "thirdparty/glm/include"  )
 set( STB_INCLUDE_DIR "thirdparty/stb" )
+set( ENTT_INCLUDE_DIR "thirdparty/entt/include" )
 
 if ( NOT IS_ABSOLUTE ${GLFW_INCLUDE_DIR} )
   get_filename_component( GLFW_INCLUDE_DIR "${CMAKE_CURRENT_LIST_DIR}/${GLFW_INCLUDE_DIR}" ABSOLUTE )
@@ -51,6 +52,10 @@ endif()
 
 if ( NOT IS_ABSOLUTE ${STB_INCLUDE_DIR} )
   get_filename_component( STB_INCLUDE_DIR "${CMAKE_CURRENT_LIST_DIR}/${STB_INCLUDE_DIR}" ABSOLUTE )
+endif()
+
+if ( NOT IS_ABSOLUTE ${ENTT_INCLUDE_DIR} )
+  get_filename_component( ENTT_INCLUDE_DIR "${CMAKE_CURRENT_LIST_DIR}/${ENTT_INCLUDE_DIR}" ABSOLUTE )
 endif()
 
 set( GLFW_BUILD_EXAMPLES OFF )
