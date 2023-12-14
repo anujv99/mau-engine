@@ -18,6 +18,7 @@ list( APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake" )
 set( GLFW_INCLUDE_DIR "thirdparty/glfw/include" )
 set( VMA_INCLUDE_DIR "thirdparty/vma/include" )
 set( IMGUI_INCLUDE_DIR "thirdparty/imgui" )
+set( TRACY_INCLUDE_DIR "thirdparty/tracy/public" )
 
 # header only libraries # 
 set( GLM_INCLUDE_DIR  "thirdparty/glm/include"  )
@@ -34,6 +35,10 @@ if ( NOT IS_ABSOLUTE ${IMGUI_INCLUDE_DIR} )
   get_filename_component( IMGUI_INCLUDE_DIR "${CMAKE_CURRENT_LIST_DIR}/${IMGUI_INCLUDE_DIR}" ABSOLUTE )
 endif()
 
+if ( NOT IS_ABSOLUTE ${TRACY_INCLUDE_DIR} )
+  get_filename_component( TRACY_INCLUDE_DIR "${CMAKE_CURRENT_LIST_DIR}/${TRACY_INCLUDE_DIR}" ABSOLUTE )
+endif()
+
 if ( NOT IS_ABSOLUTE ${GLM_INCLUDE_DIR} )
   get_filename_component( GLM_INCLUDE_DIR "${CMAKE_CURRENT_LIST_DIR}/${GLM_INCLUDE_DIR}" ABSOLUTE )
 endif()
@@ -44,6 +49,7 @@ set( GLFW_BUILD_DOCS OFF )
 add_subdirectory( thirdparty/glfw )
 add_subdirectory( thirdparty/vma )
 add_subdirectory( thirdparty/imgui )
+add_subdirectory( thirdparty/tracy )
 
 # ---------------------------------------------------------- #
 

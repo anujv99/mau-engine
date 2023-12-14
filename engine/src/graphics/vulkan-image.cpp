@@ -32,8 +32,12 @@ namespace mau {
     VK_CALL(vmaCreateImage(VulkanState::Ref().GetVulkanMemoryAllocator(), &create_info, &alloc_info, &m_Image, &m_Allocation, nullptr));
   }
 
+  Image::Image(VkImage image, VkFormat format, VkSampleCountFlagBits samples): m_Image(image), m_Format(format), m_SampleCount(samples) {
+    ASSERT(m_Image != VK_NULL_HANDLE);
+  }
+
   Image::~Image() {
-    vmaDestroyImage(VulkanState::Ref().GetVulkanMemoryAllocator(), m_Image, m_Allocation);
+    if (m_Allocation) vmaDestroyImage(VulkanState::Ref().GetVulkanMemoryAllocator(), m_Image, m_Allocation);
   }
 
   ImageView::ImageView(VkImage image, VkFormat format, VkImageViewType view_type, VkImageAspectFlags aspect_mask) {

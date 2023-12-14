@@ -21,6 +21,9 @@ namespace mau {
     Fence(VkFenceCreateFlags flags = 0u);
     ~Fence();
   public:
+    void Reset();
+    void Wait();
+  public:
     inline VkFence Get() const { return m_Fence; }
     inline const VkFence* Ref() const { return &m_Fence; }
   private:

@@ -16,6 +16,7 @@ namespace mau {
   public:
     inline VkImage GetImage() const { return m_Image; }
     inline VkFormat GetFormat() const { return m_Format; }
+    inline VkSampleCountFlagBits GetSamples() const { return m_SampleCount; }
   private:
     VkImage               m_Image       = VK_NULL_HANDLE;
     VmaAllocation         m_Allocation  = VK_NULL_HANDLE;
@@ -45,7 +46,7 @@ namespace mau {
     Framebuffer(Handle<ImageView> color, Handle<ImageView> depth, Handle<Renderpass> renderpass, TUint32 width, TUint32 height);
     ~Framebuffer();
   public:
-    inline VkFramebuffer GetFramebuffer() const { return m_Framebuffer; }
+    inline VkFramebuffer Get() const { return m_Framebuffer; }
   private:
     void CreateFramebuffer(std::vector<VkImageView> image_views, VkRenderPass renderpass, TUint32 width, TUint32 height);
   private:

@@ -4,6 +4,7 @@
 #include "common.h"
 #include "vulkan-shaders.h"
 #include "vulkan-renderpass.h"
+#include "vulkan-push-constant.h"
 
 namespace mau {
 
@@ -24,10 +25,11 @@ namespace mau {
 
   class Pipeline: public HandledObject {
   public:
-    Pipeline(Handle<VertexShader> vertex_shader, Handle<FragmentShader> fragment_shader, Handle<Renderpass> renderpass, const InputLayout& input_layout);
+    Pipeline(Handle<VertexShader> vertex_shader, Handle<FragmentShader> fragment_shader, Handle<Renderpass> renderpass, const InputLayout& input_layout, Handle<PushConstantBase> push_constant = nullptr);
     ~Pipeline();
   public:
     inline VkPipeline Get() const { return m_Pipeline; }
+    inline VkPipelineLayout GetLayout() const { return m_PipelineLayout; }
   private:
     VkPipeline       m_Pipeline       = VK_NULL_HANDLE;
     VkPipelineLayout m_PipelineLayout = VK_NULL_HANDLE;

@@ -29,7 +29,7 @@ namespace mau {
   }
 
   void CommandBuffer::Reset() {
-    vkResetCommandBuffer(m_CommandBuffer, 0u);
+    VK_CALL(vkResetCommandBuffer(m_CommandBuffer, 0u));
   }
 
   CommandPool::CommandPool(VkDevice device, TUint32 queue_family_index, TUint32 flags):
@@ -63,7 +63,7 @@ namespace mau {
     VK_CALL(vkAllocateCommandBuffers(m_Device, &alloc_info, vk_command_buffers.data()));
 
     for (const VkCommandBuffer& buffer : vk_command_buffers) {
-      command_buffers.emplace_back(new CommandBuffer(buffer, m_CommandPool));
+      command_buffers.emplace_back(make_handle<CommandBuffer>(buffer, m_CommandPool));
     }
 
     return command_buffers;

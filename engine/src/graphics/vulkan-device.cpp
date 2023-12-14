@@ -84,9 +84,16 @@ namespace mau {
     VK_CALL_REASON(vkCreateDevice(m_PhysicalDevice, &device_create_info, nullptr, &m_Device), "failed to create logical device");
 
     // get queue handles
-    vkGetDeviceQueue(m_Device, m_GraphicsQueueIndex, 0, &m_GraphicsQueue);
-    vkGetDeviceQueue(m_Device, m_TransferQueueIndex, 0, &m_TransferQueue);
-    vkGetDeviceQueue(m_Device, m_PresentQueueIndex, 0, &m_PresentQueue);
+    VkQueue graphics_queue = VK_NULL_HANDLE;
+    VkQueue transfer_queue = VK_NULL_HANDLE;
+    VkQueue present_queue = VK_NULL_HANDLE;
+    vkGetDeviceQueue(m_Device, m_GraphicsQueueIndex, 0, &graphics_queue);
+    vkGetDeviceQueue(m_Device, m_TransferQueueIndex, 0, &transfer_queue);
+    vkGetDeviceQueue(m_Device, m_PresentQueueIndex, 0, &present_queue);
+
+    m_GraphicsQueue = make_handle<VulkanQueue>(graphics_queue, m_Device);
+    m_TransferQueue = make_handle<VulkanQueue>(transfer_queue, m_Device);
+    m_PresentQueue = make_handle<PresentQueue>(present_queue, m_Device);
 
     LOG_INFO("vulkan logical device created");
   }

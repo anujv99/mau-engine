@@ -1,11 +1,13 @@
 #include <engine/engine.h>
 
 #include <chrono>
-#include <engine/log.h>
 #include <glm/glm.hpp>
 #include <imgui.h>
+#include <engine/log.h>
+#include <engine/profiler.h>
 
 #include "renderer/renderer.h"
+#include "graphics/vulkan-push-constant.h"
 
 namespace mau {
 
@@ -54,7 +56,13 @@ namespace mau {
     m_Config(validate_config(config)),
     m_Window(config.Width, config.Height, config.WindowName) {
 
-    VulkanState::Create(MAU_DEBUG);
+    #ifdef MAU_DEBUG
+      bool enable_validation = true;
+    #else
+      bool enable_validation = false;
+    #endif
+
+    VulkanState::Create(enable_validation);
     VulkanState::Ref().SetValidationSeverity(config.ValidationSeverity);
     VulkanState::Ref().Init(config.ApplicationName, m_Window.getRawWindow());
 
@@ -74,6 +82,8 @@ namespace mau {
     float delta_time = 0.0f;
 
     while (!m_Window.ShouldClose()) {
+      MAU_FRAME_MARK();
+      MAU_PROFILE_SCOPE("Engine::Loop");
 
       Renderer::Ref().StartFrame();
 

@@ -3,6 +3,7 @@
 #include <engine/types.h>
 #include <engine/utils/singleton.h>
 #include <engine/engine.h>
+#include <glm/glm.hpp>
 
 #include "../graphics/vulkan-state.h"
 #include "../graphics/vulkan-renderpass.h"
@@ -10,8 +11,13 @@
 #include "../graphics/vulkan-pipeline.h"
 #include "../graphics/vulkan-image.h"
 #include "../graphics/vulkan-buffers.h"
+#include "../graphics/vulkan-push-constant.h"
 
 namespace mau {
+
+  struct VertexShaderData {
+    glm::vec4 color;
+  };
 
   class Renderer: public Singleton<Renderer> {
     friend class Singleton<Renderer>;
@@ -39,6 +45,8 @@ namespace mau {
     // temp
     Handle<VertexBuffer>               m_QuadBuffer     = nullptr;
     Handle<IndexBuffer>                m_QuadIndices    = nullptr;
+
+    Handle<PushConstant<VertexShaderData>> m_PushConstant = nullptr;
   };
   
 }

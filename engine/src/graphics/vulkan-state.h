@@ -13,6 +13,9 @@
 #include "vulkan-swapchain.h"
 #include "vulkan-commands.h"
 
+#define MAU_GPU_ZONE(cmd, name) TracyVkZone(VulkanState::Ref().GetTracyCtx(), cmd, name)
+#define MAU_GPU_COLLECT(cmd) TracyVkCollect(VulkanState::Ref().GetTracyCtx(), cmd)
+
 namespace mau {
 
   class VulkanState: public Singleton<VulkanState> {
@@ -34,8 +37,6 @@ namespace mau {
     inline VkDevice GetDevice() const { return m_Device->GetDevice(); }
     inline Handle<VulkanDevice> GetDeviceHandle() const { return m_Device; }
     inline VkPhysicalDevice GetPhysicalDevice() const { return m_PhysicalDevice; }
-    inline VkQueue GetGraphicsQueue() const { return m_Device->GetGraphicsQueue(); }
-    inline VkQueue GetPresentQueue() const { return m_Device->GetPresentQueue(); }
 
     inline VkSwapchainKHR GetSwapchain() const { return m_Swapchain->GetSwapchain(); }
     inline Handle<VulkanSwapchain> GetSwapchainHandle() const { return m_Swapchain; }
@@ -44,10 +45,14 @@ namespace mau {
     inline VkExtent2D GetSwapchainExtent() const { return m_Swapchain->GetExtent(); }
     inline const std::vector<Handle<ImageView>> GetSwapchainImageViews() const { return m_Swapchain->GetImageViews(); }
     inline const std::vector<Handle<ImageView>> GetSwapchainDepthImageViews() const { return m_Swapchain->GetDepthImageViews(); }
+
+    inline TracyVkCtx GetTracyCtx() const { return m_TracyContext; }
   private:
     void PickPhysicalDevice();
     bool CreateCommandPool(VkQueueFlagBits queue_type);
     void CreateVulkanMemoryAllocator();
+    void InitTracy();
+    void ShutdownTracy();
   private:
     bool    m_Validation                  = false;
     TUint32 m_ValidationSeverity          = VulkanValidationLogSeverity::ALL;
@@ -75,6 +80,10 @@ namespace mau {
 
     // command pools
     std::unordered_map<VkQueueFlagBits, Handle<CommandPool>> m_CommandPools = {};
+
+    // tracy profiler context
+    TracyVkCtx            m_TracyContext = nullptr;
+    Handle<CommandBuffer> m_TracyCmdBuf  = nullptr;
   };
 
 }

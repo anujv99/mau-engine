@@ -23,21 +23,10 @@ namespace mau {
 
     cmd->End();
 
-    VkSubmitInfo submit_info         = {};
-    submit_info.sType                = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-    submit_info.pNext                = nullptr;
-    submit_info.waitSemaphoreCount   = 0u;
-    submit_info.pWaitSemaphores      = nullptr;
-    submit_info.pWaitDstStageMask    = nullptr;
-    submit_info.commandBufferCount   = 1u;
-    submit_info.pCommandBuffers      = cmd->Ref();
-    submit_info.signalSemaphoreCount = 0u;
-    submit_info.pSignalSemaphores    = nullptr;
+    Handle<VulkanQueue> transfer_queue = VulkanState::Ref().GetDeviceHandle()->GetTransferQueue();
 
-    VkQueue transfer_queue = VulkanState::Ref().GetDeviceHandle()->GetTransferQueue();
-
-    VK_CALL(vkQueueSubmit(transfer_queue, 1, &submit_info, VK_NULL_HANDLE));
-    vkQueueWaitIdle(transfer_queue);
+    transfer_queue->Submit(cmd);
+    transfer_queue->WaitIdle();
   }
 
   Buffer::Buffer(TUint64 buffer_size, VkBufferUsageFlags usage, VmaAllocationCreateFlags memory_flags): m_Size(buffer_size) {

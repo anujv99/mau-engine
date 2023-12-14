@@ -3,6 +3,7 @@
 #include <utility>
 #include <engine/assert.h>
 #include <engine/types.h>
+#include <engine/memory.h>
 
 namespace mau {
 
@@ -38,6 +39,9 @@ namespace mau {
     inline void operator=(T* const other);
     inline T* operator->() const;
     inline T& operator*() const;
+
+    template <class C>
+    inline operator Handle<C>();
   private:
     void Destroy();
   private:
@@ -97,7 +101,7 @@ namespace mau {
 
       if (m_Instance->RefCount() == 0) {
         HandledObject* base_class = dynamic_cast<T*>(m_Instance);
-        delete base_class;
+        MAU_FREE(base_class);
       }
 
       m_Instance = nullptr;
@@ -106,7 +110,19 @@ namespace mau {
 
   template <class T, typename... Args>
   Handle<T> make_handle(Args... args) {
-    return new T(std::forward<Args>(args)...);
+    T* ptr = nullptr;
+    MAU_ALLOC(ptr, T, args...);
+    return ptr;
+  }
+
+  template<class T>
+  template<class C>
+  inline Handle<T>::operator Handle<C>() {
+    if (m_Instance == nullptr) return Handle<C>(nullptr);
+
+    C* ptr = dynamic_cast<C*>(m_Instance);
+    ASSERT(ptr != nullptr);
+    return Handle<C>(ptr);
   }
 
 }

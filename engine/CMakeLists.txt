@@ -10,8 +10,8 @@ file( GLOB_RECURSE project_header_files include/*.* )
 
 add_library( engine STATIC ${project_source_files} ${project_header_files} )
 
-target_include_directories( engine PRIVATE "include" ${GLFW_INCLUDE_DIR} ${VMA_INCLUDE_DIR} ${GLM_INCLUDE_DIR} ${IMGUI_INCLUDE_DIR} ${Vulkan_INCLUDE_DIR} ${Shaderc_INCLUDE_DIR} )
-target_link_libraries( engine PRIVATE glfw VulkanMemoryAllocator imgui ${Vulkan_LIBRARIES} ${Shaderc_shared_LIBRARIES} )
+target_include_directories( engine PRIVATE "include" ${GLFW_INCLUDE_DIR} ${VMA_INCLUDE_DIR} ${GLM_INCLUDE_DIR} ${IMGUI_INCLUDE_DIR} ${TRACY_INCLUDE_DIR} ${Vulkan_INCLUDE_DIR} ${Shaderc_INCLUDE_DIR} )
+target_link_libraries( engine PRIVATE glfw VulkanMemoryAllocator imgui Tracy::TracyClient ${Vulkan_LIBRARIES} ${Shaderc_shared_LIBRARIES} )
 
 # add asset folder path
 set( ASSET_FOLDER_PATH  "assets"  )

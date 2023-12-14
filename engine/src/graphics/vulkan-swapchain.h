@@ -1,6 +1,7 @@
 #pragma once
 
 #include <vector>
+#include <functional>
 #include <engine/types.h>
 #include "common.h"
 #include "vulkan-image.h"
@@ -14,6 +15,7 @@ namespace mau {
     ~VulkanSwapchain();
   public:
     TUint32 GetNextImageIndex(Handle<Semaphore> signal);
+    void RegisterSwapchainCreateCallbackFunc(std::function<void(void)> func);
   public:
     inline VkSwapchainKHR GetSwapchain() const { return m_Swapchain; }
     inline const VkSwapchainKHR* Ref() const { return &m_Swapchain; }
@@ -21,8 +23,10 @@ namespace mau {
     inline VkFormat GetDepthFormat() const { return m_DepthFormat; }
     inline VkSurfaceCapabilitiesKHR GetSurfaceCapabilities() const { return m_SurfaceCapabilities; }
     inline VkExtent2D GetExtent() const { return m_Extent; }
-    inline const std::vector<Handle<ImageView>> GetImageViews() const { return m_SwapchainImageViews; }
-    inline const std::vector<Handle<ImageView>> GetDepthImageViews() const { return m_DepthImageViews; }
+    inline const std::vector<Handle<ImageView>>& GetImageViews() const { return m_SwapchainImageViews; }
+    inline const std::vector<Handle<ImageView>>& GetDepthImageViews() const { return m_DepthImageViews; }
+    inline const std::vector<Handle<Image>>& GetImages() const { return m_SwapchainImages; }
+    inline const std::vector<Handle<Image>>& GetDepthImages() const { return m_DepthImages; }
   private:
     void CreateSwapchain();
     VkFormat GetDepthFormat(VkImageTiling tiling);
@@ -45,10 +49,13 @@ namespace mau {
     VkSurfaceFormatKHR             m_Format              = {};
     VkFormat                       m_DepthFormat         = VK_FORMAT_UNDEFINED;
     VkPresentModeKHR               m_PresentMode         = {};
-    std::vector<VkImage>           m_SwapchainImages     = {};
+    std::vector<Handle<Image>>     m_SwapchainImages     = {};
     std::vector<Handle<ImageView>> m_SwapchainImageViews = {};
     std::vector<Handle<Image>>     m_DepthImages         = {};
     std::vector<Handle<ImageView>> m_DepthImageViews     = {};
+
+    // TODO: find something better
+    std::vector<std::function<void(void)>> m_SwapchainCreateCallback = {};
   };
 
 }

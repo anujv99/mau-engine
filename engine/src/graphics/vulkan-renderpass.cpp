@@ -1,6 +1,7 @@
 #include "vulkan-renderpass.h"
 
 #include "vulkan-state.h"
+#include "vulkan-image.h"
 
 #include <engine/assert.h>
 
@@ -35,17 +36,25 @@ namespace mau {
     if (m_Renderpass) vkDestroyRenderPass(VulkanState::Ref().GetDevice(), m_Renderpass, nullptr);
   }
 
-  void Renderpass::AddColorAttachment(VkFormat format, VkSampleCountFlagBits samples, LoadStoreOp op, VkImageLayout initial_layout, VkImageLayout final_layout, VkImageLayout subpass_layout) {
-    AttachmentDescription desc = build_attachment_description(format, samples, op, initial_layout, final_layout, subpass_layout, m_AttachmentCount++);
+  void Renderpass::AddColorAttachment(VkFormat format, VkSampleCountFlagBits samples, LoadStoreOp op, VkImageLayout initial_layout, VkImageLayout final_layout) {
+    AttachmentDescription desc = build_attachment_description(format, samples, op, initial_layout, final_layout, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, m_AttachmentCount++);
     m_Attachments.push_back(desc.Description);
     m_ColorAttachmentsRef.push_back(desc.Reference);
+
+    VkClearValue clear_value = {};
+    clear_value.color = { 0.0f, 0.0f, 0.0f, 0.0f };
+    m_ClearValues.push_back(clear_value);
   }
 
-  void Renderpass::SetDepthAttachment(VkFormat format, VkSampleCountFlagBits samples, LoadStoreOp op, VkImageLayout initial_layout, VkImageLayout final_layout, VkImageLayout subpass_layout) {
-    AttachmentDescription desc = build_attachment_description(format, samples, op, initial_layout, final_layout, subpass_layout, m_AttachmentCount++);
+  void Renderpass::SetDepthAttachment(VkFormat format, VkSampleCountFlagBits samples, LoadStoreOp op, VkImageLayout initial_layout, VkImageLayout final_layout) {
+    AttachmentDescription desc = build_attachment_description(format, samples, op, initial_layout, final_layout, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, m_AttachmentCount++);
     m_Attachments.push_back(desc.Description);
     m_DepthAttachmentRef = desc.Reference;
     m_HasDepthAttachment = true;
+
+    VkClearValue clear_value = {};
+    clear_value.depthStencil = { 1.0f, 0u };
+    m_ClearValues.push_back(clear_value);
   }
 
   void Renderpass::Build(VkPipelineBindPoint bind_point, VkPipelineStageFlags src_stage_mask, VkPipelineStageFlags dst_stage_mask, VkAccessFlags src_access_mask, VkAccessFlags dst_access_mask) {
@@ -84,6 +93,21 @@ namespace mau {
     create_info.pDependencies          = &dependency;
 
     VK_CALL(vkCreateRenderPass(VulkanState::Ref().GetDevice(), &create_info, nullptr, &m_Renderpass));
+  }
+
+  void Renderpass::Begin(Handle<CommandBuffer> cmd, Handle<Framebuffer> framebuffer, VkRect2D area) {
+    ASSERT(m_Renderpass != VK_NULL_HANDLE);
+
+    VkRenderPassBeginInfo renderpass_begin_info = {};
+    renderpass_begin_info.sType                 = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+    renderpass_begin_info.pNext                 = nullptr;
+    renderpass_begin_info.renderPass            = m_Renderpass;
+    renderpass_begin_info.framebuffer           = framebuffer->Get();
+    renderpass_begin_info.renderArea            = area;
+    renderpass_begin_info.clearValueCount       = static_cast<uint32_t>(m_ClearValues.size());
+    renderpass_begin_info.pClearValues          = m_ClearValues.data();
+
+    vkCmdBeginRenderPass(cmd->Get(), &renderpass_begin_info, VK_SUBPASS_CONTENTS_INLINE);
   }
 
 }

@@ -2,6 +2,8 @@
 
 #include <vulkan/vulkan.h>
 #include <vulkan/vk_enum_string_helper.h>
+#include <tracy/TracyVulkan.hpp>
+
 #include <engine/exceptions.h>
 #include <engine/log.h>
 #include <engine/utils/handle.h>

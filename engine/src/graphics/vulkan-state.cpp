@@ -104,6 +104,7 @@ namespace mau {
   }
 
   VulkanState::~VulkanState() {
+    ShutdownTracy();
     m_CommandPools.clear();
     m_Swapchain = nullptr;
     vmaDestroyAllocator(m_Allocator);
@@ -185,6 +186,9 @@ namespace mau {
     // pre-create command pools
     CreateCommandPool(VK_QUEUE_GRAPHICS_BIT);
     CreateCommandPool(VK_QUEUE_TRANSFER_BIT);
+
+    // init tracy
+    InitTracy();
   }
 
   bool VulkanState::EnableInstanceLayer(std::string_view layer_name) noexcept {
@@ -336,6 +340,17 @@ namespace mau {
     create_info.pTypeExternalMemoryHandleTypes = nullptr;
 
     VK_CALL(vmaCreateAllocator(&create_info, &m_Allocator));
+  }
+
+  void VulkanState::InitTracy() {
+    m_TracyCmdBuf = GetCommandPool(VK_QUEUE_GRAPHICS_BIT)->AllocateCommandBuffers(1)[0];
+    m_TracyContext = TracyVkContext(m_PhysicalDevice, m_Device->GetDevice(), m_Device->GetGraphicsQueue()->Get(), m_TracyCmdBuf->Get());
+  }
+
+  void VulkanState::ShutdownTracy() {
+    m_TracyCmdBuf = nullptr;
+    TracyVkDestroy(m_TracyContext);
+    m_TracyContext = nullptr;
   }
 
 }

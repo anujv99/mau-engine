@@ -30,4 +30,13 @@ namespace mau {
     vkDestroyFence(VulkanState::Ref().GetDevice(), m_Fence, nullptr);
   }
 
+  void Fence::Reset() {
+    VK_CALL(vkResetFences(VulkanState::Ref().GetDevice(), 1, &m_Fence));
+  }
+
+  void Fence::Wait() {
+    MAU_PROFILE_SCOPR_COLOR("Fence::Wait", tracy::Color::Cyan);
+    VK_CALL(vkWaitForFences(VulkanState::Ref().GetDevice(), 1, &m_Fence, VK_TRUE, UINT64_MAX));
+  }
+
 }

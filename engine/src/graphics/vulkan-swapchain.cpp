@@ -19,8 +19,21 @@ namespace mau {
 
   TUint32 VulkanSwapchain::GetNextImageIndex(Handle<Semaphore> signal) {
     TUint32 image_index = 0u;
-    VK_CALL(vkAcquireNextImageKHR(m_Device, m_Swapchain, UINT64_MAX, signal->Get(), VK_NULL_HANDLE, &image_index));
+
+    VkResult result = vkAcquireNextImageKHR(m_Device, m_Swapchain, UINT64_MAX, signal->Get(), VK_NULL_HANDLE, &image_index);
+    if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR) {
+      vkDeviceWaitIdle(m_Device);
+      DestroySwapchain();
+      CreateSwapchain();
+      VK_CALL(vkAcquireNextImageKHR(m_Device, m_Swapchain, UINT64_MAX, signal->Get(), VK_NULL_HANDLE, &image_index));
+    } else {
+      VK_CALL(result);
+    }
     return image_index;
+  }
+
+  void VulkanSwapchain::RegisterSwapchainCreateCallbackFunc(std::function<void(void)> func) {
+    m_SwapchainCreateCallback.push_back(func);
   }
 
   void VulkanSwapchain::CreateSwapchain() {
@@ -81,13 +94,18 @@ namespace mau {
     // get swapchain images
     uint32_t swapchain_image_count = 0u;
     VK_CALL(vkGetSwapchainImagesKHR(m_Device, m_Swapchain, &swapchain_image_count, nullptr));
-    m_SwapchainImages.resize(static_cast<size_t>(swapchain_image_count));
-    VK_CALL(vkGetSwapchainImagesKHR(m_Device, m_Swapchain, &swapchain_image_count, m_SwapchainImages.data()));
+    m_SwapchainImages.reserve(static_cast<size_t>(swapchain_image_count));
+    std::vector<VkImage> swapchain_images(static_cast<size_t>(swapchain_image_count));
+    VK_CALL(vkGetSwapchainImagesKHR(m_Device, m_Swapchain, &swapchain_image_count, swapchain_images.data()));
+
+    for (const auto& image : swapchain_images) {
+      m_SwapchainImages.push_back(make_handle<Image>(image, m_Format.format, VK_SAMPLE_COUNT_1_BIT));
+    }
 
     // create image views
     m_SwapchainImageViews.reserve(m_SwapchainImages.size());
     for (const auto& image : m_SwapchainImages) {
-      m_SwapchainImageViews.push_back(make_handle<ImageView>(image, m_Format.format, VK_IMAGE_VIEW_TYPE_2D, VK_IMAGE_ASPECT_COLOR_BIT));
+      m_SwapchainImageViews.push_back(make_handle<ImageView>(image, VK_IMAGE_VIEW_TYPE_2D, VK_IMAGE_ASPECT_COLOR_BIT));
     }
 
     // create depth images
@@ -99,6 +117,11 @@ namespace mau {
       Handle<ImageView> depth_image_view = make_handle<ImageView>(depth_image, VK_IMAGE_VIEW_TYPE_2D, VK_IMAGE_ASPECT_DEPTH_BIT);
       m_DepthImages.push_back(depth_image);
       m_DepthImageViews.push_back(depth_image_view);
+    }
+
+    // execute callbacks
+    for (const auto& callback : m_SwapchainCreateCallback) {
+      callback();
     }
 
     LOG_INFO("vulkan swachain created");

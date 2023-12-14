@@ -2,12 +2,14 @@
 
 #include <engine/types.h>
 #include <vector>
+
 #include "common.h"
 
 namespace mau {
 
   class CommandBuffer: public HandledObject {
-    friend class CommandPool;
+    template <class T, typename... Args>
+    friend Handle<T> make_handle(Args... args);
     CommandBuffer(VkCommandBuffer command_buffer, VkCommandPool m_CommandPool);
   public:
     ~CommandBuffer();
@@ -19,8 +21,8 @@ namespace mau {
     inline VkCommandBuffer Get() const { return m_CommandBuffer; }
     inline const VkCommandBuffer* Ref() const { return &m_CommandBuffer; }
   private:
-    VkCommandBuffer m_CommandBuffer;
-    VkCommandPool   m_CommandPool;
+    VkCommandBuffer m_CommandBuffer = VK_NULL_HANDLE;
+    VkCommandPool   m_CommandPool   = VK_NULL_HANDLE;
   };
 
   class CommandPool: public HandledObject {
@@ -30,7 +32,7 @@ namespace mau {
   public:
     std::vector<Handle<CommandBuffer>> AllocateCommandBuffers(TUint32 count, VkCommandBufferLevel level = VK_COMMAND_BUFFER_LEVEL_PRIMARY);
   private:
-    VkDevice m_Device           = VK_NULL_HANDLE;
+    VkDevice      m_Device      = VK_NULL_HANDLE;
     VkCommandPool m_CommandPool = VK_NULL_HANDLE;
   };
 

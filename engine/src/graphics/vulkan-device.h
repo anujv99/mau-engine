@@ -6,6 +6,7 @@
 #include <engine/types.h>
 
 #include "common.h"
+#include "vulkan-queue.h"
 
 namespace mau {
 
@@ -22,9 +23,9 @@ namespace mau {
     inline TUint32 GetGraphicsQueueIndex() const noexcept { return m_GraphicsQueueIndex; }
     inline TUint32 GetTransferQueueIndex() const noexcept { return m_TransferQueueIndex; }
     inline TUint32 GetPresentQueueIndex() const noexcept { return m_PresentQueueIndex; }
-    inline VkQueue GetGraphicsQueue() const noexcept { return m_GraphicsQueue; }
-    inline VkQueue GetTransferQueue() const noexcept { return m_TransferQueue; }
-    inline VkQueue GetPresentQueue() const noexcept { return m_PresentQueue; }
+    inline Handle<VulkanQueue> GetGraphicsQueue() const noexcept { return m_GraphicsQueue; }
+    inline Handle<VulkanQueue> GetTransferQueue() const noexcept { return m_TransferQueue; }
+    inline Handle<PresentQueue> GetPresentQueue() const noexcept { return m_PresentQueue; }
   private:
     VkPhysicalDevice         m_PhysicalDevice         = VK_NULL_HANDLE;
     VkSurfaceKHR             m_Surface                = VK_NULL_HANDLE;
@@ -42,9 +43,9 @@ namespace mau {
     TUint32 m_TransferQueueIndex = UINT32_MAX;
     TUint32 m_PresentQueueIndex  = UINT32_MAX;
 
-    VkQueue m_GraphicsQueue      = VK_NULL_HANDLE;
-    VkQueue m_TransferQueue      = VK_NULL_HANDLE;
-    VkQueue m_PresentQueue       = VK_NULL_HANDLE;
+    Handle<VulkanQueue> m_GraphicsQueue = nullptr;
+    Handle<VulkanQueue> m_TransferQueue = nullptr;
+    Handle<PresentQueue> m_PresentQueue = nullptr;
   };
 
 }

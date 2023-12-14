@@ -4,7 +4,7 @@
 
 namespace mau {
 
-  Pipeline::Pipeline(Handle<VertexShader> vertex_shader, Handle<FragmentShader> fragment_shader, Handle<Renderpass> renderpass, const InputLayout& input_layout) {
+  Pipeline::Pipeline(Handle<VertexShader> vertex_shader, Handle<FragmentShader> fragment_shader, Handle<Renderpass> renderpass, const InputLayout& input_layout, Handle<PushConstantBase> push_constant) {
     VkPipelineShaderStageCreateInfo shader_stages[] = { vertex_shader->GetShaderStageInfo(), fragment_shader->GetShaderStageInfo() };
 
     // vertex input
@@ -107,6 +107,11 @@ namespace mau {
     depth_stencil_state.depthBoundsTestEnable                 = VK_FALSE;
     depth_stencil_state.stencilTestEnable                     = VK_FALSE;
 
+    VkPushConstantRange push_constant_range = {};
+    if (push_constant) {
+      push_constant_range = push_constant->GetRange();
+    }
+
     // create pipeline layout
     VkPipelineLayoutCreateInfo layout_create_info = {};
     layout_create_info.sType                      = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
@@ -114,8 +119,8 @@ namespace mau {
     layout_create_info.flags                      = 0u;
     layout_create_info.setLayoutCount             = 0u;
     layout_create_info.pSetLayouts                = nullptr;
-    layout_create_info.pushConstantRangeCount     = 0u;
-    layout_create_info.pPushConstantRanges        = nullptr;
+    layout_create_info.pushConstantRangeCount     = push_constant ? 1 : 0;
+    layout_create_info.pPushConstantRanges        = push_constant ? &push_constant_range : nullptr;
 
     VK_CALL(vkCreatePipelineLayout(VulkanState::Ref().GetDevice(), &layout_create_info, nullptr, &m_PipelineLayout));
 
