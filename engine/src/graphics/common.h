@@ -31,7 +31,7 @@
 
 namespace mau {
 
-  // manually loaded functions
-  extern PFN_vkCmdPushDescriptorSetKHR vkCmdPushDescriptorSetKHR;
+  using TextureHandle = TUint32;
+  using BufferHandle  = TUint32;
 
 }

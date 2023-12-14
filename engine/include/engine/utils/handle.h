@@ -108,10 +108,10 @@ namespace mau {
     }
   }
 
-  template <class T, typename... Args>
+  template <class T, class... Args>
   Handle<T> make_handle(Args... args) {
     T* ptr = nullptr;
-    MAU_ALLOC(ptr, T, args...);
+    MAU_ALLOC(ptr, T, std::forward<Args>(args)...);
     return ptr;
   }
 

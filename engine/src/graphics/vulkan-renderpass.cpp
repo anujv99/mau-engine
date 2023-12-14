@@ -110,4 +110,8 @@ namespace mau {
     vkCmdBeginRenderPass(cmd->Get(), &renderpass_begin_info, VK_SUBPASS_CONTENTS_INLINE);
   }
 
+  void Renderpass::End(Handle<CommandBuffer> cmd) {
+    vkCmdEndRenderPass(cmd->Get());
+  }
+
 }

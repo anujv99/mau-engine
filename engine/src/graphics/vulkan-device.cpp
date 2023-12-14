@@ -19,6 +19,23 @@ namespace mau {
 
     m_EnabledDeviceFeatures.samplerAnisotropy = VK_TRUE;
 
+    // enable descriptor indexing
+    // TODO: check before enabling
+    VkPhysicalDeviceDescriptorIndexingFeatures descriptor_indexing_features    = {};
+    descriptor_indexing_features.sType                                         = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_INDEXING_FEATURES;
+    descriptor_indexing_features.shaderSampledImageArrayNonUniformIndexing     = VK_TRUE;
+    descriptor_indexing_features.descriptorBindingSampledImageUpdateAfterBind  = VK_TRUE;
+    descriptor_indexing_features.shaderUniformBufferArrayNonUniformIndexing    = VK_TRUE;
+    descriptor_indexing_features.descriptorBindingUniformBufferUpdateAfterBind = VK_TRUE;
+    descriptor_indexing_features.shaderStorageBufferArrayNonUniformIndexing    = VK_TRUE;
+    descriptor_indexing_features.descriptorBindingStorageBufferUpdateAfterBind = VK_TRUE;
+    descriptor_indexing_features.descriptorBindingPartiallyBound               = VK_TRUE;
+
+    VkPhysicalDeviceFeatures2 physical_device_features_2 = {};
+    physical_device_features_2.sType                     = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
+    physical_device_features_2.pNext                     = &descriptor_indexing_features;
+    physical_device_features_2.features                  = m_EnabledDeviceFeatures;
+
     // get layers
     uint32_t physical_device_layer_count = 0u;
     VK_CALL(vkEnumerateDeviceLayerProperties(m_PhysicalDevice, &physical_device_layer_count, nullptr));
@@ -52,11 +69,6 @@ namespace mau {
       throw GraphicsException("failed to enable swapchain extension");
     }
 
-    // enable push descriptor extension
-    if (!EnableDeviceExtension(VK_KHR_PUSH_DESCRIPTOR_EXTENSION_NAME)) {
-      throw GraphicsException("failed to push descriptor extension");
-    }
-
     std::set<TUint32> queue_indices = { m_GraphicsQueueIndex, m_TransferQueueIndex, m_PresentQueueIndex };
 
     std::vector<VkDeviceQueueCreateInfo> queue_create_info(queue_indices.size());
@@ -78,7 +90,7 @@ namespace mau {
 
     VkDeviceCreateInfo device_create_info      = {};
     device_create_info.sType                   = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
-    device_create_info.pNext                   = nullptr;
+    device_create_info.pNext                   = &physical_device_features_2;
     device_create_info.flags                   = 0u;
     device_create_info.queueCreateInfoCount    = static_cast<uint32_t>(queue_create_info.size());
     device_create_info.pQueueCreateInfos       = queue_create_info.data();
@@ -86,7 +98,7 @@ namespace mau {
     device_create_info.ppEnabledLayerNames     = m_DeviceLayers.data();
     device_create_info.enabledExtensionCount   = static_cast<uint32_t>(m_DeviceExtensions.size());
     device_create_info.ppEnabledExtensionNames = m_DeviceExtensions.data();
-    device_create_info.pEnabledFeatures        = &m_EnabledDeviceFeatures;
+    device_create_info.pEnabledFeatures        = nullptr;
 
     VK_CALL_REASON(vkCreateDevice(m_PhysicalDevice, &device_create_info, nullptr, &m_Device), "failed to create logical device");
 

@@ -99,7 +99,7 @@ namespace mau {
     VK_CALL(vkGetSwapchainImagesKHR(m_Device, m_Swapchain, &swapchain_image_count, swapchain_images.data()));
 
     for (const auto& image : swapchain_images) {
-      m_SwapchainImages.push_back(make_handle<Image>(image, m_Format.format, VK_SAMPLE_COUNT_1_BIT));
+      m_SwapchainImages.push_back(make_handle<Image>(m_Extent.width, m_Extent.height, image, m_Format.format, VK_SAMPLE_COUNT_1_BIT));
     }
 
     // create image views

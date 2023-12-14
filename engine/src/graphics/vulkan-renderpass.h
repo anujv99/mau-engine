@@ -28,6 +28,7 @@ namespace mau {
 
     void Build(VkPipelineBindPoint bind_point, VkPipelineStageFlags src_stage_mask, VkPipelineStageFlags dst_stage_mask, VkAccessFlags src_access_mask, VkAccessFlags dst_access_mask);
     void Begin(Handle<CommandBuffer> cmd, Handle<Framebuffer> framebuffer, VkRect2D area);
+    void End(Handle<CommandBuffer> cmd);
 
     inline VkRenderPass Get() const { return m_Renderpass; }
   private:

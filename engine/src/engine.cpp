@@ -7,9 +7,13 @@
 #include <engine/profiler.h>
 
 #include "renderer/renderer.h"
-#include "graphics/vulkan-image.h"
+#include "graphics/vulkan-bindless.h"
+#include "renderer/rendergraph/graph.h"
+#include "renderer/rendergraph/passes/lambertian-pass.h"
 
 namespace mau {
+
+  Handle<RenderGraph> graph = nullptr;
 
   // temp
   void imgui_fps_overlay(uint32_t framerate) {
@@ -66,11 +70,19 @@ namespace mau {
     VulkanState::Ref().SetValidationSeverity(config.ValidationSeverity);
     VulkanState::Ref().Init(config.ApplicationName, m_Window.getRawWindow());
 
+    VulkanBindless::Create();
+
     Renderer::Create(m_Window.getRawWindow());
+
+    graph = make_handle<RenderGraph>();
+    graph->AddPass(make_handle<LambertianPass>());
+    graph->Build();
   };
 
   Engine::~Engine() {
+    graph = nullptr;
     Renderer::Destroy();
+    VulkanBindless::Destroy();
     VulkanState::Destroy();
   };
 

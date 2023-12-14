@@ -190,9 +190,6 @@ namespace mau {
     // create device
     m_Device = make_handle<VulkanDevice>(m_PhysicalDevice, m_Surface);
 
-    // load functions
-    vkCmdPushDescriptorSetKHR = load_device_function<PFN_vkCmdPushDescriptorSetKHR>(m_Device->GetDevice(), "vkCmdPushDescriptorSetKHR");
-
     // create memory allocator
     CreateVulkanMemoryAllocator();
 

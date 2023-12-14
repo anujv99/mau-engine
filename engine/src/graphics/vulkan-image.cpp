@@ -113,7 +113,7 @@ namespace mau {
   }
 
   Image::Image(TUint32 width, TUint32 height, TUint32 depth, TUint32 mip_levels, TUint32 array_layers, VkImageType type, VkSampleCountFlagBits samples, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage):
-    m_Format(format), m_SampleCount(samples) {
+    m_Format(format), m_SampleCount(samples), m_Width(width), m_Height(height) {
     VmaAllocationCreateInfo alloc_info = {};
     alloc_info.usage                   = VMA_MEMORY_USAGE_AUTO;
     alloc_info.flags                   = VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT;
@@ -138,7 +138,8 @@ namespace mau {
     VK_CALL(vmaCreateImage(VulkanState::Ref().GetVulkanMemoryAllocator(), &create_info, &alloc_info, &m_Image, &m_Allocation, nullptr));
   }
 
-  Image::Image(VkImage image, VkFormat format, VkSampleCountFlagBits samples): m_Image(image), m_Format(format), m_SampleCount(samples) {
+  Image::Image(TUint32 width, TUint32 height, VkImage image, VkFormat format, VkSampleCountFlagBits samples):
+    m_Image(image), m_Format(format), m_SampleCount(samples), m_Width(width), m_Height(height) {
     ASSERT(m_Image != VK_NULL_HANDLE);
   }
 

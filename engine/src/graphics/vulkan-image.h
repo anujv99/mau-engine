@@ -11,17 +11,21 @@ namespace mau {
   class Image: public HandledObject {
   public:
     Image(TUint32 width, TUint32 height, TUint32 depth, TUint32 mip_levels, TUint32 array_layers, VkImageType type, VkSampleCountFlagBits samples, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage);
-    Image(VkImage image, VkFormat format, VkSampleCountFlagBits samples);
+    Image(TUint32 width, TUint32 height, VkImage image, VkFormat format, VkSampleCountFlagBits samples);
     ~Image();
   public:
     inline VkImage GetImage() const { return m_Image; }
     inline VkFormat GetFormat() const { return m_Format; }
     inline VkSampleCountFlagBits GetSamples() const { return m_SampleCount; }
+    inline TUint32 GetWidth() const { return m_Width; }
+    inline TUint32 GetHeight() const { return m_Height; }
   private:
     VkImage               m_Image       = VK_NULL_HANDLE;
     VmaAllocation         m_Allocation  = VK_NULL_HANDLE;
     VkFormat              m_Format      = VK_FORMAT_UNDEFINED;
     VkSampleCountFlagBits m_SampleCount = VK_SAMPLE_COUNT_FLAG_BITS_MAX_ENUM;
+    TUint32               m_Width       = 0u;
+    TUint32               m_Height      = 0u;
   };
 
   // image view
