@@ -13,6 +13,7 @@ namespace mau {
     case mau::BindlessDescriptorType::MATERIAL:               return VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
     case mau::BindlessDescriptorType::STORAGE_IMAGE:          return VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
     case mau::BindlessDescriptorType::ACCELERATION_STRUCTURE: return VK_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_KHR;
+    case mau::BindlessDescriptorType::RT_OBJECT_DESC:         return VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
     default:
       break;
     }
@@ -29,6 +30,7 @@ namespace mau {
       { BindlessDescriptorType::MATERIAL, 1 },
       { BindlessDescriptorType::STORAGE_IMAGE, m_DescriptorCount },
       { BindlessDescriptorType::ACCELERATION_STRUCTURE, m_DescriptorCount },
+      { BindlessDescriptorType::RT_OBJECT_DESC, 1 },
     };
 
     // create descriptor pool
@@ -102,6 +104,7 @@ namespace mau {
     }
 
     SetupMaterialBuffer();
+    SetupRTObjectBuffer();
   }
 
   VulkanBindless::~VulkanBindless() {
@@ -201,6 +204,12 @@ namespace mau {
     return handle;
   }
 
+  RTObjectHandle VulkanBindless::AddRTObject(const RTObjectDesc& desc) {
+    RTObjectHandle handle = m_CurrentRTObjectDescIndex++;
+    m_RTObjectDesc->UpdateIndex(desc, handle);
+    return handle;
+  }
+
   BufferHandle VulkanBindless::AddBufferInternal(const Handle<UniformBuffer>& buffer, BindlessDescriptorType type, TUint32 array_index) {
     const TUint32 buffer_set_index = m_DescriptorIndexMap[type];
     const VkDescriptorSet buffer_set = m_DescriptorSets[buffer_set_index];
@@ -227,6 +236,11 @@ namespace mau {
   void VulkanBindless::SetupMaterialBuffer() {
     m_MaterialBuffer = make_handle<StructuredUniformBuffer<GPUMaterial>>(m_DescriptorCount);
     AddBufferInternal(m_MaterialBuffer, BindlessDescriptorType::MATERIAL, 0);
+  }
+
+  void VulkanBindless::SetupRTObjectBuffer() {
+    m_RTObjectDesc = make_handle<StructuredUniformBuffer<RTObjectDesc>>(m_DescriptorCount);
+    AddBufferInternal(m_RTObjectDesc, BindlessDescriptorType::RT_OBJECT_DESC, 0);
   }
 
 }

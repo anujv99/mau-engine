@@ -45,12 +45,22 @@ namespace mau {
   using MaterialHandle              = TUint32;
   using ImageHandle                 = TUint32;
   using AccelerationStructureHandle = TUint32;
+  using BufferAddress               = TUint64;
+  using RTObjectHandle              = TUint32; // 24 bit only
 
   struct GPUMaterial {
     TextureHandle Diffuse = UINT32_MAX;
     TextureHandle Normal  = UINT32_MAX;
 
     TUint32 padding[2];
+  };
+
+  struct RTObjectDesc {
+    BufferAddress  VertexBuffer = UINT64_MAX; // 64 bit
+    BufferAddress  IndexBuffer  = UINT64_MAX; // 64 bit
+    MaterialHandle Material     = UINT32_MAX; // 32 bit
+
+    TUint32 padding[3];
   };
 
   template <class integral>

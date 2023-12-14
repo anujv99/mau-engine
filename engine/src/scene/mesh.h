@@ -18,13 +18,15 @@ namespace mau {
     inline Handle<IndexBuffer> GetIndexBuffer() const { return m_Indices; }
     inline TUint32 GetIndexCount() const { return m_IndexCount; }
     inline Handle<Material> GetMaterial() const { return m_Material; }
-    inline Handle<AccelerationBuffer> GetAccel() const { return m_Accel; }
+    inline Handle<BottomLevelAS> GetAccel() const { return m_Accel; }
+    inline RTObjectHandle GetRTObjectHandle() const { return m_RTDescHandle; }
   private:
-    Handle<VertexBuffer>       m_Vertices   = nullptr;
-    Handle<IndexBuffer>        m_Indices    = nullptr;
-    Handle<AccelerationBuffer> m_Accel      = nullptr;
-    Handle<Material>           m_Material   = nullptr;
-    TUint32                    m_IndexCount = 0u;
+    Handle<VertexBuffer>  m_Vertices     = nullptr;
+    Handle<IndexBuffer>   m_Indices      = nullptr;
+    Handle<BottomLevelAS> m_Accel        = nullptr;
+    Handle<Material>      m_Material     = nullptr;
+    TUint32               m_IndexCount   = 0u;
+    RTObjectHandle        m_RTDescHandle = 0u;
   };
 
   class Mesh: public HandledObject {
@@ -33,8 +35,10 @@ namespace mau {
     ~Mesh();
   public:
     inline const Vector<SubMesh>& GetSubMeshes() const { return m_SubMeshes; }
+    inline Handle<AccelerationBuffer> GetAccel() const { return m_TLAS; }
   private:
-    Vector<SubMesh> m_SubMeshes = {};
+    Vector<SubMesh>            m_SubMeshes = {};
+    Handle<AccelerationBuffer> m_TLAS      = nullptr;
   };
 
 }

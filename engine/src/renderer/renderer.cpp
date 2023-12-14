@@ -236,9 +236,7 @@ namespace mau {
         MeshComponent& mesh = entity.Get<MeshComponent>();
 
         glm::mat4 model = getModelMatrix(transform);
-        for (const auto& submesh : mesh.MeshObject->GetSubMeshes()) {
-          submesh.GetAccel()->UpdateTransform(model, cmd);
-        }
+        mesh.MeshObject->GetAccel()->UpdateTransform(model, cmd);
       });
 
       RTSBTRegion region = m_RTPipeline->GetSBTRegion();

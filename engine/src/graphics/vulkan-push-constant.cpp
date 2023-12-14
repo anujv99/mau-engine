@@ -34,7 +34,7 @@ namespace mau {
   }
 
   void PushConstantBase::Bind(Handle<CommandBuffer> cmd, Handle<Pipeline> pipeline) const {
-    vkCmdPushConstants(cmd->Get(), pipeline->GetLayout(), VK_SHADER_STAGE_VERTEX_BIT, 0u, m_Size, m_Data);
+    vkCmdPushConstants(cmd->Get(), pipeline->GetLayout(), VK_SHADER_STAGE_ALL, 0u, m_Size, m_Data);
   }
 
   void PushConstantBase::Bind(Handle<CommandBuffer> cmd, Handle<RTPipeline> pipeline) const {

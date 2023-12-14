@@ -150,24 +150,24 @@ namespace mau {
     return create_info.Vertices && create_info.Indices;
   }
 
-  AccelerationBuffer::AccelerationBuffer(const AccelerationBufferCreateInfo& create_info) {
+  BottomLevelAS::BottomLevelAS(const AccelerationBufferCreateInfo& create_info) {
     ASSERT(validate_acceleration_buffer_create_info(create_info));
+
+    // just to keep references so they don't get destroyed
+    m_VertexBuffer = create_info.Vertices;
+    m_IndexBufffer = create_info.Indices;
+
+    m_CustomIndex = create_info.CustomIndex;
 
     // build bottom level accel
     BuildBLAS(create_info);
-
-    // build top level accel
-    BuildTLAS();
   }
 
-  AccelerationBuffer::~AccelerationBuffer() {
+  BottomLevelAS::~BottomLevelAS() {
     vkDestroyAccelerationStructureKHR(VulkanState::Ref().GetDevice(), m_BLAS, nullptr);
-    vkDestroyAccelerationStructureKHR(VulkanState::Ref().GetDevice(), m_TLAS, nullptr);
-    m_BLASBuffer = nullptr;
-    m_TLASBuffer = nullptr;
   }
 
-  void AccelerationBuffer::BuildBLAS(const AccelerationBufferCreateInfo& create_info) {
+  void BottomLevelAS::BuildBLAS(const AccelerationBufferCreateInfo& create_info) {
     const TUint32 max_primitive_count = create_info.IndexCount / 3u;
 
     VkDeviceOrHostAddressConstKHR vertex_buffer_address = {
@@ -263,8 +263,24 @@ namespace mau {
     graphics_queue->WaitIdle();
   }
 
+  AccelerationBuffer::AccelerationBuffer(const Vector<Handle<BottomLevelAS>>& blases) {
+    m_BLASes = blases;
+
+    // build top level accel
+    BuildTLAS();
+  }
+
+  AccelerationBuffer::~AccelerationBuffer() {
+    vkDestroyAccelerationStructureKHR(VulkanState::Ref().GetDevice(), m_TLAS, nullptr);
+    m_TLASBuffer = nullptr;
+  }
+
   void AccelerationBuffer::BuildTLAS(Handle<CommandBuffer> in_cmd, bool update, glm::mat4 transform) {
-    const TUint32 max_primitive_count = 1u;
+    const TUint32 max_primitive_count = static_cast<TUint32>(m_BLASes.size());
+
+    if (m_InstanceBuffer == nullptr) {
+      m_InstanceBuffer = make_handle<Buffer>(sizeof(VkAccelerationStructureInstanceKHR) * max_primitive_count, VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT_KHR, VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT);
+    }
 
     VkTransformMatrixKHR transform_matrix = {
       transform[0][0], transform[1][0], transform[2][0], transform[3][0],
@@ -272,28 +288,33 @@ namespace mau {
       transform[0][2], transform[1][2], transform[2][2], transform[3][2],
     };
 
-    VkAccelerationStructureDeviceAddressInfoKHR blas_address_info = {
-      .sType                 = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_DEVICE_ADDRESS_INFO_KHR,
-      .pNext                 = nullptr,
-      .accelerationStructure = m_BLAS,
-    };
-    VkDeviceAddress blas_address = vkGetAccelerationStructureDeviceAddressKHR(VulkanState::Ref().GetDevice(), &blas_address_info);
+    Vector<VkAccelerationStructureInstanceKHR> accel_instances = {};
 
-    VkAccelerationStructureInstanceKHR tlas_instance = {
-      .transform                              = transform_matrix,
-      .instanceCustomIndex                    = 0u,
-      .mask                                   = 0xff,
-      .instanceShaderBindingTableRecordOffset = 0u,
-      .flags                                  = VK_GEOMETRY_INSTANCE_TRIANGLE_FACING_CULL_DISABLE_BIT_KHR,
-      .accelerationStructureReference         = blas_address,
-    };
+    for (TUint32 i = 0; i < max_primitive_count; i++) {
+      Handle<BottomLevelAS> blas = m_BLASes[i];
 
-    if (m_InstanceBuffer == nullptr) {
-      m_InstanceBuffer = make_handle<Buffer>(sizeof(tlas_instance), VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT_KHR, VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT);
+      VkAccelerationStructureDeviceAddressInfoKHR blas_address_info = {
+        .sType                 = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_DEVICE_ADDRESS_INFO_KHR,
+        .pNext                 = nullptr,
+        .accelerationStructure = blas->GetBLAS(),
+      };
+
+      VkDeviceAddress blas_address = vkGetAccelerationStructureDeviceAddressKHR(VulkanState::Ref().GetDevice(), &blas_address_info);
+
+      VkAccelerationStructureInstanceKHR tlas_instance = {
+        .transform                              = transform_matrix,
+        .instanceCustomIndex                    = blas->GetCustomIndex(),
+        .mask                                   = 0xff,
+        .instanceShaderBindingTableRecordOffset = 0u,
+        .flags                                  = VK_GEOMETRY_INSTANCE_TRIANGLE_FACING_CULL_DISABLE_BIT_KHR,
+        .accelerationStructureReference         = blas_address,
+      };
+
+      accel_instances.push_back(tlas_instance);
     }
 
     void* instance_buffer_mem = m_InstanceBuffer->Map();
-    memcpy(instance_buffer_mem, &tlas_instance, sizeof(tlas_instance));
+    memcpy(instance_buffer_mem, accel_instances.data(), accel_instances.size() * sizeof(accel_instances[0]));
     m_InstanceBuffer->UnMap();
 
     VkDeviceOrHostAddressConstKHR instance_buffer_address = {
@@ -348,13 +369,13 @@ namespace mau {
     if (update == false) {
       m_TLASBuffer = make_handle<Buffer>(tlas_size_info.accelerationStructureSize, VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_STORAGE_BIT_KHR, VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT);
       VkAccelerationStructureCreateInfoKHR tlas_create_info = {
-        .sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_CREATE_INFO_KHR,
-        .pNext = nullptr,
-        .createFlags = 0u,
-        .buffer = m_TLASBuffer->Get(),
-        .offset = 0ui64,
-        .size = tlas_size_info.accelerationStructureSize,
-        .type = VK_ACCELERATION_STRUCTURE_TYPE_TOP_LEVEL_KHR,
+        .sType         = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_CREATE_INFO_KHR,
+        .pNext         = nullptr,
+        .createFlags   = 0u,
+        .buffer        = m_TLASBuffer->Get(),
+        .offset        = 0ui64,
+        .size          = tlas_size_info.accelerationStructureSize,
+        .type          = VK_ACCELERATION_STRUCTURE_TYPE_TOP_LEVEL_KHR,
         .deviceAddress = 0ui64,
       };
 
@@ -365,22 +386,18 @@ namespace mau {
     tlas_build_info.dstAccelerationStructure  = m_TLAS;
     tlas_build_info.scratchData.deviceAddress = scrach_address;
 
-    VkAccelerationStructureBuildRangeInfoKHR build_offset = { 1u, 0u, 0u, 0u };
+    VkAccelerationStructureBuildRangeInfoKHR build_offset = { max_primitive_count, 0u, 0u, 0u };
     VkAccelerationStructureBuildRangeInfoKHR* range_info[] = { &build_offset };
 
-    Handle<CommandBuffer> cmd = in_cmd ? in_cmd : VulkanState::Ref().GetCommandPool(VK_QUEUE_GRAPHICS_BIT)->AllocateCommandBuffers(1)[0];
+    Handle<CommandBuffer> cmd = VulkanState::Ref().GetCommandPool(VK_QUEUE_GRAPHICS_BIT)->AllocateCommandBuffers(1)[0];
 
-    if (in_cmd == nullptr) {
-      cmd->Begin();
-      vkCmdBuildAccelerationStructuresKHR(cmd->Get(), 1u, &tlas_build_info, range_info);
-      cmd->End();
+    cmd->Begin();
+    vkCmdBuildAccelerationStructuresKHR(cmd->Get(), 1u, &tlas_build_info, range_info);
+    cmd->End();
 
-      Handle<VulkanQueue> graphics_queue = VulkanState::Ref().GetDeviceHandle()->GetGraphicsQueue();
-      graphics_queue->Submit(cmd);
-      graphics_queue->WaitIdle();
-    } else {
-      vkCmdBuildAccelerationStructuresKHR(cmd->Get(), 1u, &tlas_build_info, range_info);
-    }
+    Handle<VulkanQueue> graphics_queue = VulkanState::Ref().GetDeviceHandle()->GetGraphicsQueue();
+    graphics_queue->Submit(cmd);
+    graphics_queue->WaitIdle();
   }
 
   void AccelerationBuffer::UpdateTransform(const glm::mat4& transform, Handle<CommandBuffer> cmd) {

@@ -18,6 +18,7 @@ namespace mau {
     memset(&m_EnabledDeviceFeatures, 0, sizeof(m_EnabledDeviceFeatures));
 
     m_EnabledDeviceFeatures.samplerAnisotropy = VK_TRUE;
+    m_EnabledDeviceFeatures.shaderInt64       = VK_TRUE;
 
     // TODO: check before enabling
     VkPhysicalDeviceAccelerationStructureFeaturesKHR accel_features = {};

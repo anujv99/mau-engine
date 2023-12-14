@@ -72,12 +72,16 @@ namespace mau {
 
     Renderer::Create(m_Window.getRawWindow());
 
-    String model_path = GetAssetFolderPath() + "assets/models/BoomBoxWithAxes/glTF/BoomBoxWithAxes.gltf";
+    String model_path = GetAssetFolderPath() + "assets/models/ABeautifulGame/glTF/ABeautifulGame.gltf";
 
     Handle<Mesh> mesh = make_handle<Mesh>(model_path);
 
     m_Scene = make_handle<Scene>();
     Entity bag = m_Scene->CreateEntity("Bag");
+
+    // TransformComponent& transform = bag.Get<TransformComponent>();
+    // transform.Position = glm::vec3(0.0f, -1.31f, 4.46f);
+    // transform.Rotation = glm::vec3(0.0f, glm::radians(180.0f), 0.0f);
 
     bag.Add<MeshComponent>(mesh);
   };

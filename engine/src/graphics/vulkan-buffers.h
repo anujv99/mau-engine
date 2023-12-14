@@ -60,26 +60,42 @@ namespace mau {
     TUint32              PositionOffset = 0u;
     TUint32              VertexCount    = 0u;
     TUint32              IndexCount     = 0u;
+    TUint32              CustomIndex    = 0u;
   };
 
-  class AccelerationBuffer : public HandledObject {
+  class BottomLevelAS: public HandledObject {
   public:
-    AccelerationBuffer(const AccelerationBufferCreateInfo& create_info);
+    BottomLevelAS(const AccelerationBufferCreateInfo& create_info);
+    ~BottomLevelAS();
+  public:
+    inline VkAccelerationStructureKHR GetBLAS() const { return m_BLAS; }
+    inline TUint32 GetCustomIndex() const { return m_CustomIndex; }
+  private:
+    void BuildBLAS(const AccelerationBufferCreateInfo& create_info);
+  private:
+    Handle<VertexBuffer>       m_VertexBuffer      = nullptr;
+    Handle<IndexBuffer>        m_IndexBufffer      = nullptr;
+    Handle<Buffer>             m_BLASBuffer        = nullptr;
+    VkAccelerationStructureKHR m_BLAS              = VK_NULL_HANDLE;
+    TUint32                    m_CustomIndex       = 0u;
+  };
+
+  class AccelerationBuffer: public HandledObject {
+  public:
+    AccelerationBuffer(const Vector<Handle<BottomLevelAS>>& blases);
     ~AccelerationBuffer();
   public:
     void UpdateTransform(const glm::mat4& transform, Handle<CommandBuffer> cmd);
   public:
     inline VkAccelerationStructureKHR GetTLAS() const { return m_TLAS; }
   private:
-    void BuildBLAS(const AccelerationBufferCreateInfo& create_info);
     void BuildTLAS(Handle<CommandBuffer> cmd = nullptr, bool update = false, glm::mat4 transform = glm::mat4(1.0f));
   private:
-    Handle<Buffer>             m_BLASBuffer        = nullptr;
-    VkAccelerationStructureKHR m_BLAS              = VK_NULL_HANDLE;
-    Handle<Buffer>             m_TLASBuffer        = nullptr;
-    Handle<Buffer>             m_InstanceBuffer    = nullptr;
-    Handle<Buffer>             m_TLASScratchBuffer = nullptr;
-    VkAccelerationStructureKHR m_TLAS              = VK_NULL_HANDLE;
+    Vector<Handle<BottomLevelAS>> m_BLASes            = {};
+    Handle<Buffer>                m_TLASBuffer        = nullptr;
+    Handle<Buffer>                m_InstanceBuffer    = nullptr;
+    Handle<Buffer>                m_TLASScratchBuffer = nullptr;
+    VkAccelerationStructureKHR    m_TLAS              = VK_NULL_HANDLE;
   };
 
   // templated uniform buffer

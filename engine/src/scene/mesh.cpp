@@ -8,6 +8,7 @@
 #include <assimp/postprocess.h>
 #include <glm/glm.hpp>
 #include "graphics/vulkan-bindless.h"
+#include "graphics/vulkan-features.h"
 
 namespace mau {
 
@@ -19,7 +20,18 @@ namespace mau {
 
   SubMesh::SubMesh(Handle<VertexBuffer> vertex_buffer, Handle<IndexBuffer> index_buffer, TUint32 index_count, Handle<Material> material):
     m_Vertices(vertex_buffer), m_Indices(index_buffer), m_IndexCount(index_count), m_Material(material) {
-    
+
+    if (!VulkanFeatures::IsRtEnabled()) return;
+
+    RTObjectDesc desc = {
+      .VertexBuffer = vertex_buffer->GetDeviceAddress(),
+      .IndexBuffer  = index_buffer->GetDeviceAddress(),
+      .Material     = material->GetMaterialHandle(),
+
+      .padding      = { 0, 0, 0 },
+    };
+    m_RTDescHandle = VulkanBindless::Ref().AddRTObject(desc);
+
     AccelerationBufferCreateInfo create_info = {
       .Vertices       = vertex_buffer,
       .Indices        = index_buffer,
@@ -27,15 +39,15 @@ namespace mau {
       .PositionOffset = offsetof(Vertex, pos),
       .VertexCount    = static_cast<TUint32>(vertex_buffer->GetSize() / sizeof(Vertex)),
       .IndexCount     = index_count,
+      .CustomIndex    = m_RTDescHandle,
     };
 
-    m_Accel = make_handle<AccelerationBuffer>(create_info);
-    VulkanBindless::Ref().AddAccelerationStructure(m_Accel);
+    m_Accel = make_handle<BottomLevelAS>(create_info);
   }
 
   Mesh::Mesh(const String& filename) {
     Assimp::Importer importer;
-    const aiScene* scene = importer.ReadFile(filename, aiProcess_Triangulate | aiProcess_PreTransformVertices);
+    const aiScene* scene = importer.ReadFile(filename, aiProcess_Triangulate | aiProcess_PreTransformVertices | aiProcess_RemoveRedundantMaterials);
 
     if (scene == nullptr) {
       LOG_ERROR("failed to load mesh %s [reason: %s]", filename.c_str(), importer.GetErrorString());
@@ -101,6 +113,8 @@ namespace mau {
 
     process_node(scene->mRootNode);
 
+    Vector<Handle<BottomLevelAS>> blases = {};
+
     for (const auto& [material_index, vertex_data] : submeshes) {
       const Vector<Vertex>& vertices = vertex_data.vertices;
       const Vector<TUint32>& indices = vertex_data.indices;
@@ -134,9 +148,13 @@ namespace mau {
 
       SubMesh submesh(vertex_buffer, index_buffer, index_count, material);
       m_SubMeshes.push_back(submesh);
+      blases.push_back(submesh.GetAccel());
     }
 
-    int x = 0;
+    if (VulkanFeatures::IsRtEnabled()) {
+      m_TLAS = make_handle<AccelerationBuffer>(blases);
+      VulkanBindless::Ref().AddAccelerationStructure(m_TLAS);
+    }
   }
 
   Mesh::~Mesh() {

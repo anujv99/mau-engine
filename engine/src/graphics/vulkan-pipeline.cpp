@@ -231,7 +231,7 @@ namespace mau {
       .pStages                      = shader_stages,
       .groupCount                   = ARRAY_SIZE(shader_groups),
       .pGroups                      = shader_groups,
-      .maxPipelineRayRecursionDepth = 1,
+      .maxPipelineRayRecursionDepth = 6u,
       .pLibraryInfo                 = nullptr,
       .pLibraryInterface            = nullptr,
       .pDynamicState                = nullptr,
