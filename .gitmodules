@@ -1,0 +1,3 @@
+[submodule "engine/assets/assets"]
+	path = engine/assets/assets
+	url = https://gitlab.com/anujv/assets
