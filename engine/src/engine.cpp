@@ -75,12 +75,11 @@ namespace mau {
       MAU_FRAME_MARK();
       MAU_PROFILE_SCOPE("Engine::Loop");
 
-      // set updated to false
-      m_Scene->Each([](Entity entity) -> void {
-        TransformComponent &transform = entity.Get<TransformComponent>();
-        if (transform.Updated)
-          transform.Updated = false;
-      });
+      auto current_time = std::chrono::high_resolution_clock::now();
+      auto dt = std::chrono::duration_cast<std::chrono::nanoseconds>(current_time - last_time);
+      delta_time = (float)dt.count() * (float)1e-9;
+
+      OnUpdate(delta_time);
 
       Renderer::Ref().StartFrame();
 
@@ -94,9 +93,6 @@ namespace mau {
       m_Window.PollEvents();
 
       // framerate
-      auto current_time = std::chrono::high_resolution_clock::now();
-      auto dt = std::chrono::duration_cast<std::chrono::nanoseconds>(current_time - last_time);
-      delta_time = (float)dt.count() * (float)1e-9;
       last_time = current_time;
       passed_time += delta_time;
       frame_counter++;
@@ -112,6 +108,11 @@ namespace mau {
   }
 
   void Engine::SetVulkanValidationLogSeverity(VulkanValidationLogSeverity severity, bool enabled) noexcept { VulkanState::Ref().SetValidationSeverity(severity, enabled); }
+
+  void Engine::PushLayer(Handle<Layer> layer) noexcept { m_LayerStack.PushLayer(layer); }
+  void Engine::PushOverlay(Handle<Layer> overlay) noexcept { m_OverlayStack.PushLayer(overlay); }
+  void Engine::PopLayer(const String &name) noexcept { m_LayerStack.PopLayer(name); }
+  void Engine::PopOverlay(const String &name) noexcept { m_OverlayStack.PopLayer(name); }
 
   void Engine::ImGuiSceneList() {
     static entt::entity selected_entity;
@@ -144,6 +145,22 @@ namespace mau {
   void Engine::OnEvent(Event &e) {
     ImGuiContext::Ref().OnEvent(e);
     Input::OnEvent(e);
+
+    m_OverlayStack.OnEvent(e);
+    m_LayerStack.OnEvent(e);
+  }
+
+  void Engine::OnUpdate(TFloat32 dt) {
+    // set updated to false
+    m_Scene->Each([](Entity entity) -> void {
+      TransformComponent &transform = entity.Get<TransformComponent>();
+      if (transform.Updated)
+        transform.Updated = false;
+    });
+
+    // update layers
+    m_OverlayStack.OnUpdate(dt);
+    m_LayerStack.OnUpdate(dt);
   }
 
   std::string GetAssetFolderPath() { return MAU_ASSET_FOLDER; }

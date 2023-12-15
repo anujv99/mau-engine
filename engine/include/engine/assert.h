@@ -6,7 +6,9 @@
 #define ASSERT(condition)                                                                                                                                                                              \
   {                                                                                                                                                                                                    \
     if (!(condition)) {                                                                                                                                                                                \
-      LOG_FATAL("assertion failed: " #condition);                                                                                                                                                      \
+      LOG_FATAL("[" __FILE__ " : %d]"                                                                                                                                                                  \
+                "assertion failed: " #condition,                                                                                                                                                       \
+                __LINE__);                                                                                                                                                                             \
       std::abort();                                                                                                                                                                                    \
     }                                                                                                                                                                                                  \
   }
