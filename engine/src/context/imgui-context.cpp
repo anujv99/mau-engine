@@ -4,6 +4,8 @@
 #include <backends/imgui_impl_glfw.h>
 #include <backends/imgui_impl_vulkan.cpp>
 #include <backends/imgui_impl_glfw.cpp>
+#include <engine/events/key-events.h>
+#include <engine/events/mouse-events.h>
 
 namespace mau {
 
@@ -78,7 +80,15 @@ namespace mau {
   }
 
   void ImGuiContext::OnEvent(Event& event) {
-    if (m_BlockEvents) event.Handle();
+    auto handle_event = [](Event &e) -> void {
+      e.Handle();
+    };
+
+    if (m_BlockEvents) {
+      EventDispatcher dispatcher(event);
+      dispatcher.Dispatch<MousePressEvent>(handle_event);
+      dispatcher.Dispatch<KeyPressEvent>(handle_event);
+    }
   }
 
   void ImGuiContext::ImGuiDockspace() {

@@ -19,8 +19,7 @@
 namespace mau
 {
 
-  glm::mat4 getModelMatrix(const TransformComponent &transform)
-  {
+  glm::mat4 getModelMatrix(const TransformComponent &transform) {
     glm::mat4 model = glm::translate(glm::mat4(1.0f), transform.Position);
     model = glm::rotate(model, transform.Rotation.x, glm::vec3(1.0f, 0.0f, 0.0f));
     model = glm::rotate(model, transform.Rotation.y, glm::vec3(0.0f, 1.0f, 0.0f));
@@ -252,15 +251,15 @@ namespace mau
     const TUint32 current_frame = m_ClearAccumFlag[frame_index] ? 0 : m_PushConstant->GetData().current_frame + 1;
     m_ClearAccumFlag[frame_index] = false;
     m_PushConstant->Update({
-        .color = m_PushConstant->GetData().color,
-        .mvp = mvp,
-        .material_index = 0u,
-        .storage_image_index = sink_color_handles[frame_index],
-        .camera_buffer_index = m_CameraBufferHandle,
-        .current_frame = current_frame,
-        .accum_image_index = sink_accum_handles[frame_index],
-        .dir_light_color = m_PushConstant->GetData().dir_light_color,
-        .dir_light_direction = m_PushConstant->GetData().dir_light_direction,
+      .color = m_PushConstant->GetData().color,
+      .mvp = mvp,
+      .material_index = 0u,
+      .storage_image_index = sink_color_handles[frame_index],
+      .camera_buffer_index = m_CameraBufferHandle,
+      .current_frame = current_frame,
+      .accum_image_index = sink_accum_handles[frame_index],
+      .dir_light_color = m_PushConstant->GetData().dir_light_color,
+      .dir_light_direction = m_PushConstant->GetData().dir_light_direction,
     });
     m_PushConstant->Bind(cmd, m_RTPipeline);
 
