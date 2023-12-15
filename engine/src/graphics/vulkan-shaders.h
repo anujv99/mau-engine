@@ -9,8 +9,7 @@ namespace mau {
 
   class Shader: public HandledObject {
   public:
-    Shader(std::string_view shader_path, shaderc_shader_kind kind,
-           VkShaderStageFlagBits stage);
+    Shader(std::string_view shader_path, shaderc_shader_kind kind, VkShaderStageFlagBits stage);
     virtual ~Shader();
 
   public:

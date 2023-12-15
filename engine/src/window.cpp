@@ -10,23 +10,20 @@
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
 
-#define GLFW_CALL(call, reason)                                                \
-  {                                                                            \
-    int ret = call;                                                            \
-    if (ret != GLFW_TRUE) {                                                    \
-      throw WindowException(reason);                                           \
-    }                                                                          \
+#define GLFW_CALL(call, reason)                                                                                                                                                                        \
+  {                                                                                                                                                                                                    \
+    int ret = call;                                                                                                                                                                                    \
+    if (ret != GLFW_TRUE) {                                                                                                                                                                            \
+      throw WindowException(reason);                                                                                                                                                                   \
+    }                                                                                                                                                                                                  \
   }
 
 namespace mau {
 
-  void glfw_error_callback(int error, const char *description) {
-    LOG_ERROR("glfw error: %s", description);
-  }
+  void glfw_error_callback(int error, const char *description) { LOG_ERROR("glfw error: %s", description); }
 
   EventEmitFunction get_event_emit_func(GLFWwindow *window) {
-    Window *user_pointer =
-        reinterpret_cast<Window *>(glfwGetWindowUserPointer(window));
+    Window *user_pointer = reinterpret_cast<Window *>(glfwGetWindowUserPointer(window));
     if (!user_pointer) {
       LOG_ERROR("failed to get window user pointer");
       return nullptr;
@@ -41,8 +38,7 @@ namespace mau {
     return func;
   }
 
-  void glfw_key_callback(GLFWwindow *window, int key, int scancode, int action,
-                         int mods) {
+  void glfw_key_callback(GLFWwindow *window, int key, int scancode, int action, int mods) {
     EventEmitFunction func = get_event_emit_func(window);
     if (!func)
       return;
@@ -65,8 +61,7 @@ namespace mau {
     }
   }
 
-  void glfw_mouse_callback(GLFWwindow *window, int button, int action,
-                           int mods) {
+  void glfw_mouse_callback(GLFWwindow *window, int button, int action, int mods) {
     EventEmitFunction func = get_event_emit_func(window);
     if (!func)
       return;
@@ -94,14 +89,12 @@ namespace mau {
     func(event);
   }
 
-  void glfw_mouse_scroll_callback(GLFWwindow *window, double xoffset,
-                                  double yoffset) {
+  void glfw_mouse_scroll_callback(GLFWwindow *window, double xoffset, double yoffset) {
     EventEmitFunction func = get_event_emit_func(window);
     if (!func)
       return;
 
-    MouseScrollEvent event(static_cast<float>(xoffset),
-                           static_cast<float>(yoffset));
+    MouseScrollEvent event(static_cast<float>(xoffset), static_cast<float>(yoffset));
     func(event);
   }
 
@@ -119,8 +112,7 @@ namespace mau {
     if (!func)
       return;
 
-    WindowResizeEvent event(static_cast<TUint32>(width),
-                            static_cast<TUint32>(height));
+    WindowResizeEvent event(static_cast<TUint32>(width), static_cast<TUint32>(height));
     func(event);
   }
 
@@ -133,9 +125,7 @@ namespace mau {
 
     // create glfw window
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-    GLFWwindow *window =
-        glfwCreateWindow(static_cast<int>(width), static_cast<int>(height),
-                         name.data(), nullptr, nullptr);
+    GLFWwindow *window = glfwCreateWindow(static_cast<int>(width), static_cast<int>(height), name.data(), nullptr, nullptr);
 
     if (!window) {
       GLFW_CALL(GLFW_FALSE, "failed to create window");
@@ -178,8 +168,5 @@ namespace mau {
 
   void Window::PollEvents() const noexcept { glfwPollEvents(); }
 
-  void Window::RegisterEventCallback(
-      std::function<void(Event &)> callback) noexcept {
-    m_EventCallback = callback;
-  }
+  void Window::RegisterEventCallback(std::function<void(Event &)> callback) noexcept { m_EventCallback = callback; }
 } // namespace mau

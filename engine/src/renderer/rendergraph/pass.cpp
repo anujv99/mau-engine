@@ -8,8 +8,7 @@ namespace mau {
 
   Pass::~Pass() { }
 
-  bool Pass::Build(const UnorderedMap<String, Sink> &sinks,
-                   TUint32                           swapchain_image_count) {
+  bool Pass::Build(const UnorderedMap<String, Sink> &sinks, TUint32 swapchain_image_count) {
     for (const auto &source : m_Sources) {
       if (!sinks.contains(source.first)) {
         LOG_ERROR("failed to find source with name [%s]", source.first.c_str());
@@ -25,8 +24,7 @@ namespace mau {
       if (sink.second.IsConnecting()) {
         const String &source_name = sink.second.GetInputSourceName();
         if (!m_Sources.contains(source_name)) {
-          LOG_ERROR("cannot find source with name [%s] for sink [%s]",
-                    source_name.c_str(), sink.first.c_str());
+          LOG_ERROR("cannot find source with name [%s] for sink [%s]", source_name.c_str(), sink.first.c_str());
           return false;
         }
 
@@ -41,8 +39,7 @@ namespace mau {
 
   void Pass::RegisterSource(const String &name) {
     if (m_Sources.contains(name)) {
-      LOG_WARN("source with name [%s] already exists in pass [%s]",
-               name.c_str(), m_Name.c_str());
+      LOG_WARN("source with name [%s] already exists in pass [%s]", name.c_str(), m_Name.c_str());
       return;
     }
 
@@ -51,8 +48,7 @@ namespace mau {
 
   void Pass::RegisterSink(const String &input_source, const String &name) {
     if (m_Sinks.contains(name)) {
-      LOG_WARN("sink with name [%s] already exists in pass [%s]", name.c_str(),
-               m_Name.c_str());
+      LOG_WARN("sink with name [%s] already exists in pass [%s]", name.c_str(), m_Name.c_str());
       return;
     }
 

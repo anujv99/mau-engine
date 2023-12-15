@@ -24,22 +24,12 @@ namespace mau {
     ~Renderpass();
 
   public:
-    void AddColorAttachment(VkFormat format, VkSampleCountFlagBits samples,
-                            LoadStoreOp op, VkImageLayout initial_layout,
-                            VkImageLayout final_layout);
-    void SetDepthAttachment(VkFormat format, VkSampleCountFlagBits samples,
-                            LoadStoreOp op, VkImageLayout initial_layout,
-                            VkImageLayout final_layout);
-    void SetResolveAttachment(VkFormat format, VkSampleCountFlagBits samples,
-                              LoadStoreOp op, VkImageLayout initial_layout,
-                              VkImageLayout final_layout);
+    void AddColorAttachment(VkFormat format, VkSampleCountFlagBits samples, LoadStoreOp op, VkImageLayout initial_layout, VkImageLayout final_layout);
+    void SetDepthAttachment(VkFormat format, VkSampleCountFlagBits samples, LoadStoreOp op, VkImageLayout initial_layout, VkImageLayout final_layout);
+    void SetResolveAttachment(VkFormat format, VkSampleCountFlagBits samples, LoadStoreOp op, VkImageLayout initial_layout, VkImageLayout final_layout);
 
-    void Build(VkPipelineBindPoint  bind_point,
-               VkPipelineStageFlags src_stage_mask,
-               VkPipelineStageFlags dst_stage_mask,
-               VkAccessFlags src_access_mask, VkAccessFlags dst_access_mask);
-    void Begin(Handle<CommandBuffer> cmd, Handle<Framebuffer> framebuffer,
-               VkRect2D area);
+    void Build(VkPipelineBindPoint bind_point, VkPipelineStageFlags src_stage_mask, VkPipelineStageFlags dst_stage_mask, VkAccessFlags src_access_mask, VkAccessFlags dst_access_mask);
+    void Begin(Handle<CommandBuffer> cmd, Handle<Framebuffer> framebuffer, VkRect2D area);
     void End(Handle<CommandBuffer> cmd);
 
     inline VkRenderPass Get() const { return m_Renderpass; }

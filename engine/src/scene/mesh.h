@@ -11,9 +11,7 @@ namespace mau {
     friend class Mesh;
 
   private:
-    SubMesh(Handle<VertexBuffer> vertex_buffer,
-            Handle<IndexBuffer> index_buffer, TUint32 index_count,
-            Handle<Material> material);
+    SubMesh(Handle<VertexBuffer> vertex_buffer, Handle<IndexBuffer> index_buffer, TUint32 index_count, Handle<Material> material);
 
   public:
     ~SubMesh() = default;
@@ -24,7 +22,7 @@ namespace mau {
     inline TUint32               GetIndexCount() const { return m_IndexCount; }
     inline Handle<Material>      GetMaterial() const { return m_Material; }
     inline Handle<BottomLevelAS> GetAccel() const { return m_Accel; }
-    inline RTObjectHandle GetRTObjectHandle() const { return m_RTDescHandle; }
+    inline RTObjectHandle        GetRTObjectHandle() const { return m_RTDescHandle; }
 
   private:
     Handle<VertexBuffer>  m_Vertices = nullptr;
@@ -41,7 +39,7 @@ namespace mau {
     ~Mesh();
 
   public:
-    inline const Vector<SubMesh> &GetSubMeshes() const { return m_SubMeshes; }
+    inline const Vector<SubMesh>     &GetSubMeshes() const { return m_SubMeshes; }
     inline Handle<AccelerationBuffer> GetAccel() const { return m_TLAS; }
 
   private:

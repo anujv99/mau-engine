@@ -20,8 +20,7 @@ namespace mau {
 
   public:
     void Run() noexcept;
-    void SetVulkanValidationLogSeverity(VulkanValidationLogSeverity severity,
-                                        bool enabled) noexcept;
+    void SetVulkanValidationLogSeverity(VulkanValidationLogSeverity severity, bool enabled) noexcept;
 
   private:
     void ImGuiSceneList();

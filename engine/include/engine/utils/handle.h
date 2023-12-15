@@ -35,18 +35,10 @@ namespace mau {
 
   public:
     inline      operator bool() const { return m_Instance != nullptr; }
-    inline bool operator==(const Handle &other) const {
-      return m_Instance == other.m_Instance;
-    }
-    inline bool operator!=(const Handle &other) const {
-      return m_Instance != other.m_Instance;
-    }
-    inline bool operator==(const T *const other) const {
-      return m_Instance == other;
-    }
-    inline bool operator!=(const T *const other) const {
-      return m_Instance != other;
-    }
+    inline bool operator==(const Handle &other) const { return m_Instance == other.m_Instance; }
+    inline bool operator!=(const Handle &other) const { return m_Instance != other.m_Instance; }
+    inline bool operator==(const T *const other) const { return m_Instance == other; }
+    inline bool operator!=(const T *const other) const { return m_Instance != other; }
     inline void operator=(const Handle &other);
     inline void operator=(T *const other);
     inline T   *operator->() const;

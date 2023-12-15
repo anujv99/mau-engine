@@ -11,8 +11,7 @@ namespace mau {
 
   class VulkanSwapchain: public HandledObject {
   public:
-    VulkanSwapchain(VkDevice device, VkPhysicalDevice physical_device,
-                    VkSurfaceKHR surface);
+    VulkanSwapchain(VkDevice device, VkPhysicalDevice physical_device, VkSurfaceKHR surface);
     ~VulkanSwapchain();
 
   public:
@@ -20,26 +19,16 @@ namespace mau {
     void    RegisterSwapchainCreateCallbackFunc(std::function<void(void)> func);
 
   public:
-    inline VkSwapchainKHR        GetSwapchain() const { return m_Swapchain; }
-    inline const VkSwapchainKHR *Ref() const { return &m_Swapchain; }
-    inline VkFormat GetColorFormat() const { return m_Format.format; }
-    inline VkFormat GetDepthFormat() const { return m_DepthFormat; }
-    inline VkSurfaceCapabilitiesKHR GetSurfaceCapabilities() const {
-      return m_SurfaceCapabilities;
-    }
-    inline VkExtent2D GetExtent() const { return m_Extent; }
-    inline const std::vector<Handle<ImageView>> &GetImageViews() const {
-      return m_SwapchainImageViews;
-    }
-    inline const std::vector<Handle<ImageView>> &GetDepthImageViews() const {
-      return m_DepthImageViews;
-    }
-    inline const std::vector<Handle<Image>> &GetImages() const {
-      return m_SwapchainImages;
-    }
-    inline const std::vector<Handle<Image>> &GetDepthImages() const {
-      return m_DepthImages;
-    }
+    inline VkSwapchainKHR                        GetSwapchain() const { return m_Swapchain; }
+    inline const VkSwapchainKHR                 *Ref() const { return &m_Swapchain; }
+    inline VkFormat                              GetColorFormat() const { return m_Format.format; }
+    inline VkFormat                              GetDepthFormat() const { return m_DepthFormat; }
+    inline VkSurfaceCapabilitiesKHR              GetSurfaceCapabilities() const { return m_SurfaceCapabilities; }
+    inline VkExtent2D                            GetExtent() const { return m_Extent; }
+    inline const std::vector<Handle<ImageView>> &GetImageViews() const { return m_SwapchainImageViews; }
+    inline const std::vector<Handle<ImageView>> &GetDepthImageViews() const { return m_DepthImageViews; }
+    inline const std::vector<Handle<Image>>     &GetImages() const { return m_SwapchainImages; }
+    inline const std::vector<Handle<Image>>     &GetDepthImages() const { return m_DepthImages; }
 
   private:
     void     CreateSwapchain();

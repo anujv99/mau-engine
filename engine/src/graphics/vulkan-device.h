@@ -20,25 +20,13 @@ namespace mau {
   public:
     bool EnableDeviceExtension(std::string_view extension_name) noexcept;
 
-    inline VkDevice GetDevice() const noexcept { return m_Device; }
-    inline TUint32  GetGraphicsQueueIndex() const noexcept {
-      return m_GraphicsQueueIndex;
-    }
-    inline TUint32 GetTransferQueueIndex() const noexcept {
-      return m_TransferQueueIndex;
-    }
-    inline TUint32 GetPresentQueueIndex() const noexcept {
-      return m_PresentQueueIndex;
-    }
-    inline Handle<VulkanQueue> GetGraphicsQueue() const noexcept {
-      return m_GraphicsQueue;
-    }
-    inline Handle<VulkanQueue> GetTransferQueue() const noexcept {
-      return m_TransferQueue;
-    }
-    inline Handle<PresentQueue> GetPresentQueue() const noexcept {
-      return m_PresentQueue;
-    }
+    inline VkDevice             GetDevice() const noexcept { return m_Device; }
+    inline TUint32              GetGraphicsQueueIndex() const noexcept { return m_GraphicsQueueIndex; }
+    inline TUint32              GetTransferQueueIndex() const noexcept { return m_TransferQueueIndex; }
+    inline TUint32              GetPresentQueueIndex() const noexcept { return m_PresentQueueIndex; }
+    inline Handle<VulkanQueue>  GetGraphicsQueue() const noexcept { return m_GraphicsQueue; }
+    inline Handle<VulkanQueue>  GetTransferQueue() const noexcept { return m_TransferQueue; }
+    inline Handle<PresentQueue> GetPresentQueue() const noexcept { return m_PresentQueue; }
 
   private:
     VkPhysicalDevice         m_PhysicalDevice = VK_NULL_HANDLE;

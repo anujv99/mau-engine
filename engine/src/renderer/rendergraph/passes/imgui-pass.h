@@ -12,9 +12,7 @@ namespace mau {
     ~ImGuiPass();
 
   public:
-    inline Handle<Renderpass> GetRenderpass() const {
-      return m_Renderpass;
-    } // TODO: remove
+    inline Handle<Renderpass> GetRenderpass() const { return m_Renderpass; } // TODO: remove
   private:
     bool PostBuild(TUint32 swapchain_image_count) override;
     void Execute(Handle<CommandBuffer> cmd, TUint32 frame_index) override;

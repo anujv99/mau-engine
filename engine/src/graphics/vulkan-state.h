@@ -13,10 +13,8 @@
 #include "vulkan-swapchain.h"
 #include "vulkan-commands.h"
 
-#define MAU_GPU_ZONE(cmd, name)                                                \
-  TracyVkZone(VulkanState::Ref().GetTracyCtx(), cmd, name)
-#define MAU_GPU_COLLECT(cmd)                                                   \
-  TracyVkCollect(VulkanState::Ref().GetTracyCtx(), cmd)
+#define MAU_GPU_ZONE(cmd, name) TracyVkZone(VulkanState::Ref().GetTracyCtx(), cmd, name)
+#define MAU_GPU_COLLECT(cmd) TracyVkCollect(VulkanState::Ref().GetTracyCtx(), cmd)
 
 namespace mau {
 
@@ -31,50 +29,27 @@ namespace mau {
     void Init(std::string_view app_name, void *window);
     bool EnableInstanceLayer(std::string_view layer_name) noexcept;
     bool EnableInstanceExtension(std::string_view extension_name) noexcept;
-    void SetValidationSeverity(VulkanValidationLogSeverity severity,
-                               bool                        enabled) noexcept;
+    void SetValidationSeverity(VulkanValidationLogSeverity severity, bool enabled) noexcept;
     void SetValidationSeverity(TUint32 flags) noexcept;
 
     Handle<CommandPool> GetCommandPool(VkQueueFlagBits queue_type);
     inline VmaAllocator GetVulkanMemoryAllocator() const { return m_Allocator; }
     inline VkInstance   GetInstance() const { return m_Instance; }
 
-    inline VkDevice GetDevice() const { return m_Device->GetDevice(); }
+    inline VkDevice             GetDevice() const { return m_Device->GetDevice(); }
     inline Handle<VulkanDevice> GetDeviceHandle() const { return m_Device; }
-    inline VkPhysicalDevice     GetPhysicalDevice() const {
-      return m_PhysicalDevice;
-    }
+    inline VkPhysicalDevice     GetPhysicalDevice() const { return m_PhysicalDevice; }
 
-    inline VkSwapchainKHR GetSwapchain() const {
-      return m_Swapchain->GetSwapchain();
-    }
-    inline Handle<VulkanSwapchain> GetSwapchainHandle() const {
-      return m_Swapchain;
-    }
-    inline VkFormat GetSwapchainColorFormat() const {
-      return m_Swapchain->GetColorFormat();
-    }
-    inline VkFormat GetSwapchainDepthFormat() const {
-      return m_Swapchain->GetDepthFormat();
-    }
-    inline VkExtent2D GetSwapchainExtent() const {
-      return m_Swapchain->GetExtent();
-    }
-    inline const std::vector<Handle<ImageView>> GetSwapchainImageViews() const {
-      return m_Swapchain->GetImageViews();
-    }
-    inline const std::vector<Handle<ImageView>>
-    GetSwapchainDepthImageViews() const {
-      return m_Swapchain->GetDepthImageViews();
-    }
-    inline VkPhysicalDeviceProperties GetPhysicalDeviceProperties() const {
-      return m_PhysicalDeviceProperties;
-    }
+    inline VkSwapchainKHR                       GetSwapchain() const { return m_Swapchain->GetSwapchain(); }
+    inline Handle<VulkanSwapchain>              GetSwapchainHandle() const { return m_Swapchain; }
+    inline VkFormat                             GetSwapchainColorFormat() const { return m_Swapchain->GetColorFormat(); }
+    inline VkFormat                             GetSwapchainDepthFormat() const { return m_Swapchain->GetDepthFormat(); }
+    inline VkExtent2D                           GetSwapchainExtent() const { return m_Swapchain->GetExtent(); }
+    inline const std::vector<Handle<ImageView>> GetSwapchainImageViews() const { return m_Swapchain->GetImageViews(); }
+    inline const std::vector<Handle<ImageView>> GetSwapchainDepthImageViews() const { return m_Swapchain->GetDepthImageViews(); }
+    inline VkPhysicalDeviceProperties           GetPhysicalDeviceProperties() const { return m_PhysicalDeviceProperties; }
 
-    inline VkPhysicalDeviceRayTracingPipelinePropertiesKHR
-    GetRTPipelineProperties() const {
-      return m_RTPipelineProperties;
-    }
+    inline VkPhysicalDeviceRayTracingPipelinePropertiesKHR GetRTPipelineProperties() const { return m_RTPipelineProperties; }
 
     inline TracyVkCtx GetTracyCtx() const { return m_TracyContext; }
 
@@ -115,8 +90,7 @@ namespace mau {
     VmaAllocator m_Allocator = VK_NULL_HANDLE;
 
     // command pools
-    std::unordered_map<VkQueueFlagBits, Handle<CommandPool>> m_CommandPools =
-        {};
+    std::unordered_map<VkQueueFlagBits, Handle<CommandPool>> m_CommandPools = {};
 
     // tracy profiler context
     TracyVkCtx            m_TracyContext = nullptr;

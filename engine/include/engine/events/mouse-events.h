@@ -10,8 +10,7 @@ namespace mau {
     REGISTER_EVENT_LOG("MousePressEvent", "button: %d", m_Button);
 
   public:
-    MousePressEvent(TUint32 button)
-        : Event(EventType::MOUSE_PRESS), m_Button(button){};
+    MousePressEvent(TUint32 button): Event(EventType::MOUSE_PRESS), m_Button(button){};
     ~MousePressEvent() = default;
 
     TUint32 GetButton() const { return m_Button; }
@@ -25,8 +24,7 @@ namespace mau {
     REGISTER_EVENT_LOG("MouseReleaseEvent", "button: %d", m_Button);
 
   public:
-    MouseReleaseEvent(TUint32 button)
-        : Event(EventType::MOUSE_RELEASE), m_Button(button){};
+    MouseReleaseEvent(TUint32 button): Event(EventType::MOUSE_RELEASE), m_Button(button){};
     ~MouseReleaseEvent() = default;
 
     TUint32 GetButton() const { return m_Button; }
@@ -40,8 +38,7 @@ namespace mau {
     REGISTER_EVENT_LOG("MouseMoveEvent", "x: %f, y: %f", m_X, m_Y);
 
   public:
-    MouseMoveEvent(TFloat32 x, TFloat32 y)
-        : Event(EventType::MOUSE_MOVE), m_X(x), m_Y(y){};
+    MouseMoveEvent(TFloat32 x, TFloat32 y): Event(EventType::MOUSE_MOVE), m_X(x), m_Y(y){};
     ~MouseMoveEvent() = default;
 
     TFloat32 GetX() const { return m_X; }
@@ -57,8 +54,7 @@ namespace mau {
     REGISTER_EVENT_LOG("MouseScrollEvent", "x: %f, y: %f", m_X, m_Y);
 
   public:
-    MouseScrollEvent(TFloat32 x, TFloat32 y)
-        : Event(EventType::MOUSE_SCROLL), m_X(x), m_Y(y){};
+    MouseScrollEvent(TFloat32 x, TFloat32 y): Event(EventType::MOUSE_SCROLL), m_X(x), m_Y(y){};
     ~MouseScrollEvent() = default;
 
     TFloat32 GetX() const { return m_X; }

@@ -29,23 +29,17 @@ namespace mau {
     ~IncluderInterface() = default;
 
   public:
-    virtual shaderc_include_result *GetInclude(const char *requested_source,
-                                               shaderc_include_type type,
-                                               const char *requesting_source,
-                                               size_t include_depth) override {
+    virtual shaderc_include_result *GetInclude(const char *requested_source, shaderc_include_type type, const char *requesting_source, size_t include_depth) override {
 
-      String include_path =
-          GetAssetFolderPath() + "shaders/" + requested_source;
-      char *include_path_str = nullptr;
+      String include_path = GetAssetFolderPath() + "shaders/" + requested_source;
+      char  *include_path_str = nullptr;
       MAU_ALLOC_ARRAY(include_path_str, char, include_path.size() + 1);
-      memcpy(include_path_str, (include_path + "\0").c_str(),
-             include_path.size() + 1);
+      memcpy(include_path_str, (include_path + "\0").c_str(), include_path.size() + 1);
 
       String file_content = read_file(include_path);
       char  *file_content_str = nullptr;
       MAU_ALLOC_ARRAY(file_content_str, char, file_content.size() + 1);
-      memcpy(file_content_str, (file_content + "\0").c_str(),
-             file_content.size() + 1);
+      memcpy(file_content_str, (file_content + "\0").c_str(), file_content.size() + 1);
 
       shaderc_include_result *result = nullptr;
       MAU_ALLOC(result, shaderc_include_result);
@@ -67,21 +61,17 @@ namespace mau {
     }
   };
 
-  std::vector<TUint32> compile_shader(shaderc::Compiler  &compiler,
-                                      shaderc_shader_kind kind,
-                                      std::string_view    file_path) {
+  std::vector<TUint32> compile_shader(shaderc::Compiler &compiler, shaderc_shader_kind kind, std::string_view file_path) {
     std::string raw = read_file(file_path);
     if (raw.empty())
       return std::vector<TUint32>();
 
     shaderc::CompileOptions options;
     options.SetTargetSpirv(shaderc_spirv_version_1_4);
-    auto includer = std::unique_ptr<shaderc::CompileOptions::IncluderInterface>(
-        new IncluderInterface());
+    auto includer = std::unique_ptr<shaderc::CompileOptions::IncluderInterface>(new IncluderInterface());
     options.SetIncluder(std::move(includer));
 
-    shaderc::SpvCompilationResult result =
-        compiler.CompileGlslToSpv(raw, kind, file_path.data(), options);
+    shaderc::SpvCompilationResult result = compiler.CompileGlslToSpv(raw, kind, file_path.data(), options);
 
     if (result.GetCompilationStatus() != shaderc_compilation_status_success) {
       LOG_ERROR("%s", result.GetErrorMessage().c_str());
@@ -91,13 +81,10 @@ namespace mau {
     return std::vector<TUint32>(result.begin(), result.end());
   }
 
-  Shader::Shader(std::string_view shader_path, shaderc_shader_kind kind,
-                 VkShaderStageFlagBits stage)
-      : m_Stage(stage) {
+  Shader::Shader(std::string_view shader_path, shaderc_shader_kind kind, VkShaderStageFlagBits stage): m_Stage(stage) {
     static shaderc::Compiler compiler;
 
-    std::vector<TUint32> shader_code =
-        compile_shader(compiler, kind, shader_path);
+    std::vector<TUint32> shader_code = compile_shader(compiler, kind, shader_path);
     if (!shader_code.size())
       return;
 
@@ -108,8 +95,7 @@ namespace mau {
     create_info.codeSize = shader_code.size() * sizeof(shader_code[0]);
     create_info.pCode = shader_code.data();
 
-    VK_CALL(vkCreateShaderModule(VulkanState::Ref().GetDevice(), &create_info,
-                                 nullptr, &m_Module));
+    VK_CALL(vkCreateShaderModule(VulkanState::Ref().GetDevice(), &create_info, nullptr, &m_Module));
   }
 
   Shader::~Shader() {
@@ -119,8 +105,7 @@ namespace mau {
 
   VkPipelineShaderStageCreateInfo Shader::GetShaderStageInfo() const {
     VkPipelineShaderStageCreateInfo shader_stage_info = {};
-    shader_stage_info.sType =
-        VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+    shader_stage_info.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
     shader_stage_info.pNext = nullptr;
     shader_stage_info.flags = 0u;
     shader_stage_info.stage = m_Stage;
@@ -131,24 +116,14 @@ namespace mau {
     return shader_stage_info;
   }
 
-  VertexShader::VertexShader(std::string_view shader_path)
-      : Shader(shader_path, shaderc_glsl_vertex_shader,
-               VK_SHADER_STAGE_VERTEX_BIT) { }
+  VertexShader::VertexShader(std::string_view shader_path): Shader(shader_path, shaderc_glsl_vertex_shader, VK_SHADER_STAGE_VERTEX_BIT) { }
 
-  FragmentShader::FragmentShader(std::string_view shader_path)
-      : Shader(shader_path, shaderc_glsl_fragment_shader,
-               VK_SHADER_STAGE_FRAGMENT_BIT) { }
+  FragmentShader::FragmentShader(std::string_view shader_path): Shader(shader_path, shaderc_glsl_fragment_shader, VK_SHADER_STAGE_FRAGMENT_BIT) { }
 
-  RTClosestHitShader::RTClosestHitShader(std::string_view shader_path)
-      : Shader(shader_path, shaderc_glsl_closesthit_shader,
-               VK_SHADER_STAGE_CLOSEST_HIT_BIT_KHR) { }
+  RTClosestHitShader::RTClosestHitShader(std::string_view shader_path): Shader(shader_path, shaderc_glsl_closesthit_shader, VK_SHADER_STAGE_CLOSEST_HIT_BIT_KHR) { }
 
-  RTRayGenShader::RTRayGenShader(std::string_view shader_path)
-      : Shader(shader_path, shaderc_glsl_raygen_shader,
-               VK_SHADER_STAGE_RAYGEN_BIT_KHR) { }
+  RTRayGenShader::RTRayGenShader(std::string_view shader_path): Shader(shader_path, shaderc_glsl_raygen_shader, VK_SHADER_STAGE_RAYGEN_BIT_KHR) { }
 
-  RTMissShader::RTMissShader(std::string_view shader_path)
-      : Shader(shader_path, shaderc_glsl_miss_shader,
-               VK_SHADER_STAGE_MISS_BIT_KHR) { }
+  RTMissShader::RTMissShader(std::string_view shader_path): Shader(shader_path, shaderc_glsl_miss_shader, VK_SHADER_STAGE_MISS_BIT_KHR) { }
 
 } // namespace mau

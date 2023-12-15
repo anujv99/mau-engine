@@ -3,11 +3,11 @@
 #include <functional>
 #include <engine/log.h>
 
-#define REGISTER_EVENT_TYPE(type)                                              \
-public:                                                                        \
+#define REGISTER_EVENT_TYPE(type)                                                                                                                                                                      \
+public:                                                                                                                                                                                                \
   static EventType GetStaticType() { return type; }
-#define REGISTER_EVENT_LOG(name, fmt, ...)                                     \
-public:                                                                        \
+#define REGISTER_EVENT_LOG(name, fmt, ...)                                                                                                                                                             \
+public:                                                                                                                                                                                                \
   void Log() const { LOG_INFO("%s: [" fmt "]", name, ##__VA_ARGS__); }
 
 #define BIND_EVENT_FN(fn) std::bind(&fn, this, std::placeholders::_1)

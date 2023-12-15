@@ -19,12 +19,10 @@ namespace mau {
     std::vector<Handle<Resource>> swapchain_images = {};
     std::vector<Handle<Resource>> swapchain_depth_images = {};
     for (size_t i = 0; i < swapchain->GetImages().size(); i++) {
-      Handle<ImageResource> backbuffer = make_handle<ImageResource>(
-          swapchain->GetImages()[i], swapchain->GetImageViews()[i]);
+      Handle<ImageResource> backbuffer = make_handle<ImageResource>(swapchain->GetImages()[i], swapchain->GetImageViews()[i]);
       swapchain_images.push_back(backbuffer);
 
-      Handle<ImageResource> depthbuffer = make_handle<ImageResource>(
-          swapchain->GetDepthImages()[i], swapchain->GetDepthImageViews()[i]);
+      Handle<ImageResource> depthbuffer = make_handle<ImageResource>(swapchain->GetDepthImages()[i], swapchain->GetDepthImageViews()[i]);
       swapchain_depth_images.push_back(depthbuffer);
     }
 

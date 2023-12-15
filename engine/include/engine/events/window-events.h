@@ -16,12 +16,10 @@ namespace mau {
 
   class WindowResizeEvent: public Event {
     REGISTER_EVENT_TYPE(EventType::WINDOW_RESIZE);
-    REGISTER_EVENT_LOG("WindowResizeEvent", "width: %d, height: %d", m_Width,
-                       m_Height);
+    REGISTER_EVENT_LOG("WindowResizeEvent", "width: %d, height: %d", m_Width, m_Height);
 
   public:
-    WindowResizeEvent(TUint32 width, TUint32 height)
-        : Event(EventType::WINDOW_RESIZE), m_Width(width), m_Height(height){};
+    WindowResizeEvent(TUint32 width, TUint32 height): Event(EventType::WINDOW_RESIZE), m_Width(width), m_Height(height){};
     ~WindowResizeEvent() = default;
 
     TUint32 GetWidth() const { return m_Width; }

@@ -15,13 +15,10 @@ namespace mau {
     virtual ~Pass();
 
   public:
-    bool         Build(const UnorderedMap<String, Sink> &sinks,
-                       TUint32                           swapchain_image_count);
+    bool         Build(const UnorderedMap<String, Sink> &sinks, TUint32 swapchain_image_count);
     virtual void Execute(Handle<CommandBuffer> cmd, TUint32 frame_index) = 0;
 
-    inline const UnorderedMap<String, Sink> &GetSinks() const {
-      return m_Sinks;
-    }
+    inline const UnorderedMap<String, Sink> &GetSinks() const { return m_Sinks; }
 
   protected:
     void         RegisterSource(const String &name);

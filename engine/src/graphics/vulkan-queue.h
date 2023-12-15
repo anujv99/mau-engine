@@ -8,8 +8,7 @@
 namespace mau {
 
   class VulkanQueue: public HandledObject {
-    template <class T, typename... Args>
-    friend Handle<T> make_handle(Args... args);
+    template <class T, typename... Args> friend Handle<T> make_handle(Args... args);
 
   protected:
     VulkanQueue(VkQueue queue, VkDevice device);
@@ -18,9 +17,7 @@ namespace mau {
     virtual ~VulkanQueue();
 
   public:
-    void Submit(Handle<CommandBuffer> cmd, VkPipelineStageFlags wait_stages,
-                Handle<Semaphore> wait_semaphore,
-                Handle<Semaphore> signal_semaphore, Handle<Fence> signal_fence);
+    void Submit(Handle<CommandBuffer> cmd, VkPipelineStageFlags wait_stages, Handle<Semaphore> wait_semaphore, Handle<Semaphore> signal_semaphore, Handle<Fence> signal_fence);
     void Submit(Handle<CommandBuffer> cmd);
     void WaitIdle();
 
@@ -33,16 +30,14 @@ namespace mau {
   };
 
   class PresentQueue final: public VulkanQueue {
-    template <class T, typename... Args>
-    friend Handle<T> make_handle(Args... args);
+    template <class T, typename... Args> friend Handle<T> make_handle(Args... args);
     PresentQueue(VkQueue queue, VkDevice device);
 
   public:
     ~PresentQueue();
 
   public:
-    void Present(TUint32 image_index, Handle<VulkanSwapchain> swapchain,
-                 Handle<Semaphore> wait_semaphore);
+    void Present(TUint32 image_index, Handle<VulkanSwapchain> swapchain, Handle<Semaphore> wait_semaphore);
   };
 
 } // namespace mau

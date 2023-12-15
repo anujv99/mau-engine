@@ -18,9 +18,7 @@ namespace mau {
 
   public:
     inline void             *GetRawWindow() const { return m_InternalState; }
-    inline EventEmitFunction GetEventCallback() const {
-      return m_EventCallback;
-    }
+    inline EventEmitFunction GetEventCallback() const { return m_EventCallback; }
 
   private:
     bool ShouldClose() const noexcept;

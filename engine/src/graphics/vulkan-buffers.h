@@ -9,8 +9,7 @@ namespace mau {
 
   class Buffer: public HandledObject {
   public:
-    Buffer(TUint64 buffer_size, VkBufferUsageFlags usage,
-           VmaAllocationCreateFlags memory_flags = 0u);
+    Buffer(TUint64 buffer_size, VkBufferUsageFlags usage, VmaAllocationCreateFlags memory_flags = 0u);
     virtual ~Buffer();
 
   public:
@@ -48,8 +47,8 @@ namespace mau {
     virtual ~UniformBuffer();
 
   public:
-    void Update(const void *data, TUint64 size, TUint64 offset = 0u);
-    void Flush(Handle<CommandBuffer> cmd);
+    void                   Update(const void *data, TUint64 size, TUint64 offset = 0u);
+    void                   Flush(Handle<CommandBuffer> cmd);
     VkDescriptorBufferInfo GetDescriptorInfo() const;
 
   private:
@@ -75,7 +74,7 @@ namespace mau {
 
   public:
     inline VkAccelerationStructureKHR GetBLAS() const { return m_BLAS; }
-    inline TUint32 GetCustomIndex() const { return m_CustomIndex; }
+    inline TUint32                    GetCustomIndex() const { return m_CustomIndex; }
 
   private:
     void BuildBLAS(const AccelerationBufferCreateInfo &create_info);
@@ -100,8 +99,7 @@ namespace mau {
     inline VkAccelerationStructureKHR GetTLAS() const { return m_TLAS; }
 
   private:
-    void BuildTLAS(Handle<CommandBuffer> cmd = nullptr, bool update = false,
-                   glm::mat4 transform = glm::mat4(1.0f));
+    void BuildTLAS(Handle<CommandBuffer> cmd = nullptr, bool update = false, glm::mat4 transform = glm::mat4(1.0f));
 
   private:
     Vector<Handle<BottomLevelAS>> m_BLASes = {};
@@ -128,30 +126,17 @@ namespace mau {
     const TUint32 m_ArraySize = 1u;
   };
 
-  template <typename T>
-  inline StructuredUniformBuffer<T>::StructuredUniformBuffer(const T &&data)
-      : m_ArraySize(1u), UniformBuffer(sizeof(T), &data) { }
+  template <typename T> inline StructuredUniformBuffer<T>::StructuredUniformBuffer(const T &&data): m_ArraySize(1u), UniformBuffer(sizeof(T), &data) { }
 
-  template <typename T>
-  inline StructuredUniformBuffer<T>::StructuredUniformBuffer(TUint32 array_size)
-      : m_ArraySize(array_size),
-        UniformBuffer(sizeof(T) * static_cast<size_t>(array_size)) { }
+  template <typename T> inline StructuredUniformBuffer<T>::StructuredUniformBuffer(TUint32 array_size): m_ArraySize(array_size), UniformBuffer(sizeof(T) * static_cast<size_t>(array_size)) { }
 
-  template <typename T>
-  inline StructuredUniformBuffer<T>::StructuredUniformBuffer()
-      : UniformBuffer(sizeof(T), nullptr) { }
+  template <typename T> inline StructuredUniformBuffer<T>::StructuredUniformBuffer(): UniformBuffer(sizeof(T), nullptr) { }
 
-  template <typename T>
-  inline StructuredUniformBuffer<T>::~StructuredUniformBuffer() { }
+  template <typename T> inline StructuredUniformBuffer<T>::~StructuredUniformBuffer() { }
 
-  template <typename T>
-  inline void StructuredUniformBuffer<T>::Update(const T &&data) {
-    UniformBuffer::Update(&data, sizeof(T));
-  }
+  template <typename T> inline void StructuredUniformBuffer<T>::Update(const T &&data) { UniformBuffer::Update(&data, sizeof(T)); }
 
-  template <typename T>
-  inline void StructuredUniformBuffer<T>::UpdateIndex(const T &data,
-                                                      TUint32  index) {
+  template <typename T> inline void StructuredUniformBuffer<T>::UpdateIndex(const T &data, TUint32 index) {
     ASSERT(index < m_ArraySize);
     UniformBuffer::Update(&data, sizeof(T), index * sizeof(T));
   }

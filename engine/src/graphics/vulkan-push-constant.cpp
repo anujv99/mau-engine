@@ -33,17 +33,9 @@ namespace mau {
     return range;
   }
 
-  void PushConstantBase::Bind(Handle<CommandBuffer> cmd,
-                              Handle<Pipeline>      pipeline) const {
-    vkCmdPushConstants(cmd->Get(), pipeline->GetLayout(), VK_SHADER_STAGE_ALL,
-                       0u, m_Size, m_Data);
-  }
+  void PushConstantBase::Bind(Handle<CommandBuffer> cmd, Handle<Pipeline> pipeline) const { vkCmdPushConstants(cmd->Get(), pipeline->GetLayout(), VK_SHADER_STAGE_ALL, 0u, m_Size, m_Data); }
 
-  void PushConstantBase::Bind(Handle<CommandBuffer> cmd,
-                              Handle<RTPipeline>    pipeline) const {
-    vkCmdPushConstants(cmd->Get(), pipeline->GetLayout(), VK_SHADER_STAGE_ALL,
-                       0u, m_Size, m_Data);
-  }
+  void PushConstantBase::Bind(Handle<CommandBuffer> cmd, Handle<RTPipeline> pipeline) const { vkCmdPushConstants(cmd->Get(), pipeline->GetLayout(), VK_SHADER_STAGE_ALL, 0u, m_Size, m_Data); }
 
   void PushConstantBase::SetData(const void *const data, TUint64 size) {
     if (m_Size == 0 || m_Data == nullptr || data == nullptr) {
@@ -53,8 +45,6 @@ namespace mau {
     memcpy(m_Data, data, std::min(m_Size, size));
   }
 
-  void PushConstantBase::SetData(const void *const data) {
-    SetData(data, m_Size);
-  }
+  void PushConstantBase::SetData(const void *const data) { SetData(data, m_Size); }
 
 } // namespace mau

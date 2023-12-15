@@ -25,22 +25,15 @@ namespace mau {
     if (m_Renderpass == nullptr) {
       m_Renderpass = make_handle<Renderpass>();
       LoadStoreOp op;
-      m_Renderpass->AddColorAttachment(source_image->GetImage()->GetFormat(),
-                                       source_image->GetImage()->GetSamples(),
-                                       op, VK_IMAGE_LAYOUT_UNDEFINED,
-                                       VK_IMAGE_LAYOUT_PRESENT_SRC_KHR);
-      m_Renderpass->Build(VK_PIPELINE_BIND_POINT_GRAPHICS,
-                          VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
-                          VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
-                          VK_ACCESS_NONE, VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT);
+      m_Renderpass->AddColorAttachment(source_image->GetImage()->GetFormat(), source_image->GetImage()->GetSamples(), op, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR);
+      m_Renderpass->Build(VK_PIPELINE_BIND_POINT_GRAPHICS, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, VK_ACCESS_NONE,
+                          VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT);
     }
 
     for (TUint32 i = 0; i < swapchain_image_count; i++) {
       Handle<ImageResource>          this_source_image = source.GetResource(i);
-      std::vector<Handle<ImageView>> image_view = {
-          this_source_image->GetImageView()};
-      Handle<Framebuffer> fbo =
-          make_handle<Framebuffer>(image_view, m_Renderpass, m_Width, m_Height);
+      std::vector<Handle<ImageView>> image_view = {this_source_image->GetImageView()};
+      Handle<Framebuffer>            fbo = make_handle<Framebuffer>(image_view, m_Renderpass, m_Width, m_Height);
       m_Framebuffers.push_back(fbo);
     }
 

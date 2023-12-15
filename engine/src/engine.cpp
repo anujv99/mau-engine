@@ -25,9 +25,7 @@ namespace mau {
     return output_config;
   }
 
-  Engine::Engine(const EngineConfig &config)
-      : m_Config(validate_config(config)),
-        m_Window(config.Width, config.Height, config.WindowName) {
+  Engine::Engine(const EngineConfig &config): m_Config(validate_config(config)), m_Window(config.Width, config.Height, config.WindowName) {
 
     m_Window.RegisterEventCallback(BIND_EVENT_FN(Engine::OnEvent));
 
@@ -45,8 +43,7 @@ namespace mau {
 
     Renderer::Create(m_Window.GetRawWindow());
 
-    String model_path =
-        GetAssetFolderPath() + "assets/models/Sponza/glTF/Sponza.gltf";
+    String model_path = GetAssetFolderPath() + "assets/models/Sponza/glTF/Sponza.gltf";
 
     Handle<Mesh> mesh = make_handle<Mesh>(model_path);
 
@@ -98,8 +95,7 @@ namespace mau {
 
       // framerate
       auto current_time = std::chrono::high_resolution_clock::now();
-      auto dt = std::chrono::duration_cast<std::chrono::nanoseconds>(
-          current_time - last_time);
+      auto dt = std::chrono::duration_cast<std::chrono::nanoseconds>(current_time - last_time);
       delta_time = (float)dt.count() * (float)1e-9;
       last_time = current_time;
       passed_time += delta_time;
@@ -115,11 +111,7 @@ namespace mau {
     vkDeviceWaitIdle(VulkanState::Ref().GetDevice());
   }
 
-  void
-  Engine::SetVulkanValidationLogSeverity(VulkanValidationLogSeverity severity,
-                                         bool enabled) noexcept {
-    VulkanState::Ref().SetValidationSeverity(severity, enabled);
-  }
+  void Engine::SetVulkanValidationLogSeverity(VulkanValidationLogSeverity severity, bool enabled) noexcept { VulkanState::Ref().SetValidationSeverity(severity, enabled); }
 
   void Engine::ImGuiSceneList() {
     static entt::entity selected_entity;

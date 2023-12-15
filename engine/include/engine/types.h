@@ -12,8 +12,7 @@ namespace mau {
   // TODO: remove exceptions, use error codes
   using String = std::string;
 
-  template <typename Key, typename Value>
-  using UnorderedMap = std::unordered_map<Key, Value>;
+  template <typename Key, typename Value> using UnorderedMap = std::unordered_map<Key, Value>;
 
   template <typename T> using Vector = std::vector<T>;
 

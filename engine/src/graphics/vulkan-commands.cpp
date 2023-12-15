@@ -5,17 +5,12 @@
 
 namespace mau {
 
-  CommandBuffer::CommandBuffer(VkCommandBuffer command_buffer,
-                               VkCommandPool   m_CommandPool)
-      : m_CommandBuffer(command_buffer), m_CommandPool(m_CommandPool) {
+  CommandBuffer::CommandBuffer(VkCommandBuffer command_buffer, VkCommandPool m_CommandPool): m_CommandBuffer(command_buffer), m_CommandPool(m_CommandPool) {
     ASSERT(m_CommandBuffer != VK_NULL_HANDLE);
     ASSERT(m_CommandPool != VK_NULL_HANDLE);
   }
 
-  CommandBuffer::~CommandBuffer() {
-    vkFreeCommandBuffers(VulkanState::Ref().GetDevice(), m_CommandPool, 1,
-                         &m_CommandBuffer);
-  }
+  CommandBuffer::~CommandBuffer() { vkFreeCommandBuffers(VulkanState::Ref().GetDevice(), m_CommandPool, 1, &m_CommandBuffer); }
 
   void CommandBuffer::Begin(VkCommandBufferUsageFlags flags) {
     VkCommandBufferBeginInfo begin_info = {};
@@ -29,13 +24,9 @@ namespace mau {
 
   void CommandBuffer::End() { VK_CALL(vkEndCommandBuffer(m_CommandBuffer)); }
 
-  void CommandBuffer::Reset() {
-    VK_CALL(vkResetCommandBuffer(m_CommandBuffer, 0u));
-  }
+  void CommandBuffer::Reset() { VK_CALL(vkResetCommandBuffer(m_CommandBuffer, 0u)); }
 
-  CommandPool::CommandPool(VkDevice device, TUint32 queue_family_index,
-                           TUint32 flags)
-      : m_Device(device) {
+  CommandPool::CommandPool(VkDevice device, TUint32 queue_family_index, TUint32 flags): m_Device(device) {
     ASSERT(m_Device != VK_NULL_HANDLE);
 
     VkCommandPoolCreateInfo create_info = {};
@@ -44,17 +35,12 @@ namespace mau {
     create_info.flags = flags;
     create_info.queueFamilyIndex = queue_family_index;
 
-    VK_CALL(
-        vkCreateCommandPool(m_Device, &create_info, nullptr, &m_CommandPool));
+    VK_CALL(vkCreateCommandPool(m_Device, &create_info, nullptr, &m_CommandPool));
   }
 
-  CommandPool::~CommandPool() {
-    vkDestroyCommandPool(m_Device, m_CommandPool, nullptr);
-  }
+  CommandPool::~CommandPool() { vkDestroyCommandPool(m_Device, m_CommandPool, nullptr); }
 
-  std::vector<Handle<CommandBuffer>>
-  CommandPool::AllocateCommandBuffers(TUint32              count,
-                                      VkCommandBufferLevel level) {
+  std::vector<Handle<CommandBuffer>> CommandPool::AllocateCommandBuffers(TUint32 count, VkCommandBufferLevel level) {
     VkCommandBufferAllocateInfo alloc_info = {};
     alloc_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
     alloc_info.pNext = nullptr;
@@ -62,15 +48,13 @@ namespace mau {
     alloc_info.level = level;
     alloc_info.commandBufferCount = count;
 
-    std::vector<VkCommandBuffer> vk_command_buffers(static_cast<size_t>(count));
+    std::vector<VkCommandBuffer>       vk_command_buffers(static_cast<size_t>(count));
     std::vector<Handle<CommandBuffer>> command_buffers;
     command_buffers.reserve(vk_command_buffers.size());
-    VK_CALL(vkAllocateCommandBuffers(m_Device, &alloc_info,
-                                     vk_command_buffers.data()));
+    VK_CALL(vkAllocateCommandBuffers(m_Device, &alloc_info, vk_command_buffers.data()));
 
     for (const VkCommandBuffer &buffer : vk_command_buffers) {
-      command_buffers.emplace_back(
-          make_handle<CommandBuffer>(buffer, m_CommandPool));
+      command_buffers.emplace_back(make_handle<CommandBuffer>(buffer, m_CommandPool));
     }
 
     return command_buffers;

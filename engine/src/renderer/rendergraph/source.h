@@ -16,11 +16,9 @@ namespace mau {
     ~Source() { }
 
   public:
-    inline const String &GetName() const { return m_Name; }
-    inline const std::vector<Handle<Resource>> &GetResources() const {
-      return m_Resources;
-    }
-    inline Handle<Resource> GetResource(TUint32 current_frame) const {
+    inline const String                        &GetName() const { return m_Name; }
+    inline const std::vector<Handle<Resource>> &GetResources() const { return m_Resources; }
+    inline Handle<Resource>                     GetResource(TUint32 current_frame) const {
       ASSERT(current_frame < m_Resources.size());
       return m_Resources[current_frame];
     }

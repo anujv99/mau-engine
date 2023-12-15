@@ -16,9 +16,7 @@ namespace mau {
     static T *m_Instance;
   };
 
-  template <class T>
-  template <typename... Args>
-  inline void Singleton<T>::Create(Args... args) {
+  template <class T> template <typename... Args> inline void Singleton<T>::Create(Args... args) {
     Destroy();
     MAU_ALLOC(m_Instance, T, args...);
   }

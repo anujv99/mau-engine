@@ -17,8 +17,8 @@ namespace mau {
 
   public:
     VkPushConstantRange GetRange() const;
-    void Bind(Handle<CommandBuffer> cmd, Handle<Pipeline> pipeline) const;
-    void Bind(Handle<CommandBuffer> cmd, Handle<RTPipeline> pipeline) const;
+    void                Bind(Handle<CommandBuffer> cmd, Handle<Pipeline> pipeline) const;
+    void                Bind(Handle<CommandBuffer> cmd, Handle<RTPipeline> pipeline) const;
 
   protected:
     void SetData(const void *const data, TUint64 size);
@@ -39,17 +39,11 @@ namespace mau {
     T    GetData() const;
   };
 
-  template <typename T>
-  inline PushConstant<T>::PushConstant(const T &init)
-      : PushConstantBase(sizeof(T)) {
-    SetData(reinterpret_cast<const void *>(&init));
-  }
+  template <typename T> inline PushConstant<T>::PushConstant(const T &init): PushConstantBase(sizeof(T)) { SetData(reinterpret_cast<const void *>(&init)); }
 
   template <typename T> inline PushConstant<T>::~PushConstant() { }
 
-  template <typename T> inline void PushConstant<T>::Update(const T &data) {
-    SetData(reinterpret_cast<const void *>(&data));
-  }
+  template <typename T> inline void PushConstant<T>::Update(const T &data) { SetData(reinterpret_cast<const void *>(&data)); }
 
   template <typename T> inline T PushConstant<T>::GetData() const {
     ASSERT(m_Data != nullptr);

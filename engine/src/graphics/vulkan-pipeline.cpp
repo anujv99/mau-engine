@@ -17,8 +17,7 @@ namespace mau {
     m_BindingDesc.push_back(desc);
   }
 
-  void InputLayout::AddAttributeDesc(TUint32 location, TUint32 binding,
-                                     VkFormat format, TUint32 offset) {
+  void InputLayout::AddAttributeDesc(TUint32 location, TUint32 binding, VkFormat format, TUint32 offset) {
     VkVertexInputAttributeDescription desc = {};
     desc.location = location;
     desc.binding = binding;
@@ -28,43 +27,30 @@ namespace mau {
     m_AttributeDesc.push_back(desc);
   }
 
-  Pipeline::Pipeline(
-      Handle<VertexShader>   vertex_shader,
-      Handle<FragmentShader> fragment_shader, Handle<Renderpass> renderpass,
-      const InputLayout &input_layout, Handle<PushConstantBase> push_constant,
-      const std::vector<VkDescriptorSetLayout> &descriptor_layouts,
-      const VkSampleCountFlagBits              &sample_count) {
-    VkPipelineShaderStageCreateInfo shader_stages[] = {
-        vertex_shader->GetShaderStageInfo(),
-        fragment_shader->GetShaderStageInfo()};
+  Pipeline::Pipeline(Handle<VertexShader> vertex_shader, Handle<FragmentShader> fragment_shader, Handle<Renderpass> renderpass, const InputLayout &input_layout, Handle<PushConstantBase> push_constant,
+                     const std::vector<VkDescriptorSetLayout> &descriptor_layouts, const VkSampleCountFlagBits &sample_count) {
+    VkPipelineShaderStageCreateInfo shader_stages[] = {vertex_shader->GetShaderStageInfo(), fragment_shader->GetShaderStageInfo()};
 
     // vertex input
     VkPipelineVertexInputStateCreateInfo vertex_input_state = {};
-    vertex_input_state.sType =
-        VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
+    vertex_input_state.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
     vertex_input_state.pNext = nullptr;
     vertex_input_state.flags = 0u;
-    vertex_input_state.vertexBindingDescriptionCount =
-        static_cast<uint32_t>(input_layout.GetBindingDesc().size());
-    vertex_input_state.pVertexBindingDescriptions =
-        input_layout.GetBindingDesc().data();
-    vertex_input_state.vertexAttributeDescriptionCount =
-        static_cast<uint32_t>(input_layout.GetAttributeDesc().size());
-    vertex_input_state.pVertexAttributeDescriptions =
-        input_layout.GetAttributeDesc().data();
+    vertex_input_state.vertexBindingDescriptionCount = static_cast<uint32_t>(input_layout.GetBindingDesc().size());
+    vertex_input_state.pVertexBindingDescriptions = input_layout.GetBindingDesc().data();
+    vertex_input_state.vertexAttributeDescriptionCount = static_cast<uint32_t>(input_layout.GetAttributeDesc().size());
+    vertex_input_state.pVertexAttributeDescriptions = input_layout.GetAttributeDesc().data();
 
     // input assembly
     VkPipelineInputAssemblyStateCreateInfo input_assembly_state = {};
-    input_assembly_state.sType =
-        VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
+    input_assembly_state.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
     input_assembly_state.pNext = nullptr;
     input_assembly_state.flags = 0u;
     input_assembly_state.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
     input_assembly_state.primitiveRestartEnable = false;
 
     // dynamic states
-    VkDynamicState dynamic_states[] = {VK_DYNAMIC_STATE_VIEWPORT,
-                                       VK_DYNAMIC_STATE_SCISSOR};
+    VkDynamicState                   dynamic_states[] = {VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR};
     VkPipelineDynamicStateCreateInfo dynamic_state = {};
     dynamic_state.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
     dynamic_state.pNext = nullptr;
@@ -74,8 +60,7 @@ namespace mau {
 
     // viewport, empty because dynamic
     VkPipelineViewportStateCreateInfo viewport_state = {};
-    viewport_state.sType =
-        VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
+    viewport_state.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
     viewport_state.pNext = nullptr;
     viewport_state.flags = 0u;
     viewport_state.viewportCount = 1u;
@@ -85,8 +70,7 @@ namespace mau {
 
     // rasterizer
     VkPipelineRasterizationStateCreateInfo raster_state = {};
-    raster_state.sType =
-        VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
+    raster_state.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
     raster_state.pNext = nullptr;
     raster_state.flags = 0u;
     raster_state.depthClampEnable = VK_FALSE;
@@ -102,8 +86,7 @@ namespace mau {
 
     // multisampling
     VkPipelineMultisampleStateCreateInfo multisample_state = {};
-    multisample_state.sType =
-        VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
+    multisample_state.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
     multisample_state.pNext = nullptr;
     multisample_state.flags = 0u;
     multisample_state.rasterizationSamples = sample_count;
@@ -122,13 +105,10 @@ namespace mau {
     color_blend_attachment.srcAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
     color_blend_attachment.dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
     color_blend_attachment.alphaBlendOp = VK_BLEND_OP_ADD;
-    color_blend_attachment.colorWriteMask =
-        VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT |
-        VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
+    color_blend_attachment.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
 
     VkPipelineColorBlendStateCreateInfo color_blend_state = {};
-    color_blend_state.sType =
-        VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
+    color_blend_state.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
     color_blend_state.pNext = nullptr;
     color_blend_state.flags = 0u;
     color_blend_state.logicOpEnable = VK_FALSE;
@@ -142,8 +122,7 @@ namespace mau {
 
     // depth stencil
     VkPipelineDepthStencilStateCreateInfo depth_stencil_state = {};
-    depth_stencil_state.sType =
-        VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
+    depth_stencil_state.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
     depth_stencil_state.pNext = nullptr;
     depth_stencil_state.flags = 0u;
     depth_stencil_state.depthTestEnable = VK_TRUE;
@@ -162,16 +141,12 @@ namespace mau {
     layout_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
     layout_create_info.pNext = nullptr;
     layout_create_info.flags = 0u;
-    layout_create_info.setLayoutCount =
-        static_cast<uint32_t>(descriptor_layouts.size());
+    layout_create_info.setLayoutCount = static_cast<uint32_t>(descriptor_layouts.size());
     layout_create_info.pSetLayouts = descriptor_layouts.data();
     layout_create_info.pushConstantRangeCount = push_constant ? 1 : 0;
-    layout_create_info.pPushConstantRanges =
-        push_constant ? &push_constant_range : nullptr;
+    layout_create_info.pPushConstantRanges = push_constant ? &push_constant_range : nullptr;
 
-    VK_CALL(vkCreatePipelineLayout(VulkanState::Ref().GetDevice(),
-                                   &layout_create_info, nullptr,
-                                   &m_PipelineLayout));
+    VK_CALL(vkCreatePipelineLayout(VulkanState::Ref().GetDevice(), &layout_create_info, nullptr, &m_PipelineLayout));
 
     VkGraphicsPipelineCreateInfo create_info = {};
     create_info.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
@@ -194,22 +169,17 @@ namespace mau {
     create_info.basePipelineHandle = VK_NULL_HANDLE;
     create_info.basePipelineIndex = -1;
 
-    VK_CALL(vkCreateGraphicsPipelines(VulkanState::Ref().GetDevice(),
-                                      VK_NULL_HANDLE, 1, &create_info, nullptr,
-                                      &m_Pipeline));
+    VK_CALL(vkCreateGraphicsPipelines(VulkanState::Ref().GetDevice(), VK_NULL_HANDLE, 1, &create_info, nullptr, &m_Pipeline));
   }
 
   Pipeline::~Pipeline() {
     if (m_PipelineLayout)
-      vkDestroyPipelineLayout(VulkanState::Ref().GetDevice(), m_PipelineLayout,
-                              nullptr);
+      vkDestroyPipelineLayout(VulkanState::Ref().GetDevice(), m_PipelineLayout, nullptr);
     if (m_Pipeline)
       vkDestroyPipeline(VulkanState::Ref().GetDevice(), m_Pipeline, nullptr);
   }
 
-  bool validate_create_info(const RTPipelineCreateInfo &create_info) {
-    return create_info.ClosestHit && create_info.Miss && create_info.RayGen;
-  }
+  bool validate_create_info(const RTPipelineCreateInfo &create_info) { return create_info.ClosestHit && create_info.Miss && create_info.RayGen; }
 
   RTPipeline::RTPipeline(const RTPipelineCreateInfo &create_info) {
     ASSERT(validate_create_info(create_info));
@@ -230,11 +200,9 @@ namespace mau {
         .intersectionShader = VK_SHADER_UNUSED_KHR,
         .pShaderGroupCaptureReplayHandle = nullptr,
     };
-    VkRayTracingShaderGroupCreateInfoKHR shader_groups[3] = {
-        base_shader_group_info, base_shader_group_info, base_shader_group_info};
+    VkRayTracingShaderGroupCreateInfoKHR shader_groups[3] = {base_shader_group_info, base_shader_group_info, base_shader_group_info};
 
-    shader_groups[0].type =
-        VK_RAY_TRACING_SHADER_GROUP_TYPE_TRIANGLES_HIT_GROUP_KHR;
+    shader_groups[0].type = VK_RAY_TRACING_SHADER_GROUP_TYPE_TRIANGLES_HIT_GROUP_KHR;
     shader_groups[0].closestHitShader = 0u;
     shader_groups[1].generalShader = 1u;
     shader_groups[2].generalShader = 2u;
@@ -248,17 +216,13 @@ namespace mau {
         .sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO,
         .pNext = nullptr,
         .flags = 0u,
-        .setLayoutCount =
-            static_cast<uint32_t>(create_info.DescriptorLayouts.size()),
+        .setLayoutCount = static_cast<uint32_t>(create_info.DescriptorLayouts.size()),
         .pSetLayouts = create_info.DescriptorLayouts.data(),
         .pushConstantRangeCount = create_info.PushConstant ? 1u : 0u,
-        .pPushConstantRanges =
-            create_info.PushConstant ? &push_constant_range : nullptr,
+        .pPushConstantRanges = create_info.PushConstant ? &push_constant_range : nullptr,
     };
 
-    VK_CALL(vkCreatePipelineLayout(VulkanState::Ref().GetDevice(),
-                                   &layout_create_info, nullptr,
-                                   &m_PipelineLayout));
+    VK_CALL(vkCreatePipelineLayout(VulkanState::Ref().GetDevice(), &layout_create_info, nullptr, &m_PipelineLayout));
 
     VkRayTracingPipelineCreateInfoKHR pipeline_create_info = {
         .sType = VK_STRUCTURE_TYPE_RAY_TRACING_PIPELINE_CREATE_INFO_KHR,
@@ -277,17 +241,14 @@ namespace mau {
         .basePipelineIndex = 0u,
     };
 
-    VK_CALL(vkCreateRayTracingPipelinesKHR(
-        VulkanState::Ref().GetDevice(), VK_NULL_HANDLE, VK_NULL_HANDLE, 1,
-        &pipeline_create_info, nullptr, &m_Pipeline));
+    VK_CALL(vkCreateRayTracingPipelinesKHR(VulkanState::Ref().GetDevice(), VK_NULL_HANDLE, VK_NULL_HANDLE, 1, &pipeline_create_info, nullptr, &m_Pipeline));
 
     CreateShaderBindingTable();
   }
 
   RTPipeline::~RTPipeline() {
     if (m_PipelineLayout)
-      vkDestroyPipelineLayout(VulkanState::Ref().GetDevice(), m_PipelineLayout,
-                              nullptr);
+      vkDestroyPipelineLayout(VulkanState::Ref().GetDevice(), m_PipelineLayout, nullptr);
     if (m_Pipeline)
       vkDestroyPipeline(VulkanState::Ref().GetDevice(), m_Pipeline, nullptr);
   }
@@ -304,37 +265,30 @@ namespace mau {
   }
 
   void RTPipeline::CreateShaderBindingTable() {
-    VkPhysicalDeviceRayTracingPipelinePropertiesKHR rt_pipeline_properties =
-        VulkanState::Ref().GetRTPipelineProperties();
+    VkPhysicalDeviceRayTracingPipelinePropertiesKHR rt_pipeline_properties = VulkanState::Ref().GetRTPipelineProperties();
 
     TUint32 miss_count = 1u;
     TUint32 chit_count = 1u;
     TUint32 handle_count = 1u + miss_count + chit_count;
-    TUint64 handle_size =
-        static_cast<TUint64>(rt_pipeline_properties.shaderGroupHandleSize);
-    TUint64 handle_size_aligned = align_up(
-        handle_size, rt_pipeline_properties.shaderGroupHandleAlignment);
+    TUint64 handle_size = static_cast<TUint64>(rt_pipeline_properties.shaderGroupHandleSize);
+    TUint64 handle_size_aligned = align_up(handle_size, rt_pipeline_properties.shaderGroupHandleAlignment);
 
     m_RayGenRegion = {
         .deviceAddress = 0u,
-        .stride = align_up(handle_size_aligned,
-                           rt_pipeline_properties.shaderGroupBaseAlignment),
-        .size = align_up(handle_size_aligned,
-                         rt_pipeline_properties.shaderGroupBaseAlignment),
+        .stride = align_up(handle_size_aligned, rt_pipeline_properties.shaderGroupBaseAlignment),
+        .size = align_up(handle_size_aligned, rt_pipeline_properties.shaderGroupBaseAlignment),
     };
 
     m_RayMissRegion = {
         .deviceAddress = 0u,
         .stride = handle_size_aligned,
-        .size = align_up(miss_count * handle_size_aligned,
-                         rt_pipeline_properties.shaderGroupBaseAlignment),
+        .size = align_up(miss_count * handle_size_aligned, rt_pipeline_properties.shaderGroupBaseAlignment),
     };
 
     m_RayClosestHitRegion = {
         .deviceAddress = 0u,
         .stride = handle_size_aligned,
-        .size = align_up(chit_count * handle_size_aligned,
-                         rt_pipeline_properties.shaderGroupBaseAlignment),
+        .size = align_up(chit_count * handle_size_aligned, rt_pipeline_properties.shaderGroupBaseAlignment),
     };
 
     m_RayCallRegion = {
@@ -345,27 +299,17 @@ namespace mau {
 
     TUint64        data_size = static_cast<TUint64>(handle_count * handle_size);
     Vector<TUint8> handles(data_size);
-    VK_CALL(vkGetRayTracingShaderGroupHandlesKHR(VulkanState::Ref().GetDevice(),
-                                                 m_Pipeline, 0, handle_count,
-                                                 data_size, handles.data()));
+    VK_CALL(vkGetRayTracingShaderGroupHandlesKHR(VulkanState::Ref().GetDevice(), m_Pipeline, 0, handle_count, data_size, handles.data()));
 
-    VkDeviceSize sbt_size = m_RayGenRegion.size + m_RayMissRegion.size +
-                            m_RayClosestHitRegion.size + m_RayCallRegion.size;
-    m_SBTBuffer = make_handle<Buffer>(
-        sbt_size,
-        VK_BUFFER_USAGE_TRANSFER_SRC_BIT |
-            VK_BUFFER_USAGE_SHADER_BINDING_TABLE_BIT_KHR,
-        VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT);
+    VkDeviceSize sbt_size = m_RayGenRegion.size + m_RayMissRegion.size + m_RayClosestHitRegion.size + m_RayCallRegion.size;
+    m_SBTBuffer = make_handle<Buffer>(sbt_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_SHADER_BINDING_TABLE_BIT_KHR, VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT);
 
     VkDeviceAddress sbt_address = m_SBTBuffer->GetDeviceAddress();
     m_RayClosestHitRegion.deviceAddress = sbt_address;
     m_RayGenRegion.deviceAddress = sbt_address + m_RayClosestHitRegion.size;
-    m_RayMissRegion.deviceAddress =
-        sbt_address + m_RayClosestHitRegion.size + m_RayGenRegion.size;
+    m_RayMissRegion.deviceAddress = sbt_address + m_RayClosestHitRegion.size + m_RayGenRegion.size;
 
-    auto get_handle = [&](TUint32 i) {
-      return handles.data() + i * handle_size;
-    };
+    auto get_handle = [&](TUint32 i) { return handles.data() + i * handle_size; };
 
     TUint8 *sbt_buffer_data = reinterpret_cast<TUint8 *>(m_SBTBuffer->Map());
     TUint8 *data = nullptr;

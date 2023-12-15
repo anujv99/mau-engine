@@ -8,8 +8,7 @@
 namespace mau {
 
   class CommandBuffer: public HandledObject {
-    template <class T, typename... Args>
-    friend Handle<T> make_handle(Args... args);
+    template <class T, typename... Args> friend Handle<T> make_handle(Args... args);
     CommandBuffer(VkCommandBuffer command_buffer, VkCommandPool m_CommandPool);
 
   public:
@@ -34,9 +33,7 @@ namespace mau {
     ~CommandPool();
 
   public:
-    std::vector<Handle<CommandBuffer>> AllocateCommandBuffers(
-        TUint32              count,
-        VkCommandBufferLevel level = VK_COMMAND_BUFFER_LEVEL_PRIMARY);
+    std::vector<Handle<CommandBuffer>> AllocateCommandBuffers(TUint32 count, VkCommandBufferLevel level = VK_COMMAND_BUFFER_LEVEL_PRIMARY);
 
   private:
     VkDevice      m_Device = VK_NULL_HANDLE;

@@ -10,11 +10,9 @@ namespace mau {
   // image
   class Image: public HandledObject {
   public:
-    Image(TUint32 width, TUint32 height, TUint32 depth, TUint32 mip_levels,
-          TUint32 array_layers, VkImageType type, VkSampleCountFlagBits samples,
-          VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage);
-    Image(TUint32 width, TUint32 height, VkImage image, VkFormat format,
-          VkSampleCountFlagBits samples);
+    Image(TUint32 width, TUint32 height, TUint32 depth, TUint32 mip_levels, TUint32 array_layers, VkImageType type, VkSampleCountFlagBits samples, VkFormat format, VkImageTiling tiling,
+          VkImageUsageFlags usage);
+    Image(TUint32 width, TUint32 height, VkImage image, VkFormat format, VkSampleCountFlagBits samples);
     ~Image();
 
   public:
@@ -33,17 +31,13 @@ namespace mau {
     TUint32               m_Height = 0u;
   };
 
-  void TransitionImageLayout(Handle<CommandBuffer> cmd, Handle<Image> image,
-                             VkImageLayout old_layout,
-                             VkImageLayout new_layout);
+  void TransitionImageLayout(Handle<CommandBuffer> cmd, Handle<Image> image, VkImageLayout old_layout, VkImageLayout new_layout);
 
   // image view
   class ImageView: public HandledObject {
   public:
-    ImageView(VkImage image, VkFormat format, VkImageViewType view_type,
-              VkImageAspectFlags aspect_mask);
-    ImageView(Handle<Image> image, VkImageViewType view_type,
-              VkImageAspectFlags aspect_mask);
+    ImageView(VkImage image, VkFormat format, VkImageViewType view_type, VkImageAspectFlags aspect_mask);
+    ImageView(Handle<Image> image, VkImageViewType view_type, VkImageAspectFlags aspect_mask);
     ImageView(const ImageView &other);
     ~ImageView();
 
@@ -51,9 +45,7 @@ namespace mau {
     inline VkImageView GetImageView() const { return m_ImageView; }
 
   private:
-    void CreateImageView(VkImage image, VkFormat format,
-                         VkImageViewType    view_type,
-                         VkImageAspectFlags aspect_mask);
+    void CreateImageView(VkImage image, VkFormat format, VkImageViewType view_type, VkImageAspectFlags aspect_mask);
 
   private:
     VkImageView m_ImageView = VK_NULL_HANDLE;
@@ -62,19 +54,15 @@ namespace mau {
   // framebuffer
   class Framebuffer: public HandledObject {
   public:
-    Framebuffer(std::vector<Handle<ImageView>> image_views,
-                Handle<Renderpass> renderpass, TUint32 width, TUint32 height);
-    Framebuffer(Handle<ImageView> color, Handle<ImageView> depth,
-                Handle<Renderpass> renderpass, TUint32 width, TUint32 height);
+    Framebuffer(std::vector<Handle<ImageView>> image_views, Handle<Renderpass> renderpass, TUint32 width, TUint32 height);
+    Framebuffer(Handle<ImageView> color, Handle<ImageView> depth, Handle<Renderpass> renderpass, TUint32 width, TUint32 height);
     ~Framebuffer();
 
   public:
     inline VkFramebuffer Get() const { return m_Framebuffer; }
 
   private:
-    void CreateFramebuffer(std::vector<VkImageView> image_views,
-                           VkRenderPass renderpass, TUint32 width,
-                           TUint32 height);
+    void CreateFramebuffer(std::vector<VkImageView> image_views, VkRenderPass renderpass, TUint32 width, TUint32 height);
 
   private:
     VkFramebuffer m_Framebuffer;

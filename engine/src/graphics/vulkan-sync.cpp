@@ -10,13 +10,10 @@ namespace mau {
     create_info.pNext = nullptr;
     create_info.flags = 0u;
 
-    VK_CALL(vkCreateSemaphore(VulkanState::Ref().GetDevice(), &create_info,
-                              nullptr, &m_Semaphore));
+    VK_CALL(vkCreateSemaphore(VulkanState::Ref().GetDevice(), &create_info, nullptr, &m_Semaphore));
   }
 
-  Semaphore::~Semaphore() {
-    vkDestroySemaphore(VulkanState::Ref().GetDevice(), m_Semaphore, nullptr);
-  }
+  Semaphore::~Semaphore() { vkDestroySemaphore(VulkanState::Ref().GetDevice(), m_Semaphore, nullptr); }
 
   Fence::Fence(VkFenceCreateFlags flags) {
     VkFenceCreateInfo create_info = {};
@@ -24,22 +21,16 @@ namespace mau {
     create_info.pNext = nullptr;
     create_info.flags = flags;
 
-    VK_CALL(vkCreateFence(VulkanState::Ref().GetDevice(), &create_info, nullptr,
-                          &m_Fence));
+    VK_CALL(vkCreateFence(VulkanState::Ref().GetDevice(), &create_info, nullptr, &m_Fence));
   }
 
-  Fence::~Fence() {
-    vkDestroyFence(VulkanState::Ref().GetDevice(), m_Fence, nullptr);
-  }
+  Fence::~Fence() { vkDestroyFence(VulkanState::Ref().GetDevice(), m_Fence, nullptr); }
 
-  void Fence::Reset() {
-    VK_CALL(vkResetFences(VulkanState::Ref().GetDevice(), 1, &m_Fence));
-  }
+  void Fence::Reset() { VK_CALL(vkResetFences(VulkanState::Ref().GetDevice(), 1, &m_Fence)); }
 
   void Fence::Wait() {
     MAU_PROFILE_SCOPR_COLOR("Fence::Wait", tracy::Color::Cyan);
-    VK_CALL(vkWaitForFences(VulkanState::Ref().GetDevice(), 1, &m_Fence,
-                            VK_TRUE, UINT64_MAX));
+    VK_CALL(vkWaitForFences(VulkanState::Ref().GetDevice(), 1, &m_Fence, VK_TRUE, UINT64_MAX));
   }
 
 } // namespace mau

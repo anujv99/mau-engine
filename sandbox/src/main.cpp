@@ -11,8 +11,7 @@ int main() {
   config.Height = 1080u;
   config.FramesInFlight = 3u;
   config.WindowName = "Mau Engine";
-  config.ValidationSeverity =
-      VulkanValidationLogSeverity::ERROR | VulkanValidationLogSeverity::WARNING;
+  config.ValidationSeverity = VulkanValidationLogSeverity::ERROR | VulkanValidationLogSeverity::WARNING;
 
   try {
     Engine::Create(config);

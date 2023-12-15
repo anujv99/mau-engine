@@ -8,21 +8,15 @@ namespace mau {
     friend class Source;
 
   public:
-    Sink(const String &name)
-        : m_Name(name), m_InputSourceName(name), m_Connecting(false) { }
-    Sink(const String &input_name, const String &name)
-        : m_Name(name), m_InputSourceName(input_name), m_Connecting(true) { }
+    Sink(const String &name): m_Name(name), m_InputSourceName(name), m_Connecting(false) { }
+    Sink(const String &input_name, const String &name): m_Name(name), m_InputSourceName(input_name), m_Connecting(true) { }
     ~Sink() { }
 
   public:
-    void AssignResources(const std::vector<Handle<Resource>> &resources) {
-      m_Resources = resources;
-    }
+    void AssignResources(const std::vector<Handle<Resource>> &resources) { m_Resources = resources; }
 
-    inline const String &GetName() const { return m_Name; }
-    inline const String &GetInputSourceName() const {
-      return m_InputSourceName;
-    }
+    inline const String    &GetName() const { return m_Name; }
+    inline const String    &GetInputSourceName() const { return m_InputSourceName; }
     inline bool             IsConnecting() const { return m_Connecting; }
     inline Handle<Resource> GetResource(TUint32 current_frame) const {
       ASSERT(current_frame < m_Resources.size());

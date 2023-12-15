@@ -9,8 +9,7 @@ namespace mau {
 
   RawImage::RawImage(const String &image_path) {
     int      width = 0, height = 0, channels = 0;
-    stbi_uc *pixels = stbi_load(image_path.c_str(), &width, &height, &channels,
-                                STBI_rgb_alpha);
+    stbi_uc *pixels = stbi_load(image_path.c_str(), &width, &height, &channels, STBI_rgb_alpha);
 
     if (!pixels) {
       LOG_ERROR("failed to load image: %s", image_path.c_str());

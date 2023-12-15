@@ -18,11 +18,8 @@ namespace mau {
     glm::vec2 tex;
   };
 
-  SubMesh::SubMesh(Handle<VertexBuffer> vertex_buffer,
-                   Handle<IndexBuffer> index_buffer, TUint32 index_count,
-                   Handle<Material> material)
-      : m_Vertices(vertex_buffer), m_Indices(index_buffer),
-        m_IndexCount(index_count), m_Material(material) {
+  SubMesh::SubMesh(Handle<VertexBuffer> vertex_buffer, Handle<IndexBuffer> index_buffer, TUint32 index_count, Handle<Material> material)
+      : m_Vertices(vertex_buffer), m_Indices(index_buffer), m_IndexCount(index_count), m_Material(material) {
 
     if (!VulkanFeatures::IsRtEnabled())
       return;
@@ -41,8 +38,7 @@ namespace mau {
         .Indices = index_buffer,
         .VertexSize = sizeof(Vertex),
         .PositionOffset = offsetof(Vertex, pos),
-        .VertexCount =
-            static_cast<TUint32>(vertex_buffer->GetSize() / sizeof(Vertex)),
+        .VertexCount = static_cast<TUint32>(vertex_buffer->GetSize() / sizeof(Vertex)),
         .IndexCount = index_count,
         .CustomIndex = m_RTDescHandle,
     };
@@ -52,18 +48,14 @@ namespace mau {
 
   Mesh::Mesh(const String &filename) {
     Assimp::Importer importer;
-    const aiScene   *scene = importer.ReadFile(
-        filename, aiProcess_Triangulate | aiProcess_PreTransformVertices |
-                      aiProcess_RemoveRedundantMaterials);
+    const aiScene   *scene = importer.ReadFile(filename, aiProcess_Triangulate | aiProcess_PreTransformVertices | aiProcess_RemoveRedundantMaterials);
 
     if (scene == nullptr) {
-      LOG_ERROR("failed to load mesh %s [reason: %s]", filename.c_str(),
-                importer.GetErrorString());
+      LOG_ERROR("failed to load mesh %s [reason: %s]", filename.c_str(), importer.GetErrorString());
       return;
     }
 
-    const String directory =
-        std::filesystem::path(filename).parent_path().string();
+    const String directory = std::filesystem::path(filename).parent_path().string();
 
     struct VertexData {
       Vector<Vertex>  vertices = {};
@@ -127,21 +119,17 @@ namespace mau {
       const Vector<Vertex>  &vertices = vertex_data.vertices;
       const Vector<TUint32> &indices = vertex_data.indices;
 
-      Handle<VertexBuffer> vertex_buffer = make_handle<VertexBuffer>(
-          vertices.size() * sizeof(vertices[0]), vertices.data());
-      Handle<IndexBuffer> index_buffer = make_handle<IndexBuffer>(
-          indices.size() * sizeof(indices[0]), indices.data());
-      TUint32          index_count = static_cast<TUint32>(indices.size());
-      Handle<Material> material = nullptr;
+      Handle<VertexBuffer> vertex_buffer = make_handle<VertexBuffer>(vertices.size() * sizeof(vertices[0]), vertices.data());
+      Handle<IndexBuffer>  index_buffer = make_handle<IndexBuffer>(indices.size() * sizeof(indices[0]), indices.data());
+      TUint32              index_count = static_cast<TUint32>(indices.size());
+      Handle<Material>     material = nullptr;
 
       if (material_index >= 0) {
         aiMaterial        *ai_material = scene->mMaterials[material_index];
         MaterialCreateInfo create_info = {};
 
-        const TUint32 diffuse_map_count =
-            ai_material->GetTextureCount(aiTextureType_DIFFUSE);
-        const TUint32 normal_map_count =
-            ai_material->GetTextureCount(aiTextureType_NORMALS);
+        const TUint32 diffuse_map_count = ai_material->GetTextureCount(aiTextureType_DIFFUSE);
+        const TUint32 normal_map_count = ai_material->GetTextureCount(aiTextureType_NORMALS);
 
         if (diffuse_map_count > 0) {
           aiString texture_path;

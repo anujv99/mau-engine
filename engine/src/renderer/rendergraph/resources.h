@@ -24,11 +24,7 @@ namespace mau {
 
   class ImageResource: public Resource {
   public:
-    ImageResource(Handle<Image> image, Handle<ImageView> image_view)
-        : Resource(ResourceType::IMAGE), m_Image(image),
-          m_ImageView(image_view) {
-      ASSERT(image && image_view);
-    }
+    ImageResource(Handle<Image> image, Handle<ImageView> image_view): Resource(ResourceType::IMAGE), m_Image(image), m_ImageView(image_view) { ASSERT(image && image_view); }
     ~ImageResource() = default;
 
   public:
@@ -42,10 +38,7 @@ namespace mau {
 
   class TextureResource: public Resource {
   public:
-    TextureResource(Handle<Texture> texture)
-        : Resource(ResourceType::TEXTURE), m_Texture(texture) {
-      ASSERT(texture);
-    }
+    TextureResource(Handle<Texture> texture): Resource(ResourceType::TEXTURE), m_Texture(texture) { ASSERT(texture); }
     ~TextureResource() = default;
 
   private:
@@ -54,10 +47,7 @@ namespace mau {
 
   class BufferResource: public Resource {
   public:
-    BufferResource(Handle<UniformBuffer> buffer)
-        : Resource(ResourceType::BUFFER), m_Buffer(buffer) {
-      ASSERT(buffer);
-    }
+    BufferResource(Handle<UniformBuffer> buffer): Resource(ResourceType::BUFFER), m_Buffer(buffer) { ASSERT(buffer); }
     ~BufferResource() = default;
 
   private:
