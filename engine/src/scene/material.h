@@ -13,14 +13,16 @@ namespace mau {
 
   class Material: public HandledObject {
   public:
-		Material(const MaterialCreateInfo& create_info);
-		~Material() = default;
+    Material(const MaterialCreateInfo &create_info);
+    ~Material() = default;
+
   public:
     inline MaterialHandle GetMaterialHandle() const { return m_MaterialHandle; }
+
   private:
-    Handle<Texture> m_Diffuse        = nullptr;
-    Handle<Texture> m_Normal         = nullptr;
+    Handle<Texture> m_Diffuse = nullptr;
+    Handle<Texture> m_Normal = nullptr;
     MaterialHandle  m_MaterialHandle = UINT32_MAX;
   };
 
-}
+} // namespace mau

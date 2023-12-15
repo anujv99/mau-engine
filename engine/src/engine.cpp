@@ -14,7 +14,7 @@
 
 namespace mau {
 
-  EngineConfig validate_config(const EngineConfig& config) {
+  EngineConfig validate_config(const EngineConfig &config) {
     EngineConfig output_config = config;
 
     if (output_config.FramesInFlight == 0u) {
@@ -25,17 +25,17 @@ namespace mau {
     return output_config;
   }
 
-  Engine::Engine(const EngineConfig& config):
-    m_Config(validate_config(config)),
-    m_Window(config.Width, config.Height, config.WindowName) {
+  Engine::Engine(const EngineConfig &config)
+      : m_Config(validate_config(config)),
+        m_Window(config.Width, config.Height, config.WindowName) {
 
     m_Window.RegisterEventCallback(BIND_EVENT_FN(Engine::OnEvent));
 
-    #ifdef MAU_DEBUG
-      bool enable_validation = true;
-    #else
-      bool enable_validation = false;
-    #endif
+#ifdef MAU_DEBUG
+    bool enable_validation = true;
+#else
+    bool enable_validation = false;
+#endif
 
     VulkanState::Create(enable_validation);
     VulkanState::Ref().SetValidationSeverity(config.ValidationSeverity);
@@ -45,14 +45,15 @@ namespace mau {
 
     Renderer::Create(m_Window.GetRawWindow());
 
-    String model_path = GetAssetFolderPath() + "assets/models/Sponza/glTF/Sponza.gltf";
+    String model_path =
+        GetAssetFolderPath() + "assets/models/Sponza/glTF/Sponza.gltf";
 
     Handle<Mesh> mesh = make_handle<Mesh>(model_path);
 
     m_Scene = make_handle<Scene>();
     Entity bag = m_Scene->CreateEntity("Bag");
 
-    TransformComponent& transform = bag.Get<TransformComponent>();
+    TransformComponent &transform = bag.Get<TransformComponent>();
     transform.Position = glm::vec3(0.0f, 0.0f, 2.0f);
     transform.Rotation = glm::vec3(0.0f, 2.853, 0.0f);
 
@@ -69,9 +70,9 @@ namespace mau {
   void Engine::Run() noexcept {
     uint32_t frame_counter = 0;
     uint32_t last_second_framerate = 0;
-    auto last_time = std::chrono::high_resolution_clock::now();
-    float passed_time = 0.0f;
-    float delta_time = 0.0f;
+    auto     last_time = std::chrono::high_resolution_clock::now();
+    float    passed_time = 0.0f;
+    float    delta_time = 0.0f;
 
     while (!m_Window.ShouldClose()) {
       MAU_FRAME_MARK();
@@ -79,8 +80,9 @@ namespace mau {
 
       // set updated to false
       m_Scene->Each([](Entity entity) -> void {
-        TransformComponent& transform = entity.Get<TransformComponent>();
-        if (transform.Updated) transform.Updated = false;
+        TransformComponent &transform = entity.Get<TransformComponent>();
+        if (transform.Updated)
+          transform.Updated = false;
       });
 
       Renderer::Ref().StartFrame();
@@ -90,13 +92,14 @@ namespace mau {
       ImGuiSceneList();
 
       Renderer::Ref().EndFrame();
-      
+
       Input::OnUpdate();
       m_Window.PollEvents();
 
       // framerate
       auto current_time = std::chrono::high_resolution_clock::now();
-      auto dt = std::chrono::duration_cast<std::chrono::nanoseconds>(current_time - last_time);
+      auto dt = std::chrono::duration_cast<std::chrono::nanoseconds>(
+          current_time - last_time);
       delta_time = (float)dt.count() * (float)1e-9;
       last_time = current_time;
       passed_time += delta_time;
@@ -112,7 +115,9 @@ namespace mau {
     vkDeviceWaitIdle(VulkanState::Ref().GetDevice());
   }
 
-  void Engine::SetVulkanValidationLogSeverity(VulkanValidationLogSeverity severity, bool enabled) noexcept {
+  void
+  Engine::SetVulkanValidationLogSeverity(VulkanValidationLogSeverity severity,
+                                         bool enabled) noexcept {
     VulkanState::Ref().SetValidationSeverity(severity, enabled);
   }
 
@@ -120,36 +125,35 @@ namespace mau {
     static entt::entity selected_entity;
 
     if (ImGui::Begin("Scene List")) {
-      
+
       m_Scene->Each([](Entity entity) -> void {
-        NameComponent& name = entity.Get<NameComponent>();
-        const bool is_selected = selected_entity == entity.GetId();
+        NameComponent &name = entity.Get<NameComponent>();
+        const bool     is_selected = selected_entity == entity.GetId();
 
         if (ImGui::Selectable(name.Name.c_str(), is_selected)) {
           selected_entity = entity.GetId();
         }
 
         if (is_selected) {
-          TransformComponent& transform = entity.Get<TransformComponent>();
+          TransformComponent &transform = entity.Get<TransformComponent>();
 
-          if (ImGui::DragFloat3("Position", &transform.Position[0], 0.01f)) transform.Updated = true;
-          if (ImGui::DragFloat3("Rotation", &transform.Rotation[0], 0.01f)) transform.Updated = true;
+          if (ImGui::DragFloat3("Position", &transform.Position[0], 0.01f))
+            transform.Updated = true;
+          if (ImGui::DragFloat3("Rotation", &transform.Rotation[0], 0.01f))
+            transform.Updated = true;
         }
       });
-
     }
     ImGui::End();
 
     // ImGui::ShowDemoWindow();
   }
 
-  void Engine::OnEvent(Event& e) {
+  void Engine::OnEvent(Event &e) {
     ImGuiContext::Ref().OnEvent(e);
     Input::OnEvent(e);
   }
 
-  std::string GetAssetFolderPath() {
-    return MAU_ASSET_FOLDER;
-  }
+  std::string GetAssetFolderPath() { return MAU_ASSET_FOLDER; }
 
-}
+} // namespace mau

@@ -12,19 +12,23 @@ namespace mau {
 
   class ImGuiContext: public Singleton<ImGuiContext> {
     friend class Singleton<ImGuiContext>;
+
   private:
-    ImGuiContext(void* window, Handle<Renderpass> renderpass);
+    ImGuiContext(void *window, Handle<Renderpass> renderpass);
     ~ImGuiContext();
+
   public:
     void StartFrame();
-    void OnEvent(Event& event);
+    void OnEvent(Event &event);
 
     inline void BlockEvents(bool block) { m_BlockEvents = block; }
+
   private:
     void ImGuiDockspace();
+
   private:
-    VkDescriptorPool  m_DescriptorPool = VK_NULL_HANDLE;
-    bool              m_BlockEvents    = false;
+    VkDescriptorPool m_DescriptorPool = VK_NULL_HANDLE;
+    bool             m_BlockEvents = false;
   };
 
-}
+} // namespace mau

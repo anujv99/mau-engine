@@ -31,9 +31,9 @@ namespace mau {
     TUint32   current_frame;
     TUint32   accum_image_index;
 
-    TUint32   pad1;
-    TUint32   pad2;
-    TUint32   pad3;
+    TUint32 pad1;
+    TUint32 pad2;
+    TUint32 pad3;
 
     glm::vec4 dir_light_color;
     glm::vec4 dir_light_direction;
@@ -47,62 +47,65 @@ namespace mau {
 
   class Renderer: public Singleton<Renderer> {
     friend class Singleton<Renderer>;
-    Renderer(void* window_ptr);
+    Renderer(void *window_ptr);
     ~Renderer();
+
   public:
     void StartFrame();
     void EndFrame();
     void Render(Handle<CommandBuffer> cmd, TUint32 frame_index);
     void RenderRT(Handle<CommandBuffer> cmd, TUint32 frame_index);
     void SubmitScene(Handle<Scene> scene) { m_DrawScene = scene; }
+
   private:
     void RecordCommandBuffer(TUint64 idx);
     void ImGuiTest(TUint32 idx);
     void CreateViewportBuffers(TUint32 width, TUint32 height);
     void CreateImguiTextures();
     void UpdateCamera();
+
   private:
     TUint64    m_CurrentFrame = 0u;
-    VkExtent2D m_Extent       = {};
+    VkExtent2D m_Extent = {};
 
-    Handle<VertexShader>               m_VertexShader   = nullptr;
+    Handle<VertexShader>               m_VertexShader = nullptr;
     Handle<FragmentShader>             m_FragmentShader = nullptr;
-    Handle<Pipeline>                   m_Pipeline       = nullptr;
+    Handle<Pipeline>                   m_Pipeline = nullptr;
     std::vector<Handle<CommandBuffer>> m_CommandBuffers = {};
     std::vector<Handle<Semaphore>>     m_ImageAvailable = {};
     std::vector<Handle<Semaphore>>     m_RenderFinished = {};
-    std::vector<Handle<Fence>>         m_QueueSubmit    = {};
+    std::vector<Handle<Fence>>         m_QueueSubmit = {};
 
     // rt
-    Handle<RTClosestHitShader>         m_RTCHit         = nullptr;
-    Handle<RTMissShader>               m_RTMiss         = nullptr;
-    Handle<RTRayGenShader>             m_RTGen          = nullptr;
-    Handle<RTPipeline>                 m_RTPipeline     = nullptr;
+    Handle<RTClosestHitShader> m_RTCHit = nullptr;
+    Handle<RTMissShader>       m_RTMiss = nullptr;
+    Handle<RTRayGenShader>     m_RTGen = nullptr;
+    Handle<RTPipeline>         m_RTPipeline = nullptr;
 
-    Handle<RenderGraph>                m_Rendergraph    = nullptr;
+    Handle<RenderGraph> m_Rendergraph = nullptr;
 
     // temp
-    Handle<Scene>                          m_DrawScene    = nullptr;
-    Handle<PushConstant<VertexShaderData>> m_PushConstant = nullptr;
+    Handle<Scene>                                 m_DrawScene = nullptr;
+    Handle<PushConstant<VertexShaderData>>        m_PushConstant = nullptr;
     Handle<StructuredUniformBuffer<CameraBuffer>> m_CameraBuffer = nullptr;
-    BufferHandle m_CameraBufferHandle = 0u;
-    std::vector<bool> m_ClearAccumFlag = {};
+    BufferHandle                                  m_CameraBufferHandle = 0u;
+    std::vector<bool>                             m_ClearAccumFlag = {};
 
-    Sink sink_color = Sink("imgui-viewport-color");
-    Sink sink_depth = Sink("imgui-viewport-depth");
-    Sink sink_accum = Sink("rt-accum-buffer");
-    Sampler sampler;
-    std::vector<void*> imgui_texture_ids = {};
+    Sink                     sink_color = Sink("imgui-viewport-color");
+    Sink                     sink_depth = Sink("imgui-viewport-depth");
+    Sink                     sink_accum = Sink("rt-accum-buffer");
+    Sampler                  sampler;
+    std::vector<void *>      imgui_texture_ids = {};
     std::vector<ImageHandle> sink_color_handles = {};
     std::vector<ImageHandle> sink_accum_handles = {};
 
     Camera m_Camera;
 
-    TUint32 m_ImGuiViewportWidth  = 800u;
+    TUint32 m_ImGuiViewportWidth = 800u;
     TUint32 m_ImGuiViewportHeight = 600u;
 
-    TUint32 m_CurrentViewportWidth  = 800u;
+    TUint32 m_CurrentViewportWidth = 800u;
     TUint32 m_CurrentViewportHeight = 600u;
   };
-  
-}
+
+} // namespace mau

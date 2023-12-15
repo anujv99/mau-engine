@@ -16,13 +16,15 @@ namespace mau {
   public:
     Scene();
     ~Scene();
+
   public:
-    Entity CreateEntity(const String& name = "");
+    Entity CreateEntity(const String &name = "");
     Entity GetEntity(entt::entity entity_id);
 
     void Each(EntityIterator func);
+
   private:
     entt::registry m_Registry;
   };
 
-}
+} // namespace mau

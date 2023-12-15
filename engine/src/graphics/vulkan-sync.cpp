@@ -6,11 +6,12 @@ namespace mau {
 
   Semaphore::Semaphore() {
     VkSemaphoreCreateInfo create_info = {};
-    create_info.sType                 = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
-    create_info.pNext                 = nullptr;
-    create_info.flags                 = 0u;
+    create_info.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+    create_info.pNext = nullptr;
+    create_info.flags = 0u;
 
-    VK_CALL(vkCreateSemaphore(VulkanState::Ref().GetDevice(), &create_info, nullptr, &m_Semaphore));
+    VK_CALL(vkCreateSemaphore(VulkanState::Ref().GetDevice(), &create_info,
+                              nullptr, &m_Semaphore));
   }
 
   Semaphore::~Semaphore() {
@@ -19,11 +20,12 @@ namespace mau {
 
   Fence::Fence(VkFenceCreateFlags flags) {
     VkFenceCreateInfo create_info = {};
-    create_info.sType             = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
-    create_info.pNext             = nullptr;
-    create_info.flags             = flags;
+    create_info.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+    create_info.pNext = nullptr;
+    create_info.flags = flags;
 
-    VK_CALL(vkCreateFence(VulkanState::Ref().GetDevice(), &create_info, nullptr, &m_Fence));
+    VK_CALL(vkCreateFence(VulkanState::Ref().GetDevice(), &create_info, nullptr,
+                          &m_Fence));
   }
 
   Fence::~Fence() {
@@ -36,7 +38,8 @@ namespace mau {
 
   void Fence::Wait() {
     MAU_PROFILE_SCOPR_COLOR("Fence::Wait", tracy::Color::Cyan);
-    VK_CALL(vkWaitForFences(VulkanState::Ref().GetDevice(), 1, &m_Fence, VK_TRUE, UINT64_MAX));
+    VK_CALL(vkWaitForFences(VulkanState::Ref().GetDevice(), 1, &m_Fence,
+                            VK_TRUE, UINT64_MAX));
   }
 
-}
+} // namespace mau

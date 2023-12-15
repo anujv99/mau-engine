@@ -4,7 +4,7 @@
 
 namespace mau {
 
-  Material::Material(const MaterialCreateInfo& create_info) {
+  Material::Material(const MaterialCreateInfo &create_info) {
     GPUMaterial material = {};
 
     if (create_info.DiffuseMap != "") {
@@ -20,4 +20,4 @@ namespace mau {
     m_MaterialHandle = VulkanBindless::Ref().AddMaterial(material);
   }
 
-}
+} // namespace mau

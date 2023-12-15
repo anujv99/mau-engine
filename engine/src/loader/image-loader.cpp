@@ -7,16 +7,17 @@
 
 namespace mau {
 
-  RawImage::RawImage(const String& image_path) {
-    int width = 0, height = 0, channels = 0;
-    stbi_uc* pixels = stbi_load(image_path.c_str(), &width, &height, &channels, STBI_rgb_alpha);
+  RawImage::RawImage(const String &image_path) {
+    int      width = 0, height = 0, channels = 0;
+    stbi_uc *pixels = stbi_load(image_path.c_str(), &width, &height, &channels,
+                                STBI_rgb_alpha);
 
     if (!pixels) {
       LOG_ERROR("failed to load image: %s", image_path.c_str());
       return;
     }
 
-    Data = reinterpret_cast<void*>(pixels);
+    Data = reinterpret_cast<void *>(pixels);
     Width = static_cast<TUint32>(width);
     Height = static_cast<TUint32>(height);
   }
@@ -28,4 +29,4 @@ namespace mau {
     }
   }
 
-}
+} // namespace mau

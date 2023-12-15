@@ -5,16 +5,16 @@ namespace mau {
 
   Scene::Scene() { }
 
-  Scene::~Scene() {
-    m_Registry.clear();
-  }
+  Scene::~Scene() { m_Registry.clear(); }
 
-  Entity Scene::CreateEntity(const String& name) {
+  Entity Scene::CreateEntity(const String &name) {
     entt::entity entity_id = m_Registry.create();
 
     Entity entity(entity_id, m_Registry);
     entity.Add<TransformComponent>();
-    entity.Add<NameComponent>(name.empty() ? std::to_string(static_cast<ENTT_ID_TYPE>(entity_id)) : name);
+    entity.Add<NameComponent>(
+        name.empty() ? std::to_string(static_cast<ENTT_ID_TYPE>(entity_id))
+                     : name);
 
     return entity;
   }
@@ -31,4 +31,4 @@ namespace mau {
     });
   }
 
-}
+} // namespace mau

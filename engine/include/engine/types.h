@@ -15,16 +15,15 @@ namespace mau {
   template <typename Key, typename Value>
   using UnorderedMap = std::unordered_map<Key, Value>;
 
-  template <typename T>
-  using Vector = std::vector<T>;
+  template <typename T> using Vector = std::vector<T>;
 
   typedef uint8_t  TUint8;
   typedef uint32_t TUint32;
   typedef uint64_t TUint64;
 
-  typedef int32_t  TInt32;
+  typedef int32_t TInt32;
 
-  typedef float    TFloat32;
-  typedef double   TFloat64;
+  typedef float  TFloat32;
+  typedef double TFloat64;
 
-}
+} // namespace mau

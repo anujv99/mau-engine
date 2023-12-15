@@ -9,4 +9,4 @@ namespace mau {
     static inline bool IsBufferDeviceAddressEnabled() { return true; }
   };
 
-}
+} // namespace mau

@@ -9,9 +9,11 @@ namespace mau {
   public:
     Semaphore();
     ~Semaphore();
+
   public:
-    inline VkSemaphore Get() const { return m_Semaphore; }
-    inline const VkSemaphore* Ref() const { return &m_Semaphore; }
+    inline VkSemaphore        Get() const { return m_Semaphore; }
+    inline const VkSemaphore *Ref() const { return &m_Semaphore; }
+
   private:
     VkSemaphore m_Semaphore = VK_NULL_HANDLE;
   };
@@ -20,14 +22,17 @@ namespace mau {
   public:
     Fence(VkFenceCreateFlags flags = 0u);
     ~Fence();
+
   public:
     void Reset();
     void Wait();
+
   public:
-    inline VkFence Get() const { return m_Fence; }
-    inline const VkFence* Ref() const { return &m_Fence; }
+    inline VkFence        Get() const { return m_Fence; }
+    inline const VkFence *Ref() const { return &m_Fence; }
+
   private:
     VkFence m_Fence = VK_NULL_HANDLE;
   };
 
-}
+} // namespace mau

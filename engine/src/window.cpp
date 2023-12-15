@@ -10,21 +10,23 @@
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
 
-#define GLFW_CALL(call, reason) {                  \
-  int ret = call;                                  \
-  if (ret != GLFW_TRUE) {                          \
-    throw WindowException(reason);                 \
-  }                                                \
-}                                                  \
+#define GLFW_CALL(call, reason)                                                \
+  {                                                                            \
+    int ret = call;                                                            \
+    if (ret != GLFW_TRUE) {                                                    \
+      throw WindowException(reason);                                           \
+    }                                                                          \
+  }
 
 namespace mau {
 
-  void glfw_error_callback(int error, const char* description) {
+  void glfw_error_callback(int error, const char *description) {
     LOG_ERROR("glfw error: %s", description);
   }
 
-  EventEmitFunction get_event_emit_func(GLFWwindow* window) {
-    Window* user_pointer = reinterpret_cast<Window*>(glfwGetWindowUserPointer(window));
+  EventEmitFunction get_event_emit_func(GLFWwindow *window) {
+    Window *user_pointer =
+        reinterpret_cast<Window *>(glfwGetWindowUserPointer(window));
     if (!user_pointer) {
       LOG_ERROR("failed to get window user pointer");
       return nullptr;
@@ -39,75 +41,86 @@ namespace mau {
     return func;
   }
 
-  void glfw_key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
+  void glfw_key_callback(GLFWwindow *window, int key, int scancode, int action,
+                         int mods) {
     EventEmitFunction func = get_event_emit_func(window);
-    if (!func) return;
+    if (!func)
+      return;
     switch (action) {
-      case GLFW_PRESS: {
-        KeyPressEvent event(key);
-        func(event);
-        break;
-      }
-      case GLFW_RELEASE: {
-        KeyReleaseEvent event(key);
-        func(event);
-        break;
-      }
-      case GLFW_REPEAT: {
-        KeyRepeatEvent event(key);
-        func(event);
-        break;
-      }
+    case GLFW_PRESS: {
+      KeyPressEvent event(key);
+      func(event);
+      break;
+    }
+    case GLFW_RELEASE: {
+      KeyReleaseEvent event(key);
+      func(event);
+      break;
+    }
+    case GLFW_REPEAT: {
+      KeyRepeatEvent event(key);
+      func(event);
+      break;
+    }
     }
   }
 
-  void glfw_mouse_callback(GLFWwindow* window, int button, int action, int mods) {
+  void glfw_mouse_callback(GLFWwindow *window, int button, int action,
+                           int mods) {
     EventEmitFunction func = get_event_emit_func(window);
-    if (!func) return;
+    if (!func)
+      return;
 
     switch (action) {
-      case GLFW_PRESS: {
-        MousePressEvent event(button);
-        func(event);
-        break;
-      }
-      case GLFW_RELEASE: {
-        MouseReleaseEvent event(button);
-        func(event);
-        break;
-      }
+    case GLFW_PRESS: {
+      MousePressEvent event(button);
+      func(event);
+      break;
+    }
+    case GLFW_RELEASE: {
+      MouseReleaseEvent event(button);
+      func(event);
+      break;
+    }
     }
   }
 
-  void glfw_mouse_move_callback(GLFWwindow* window, double xpos, double ypos) {
+  void glfw_mouse_move_callback(GLFWwindow *window, double xpos, double ypos) {
     EventEmitFunction func = get_event_emit_func(window);
-    if (!func) return;
+    if (!func)
+      return;
 
     MouseMoveEvent event(static_cast<float>(xpos), static_cast<float>(ypos));
     func(event);
   }
 
-  void glfw_mouse_scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
+  void glfw_mouse_scroll_callback(GLFWwindow *window, double xoffset,
+                                  double yoffset) {
     EventEmitFunction func = get_event_emit_func(window);
-    if (!func) return;
+    if (!func)
+      return;
 
-    MouseScrollEvent event(static_cast<float>(xoffset), static_cast<float>(yoffset));
+    MouseScrollEvent event(static_cast<float>(xoffset),
+                           static_cast<float>(yoffset));
     func(event);
   }
 
-  void glfw_window_close_callback(GLFWwindow* window) {
+  void glfw_window_close_callback(GLFWwindow *window) {
     EventEmitFunction func = get_event_emit_func(window);
-    if (!func) return;
+    if (!func)
+      return;
 
     WindowCloseEvent event;
     func(event);
   }
 
-  void glfw_window_resize_callback(GLFWwindow* window, int width, int height) {
+  void glfw_window_resize_callback(GLFWwindow *window, int width, int height) {
     EventEmitFunction func = get_event_emit_func(window);
-    if (!func) return;
+    if (!func)
+      return;
 
-    WindowResizeEvent event(static_cast<TUint32>(width), static_cast<TUint32>(height));
+    WindowResizeEvent event(static_cast<TUint32>(width),
+                            static_cast<TUint32>(height));
     func(event);
   }
 
@@ -120,7 +133,9 @@ namespace mau {
 
     // create glfw window
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-    GLFWwindow* window = glfwCreateWindow(static_cast<int>(width), static_cast<int>(height), name.data(), nullptr, nullptr);
+    GLFWwindow *window =
+        glfwCreateWindow(static_cast<int>(width), static_cast<int>(height),
+                         name.data(), nullptr, nullptr);
 
     if (!window) {
       GLFW_CALL(GLFW_FALSE, "failed to create window");
@@ -135,7 +150,7 @@ namespace mau {
     glfwSetWindowCloseCallback(window, glfw_window_close_callback);
     glfwSetWindowSizeCallback(window, glfw_window_resize_callback);
 
-    m_InternalState = reinterpret_cast<void*>(window);
+    m_InternalState = reinterpret_cast<void *>(window);
     m_Width = width;
     m_Height = height;
 
@@ -143,7 +158,7 @@ namespace mau {
   }
 
   Window::~Window() {
-    GLFWwindow* window = reinterpret_cast<GLFWwindow*>(m_InternalState);
+    GLFWwindow *window = reinterpret_cast<GLFWwindow *>(m_InternalState);
     if (window) {
       glfwDestroyWindow(window);
       m_InternalState = nullptr;
@@ -153,7 +168,7 @@ namespace mau {
   }
 
   bool Window::ShouldClose() const noexcept {
-    GLFWwindow* window = reinterpret_cast<GLFWwindow*>(m_InternalState);
+    GLFWwindow *window = reinterpret_cast<GLFWwindow *>(m_InternalState);
     if (window) {
       return glfwWindowShouldClose(window) == GLFW_TRUE;
     }
@@ -161,11 +176,10 @@ namespace mau {
     return true;
   }
 
-  void Window::PollEvents() const noexcept {
-    glfwPollEvents();
-  }
+  void Window::PollEvents() const noexcept { glfwPollEvents(); }
 
-  void Window::RegisterEventCallback(std::function<void(Event&)> callback) noexcept {
+  void Window::RegisterEventCallback(
+      std::function<void(Event &)> callback) noexcept {
     m_EventCallback = callback;
   }
-}
+} // namespace mau

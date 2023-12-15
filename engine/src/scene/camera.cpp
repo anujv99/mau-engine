@@ -9,7 +9,8 @@ namespace mau {
   }
 
   glm::mat4 Camera::GetProj(glm::vec2 window_size) const {
-    return glm::perspective(glm::radians(80.0f), window_size.x / window_size.y, 0.001f, 10000.0f);
+    return glm::perspective(glm::radians(80.0f), window_size.x / window_size.y,
+                            0.001f, 10000.0f);
   }
 
   glm::mat4 Camera::GetMVP(glm::vec2 window_size) const {
@@ -19,4 +20,4 @@ namespace mau {
     return projection * view;
   }
 
-}
+} // namespace mau
