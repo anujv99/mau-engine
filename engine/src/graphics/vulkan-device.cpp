@@ -89,6 +89,10 @@ namespace mau {
     EnableDeviceExtension(VK_KHR_ACCELERATION_STRUCTURE_EXTENSION_NAME);
     EnableDeviceExtension(VK_KHR_RAY_TRACING_PIPELINE_EXTENSION_NAME);
 
+#ifdef MAU_OPTIX
+    EnableDeviceExtension(VK_KHR_EXTERNAL_MEMORY_FD_EXTENSION_NAME);
+#endif
+
     std::set<TUint32> queue_indices = {m_GraphicsQueueIndex, m_TransferQueueIndex, m_PresentQueueIndex};
 
     std::vector<VkDeviceQueueCreateInfo> queue_create_info(queue_indices.size());

@@ -25,15 +25,16 @@ namespace mau {
   struct VertexShaderData {
     glm::vec4 color;
     glm::mat4 mvp;
-    TUint32   material_index;
-    TUint32   storage_image_index;
-    TUint32   camera_buffer_index;
-    TUint32   current_frame;
-    TUint32   accum_image_index;
 
+    TUint32 material_index;
+    TUint32 storage_image_index;
+    TUint32 camera_buffer_index;
+    TUint32 current_frame;
+
+    TUint32 accum_image_index;
+    TUint32 albedo_image_index;
+    TUint32 normal_image_index;
     TUint32 pad1;
-    TUint32 pad2;
-    TUint32 pad3;
 
     glm::vec4 dir_light_color;
     glm::vec4 dir_light_direction;
@@ -94,10 +95,14 @@ namespace mau {
     Sink                     sink_color = Sink("imgui-viewport-color");
     Sink                     sink_depth = Sink("imgui-viewport-depth");
     Sink                     sink_accum = Sink("rt-accum-buffer");
+    Sink                     sink_albedo = Sink("rt-albedo-buffer");
+    Sink                     sink_normal = Sink("rt-normal-buffer");
     Sampler                  sampler;
     std::vector<void *>      imgui_texture_ids = {};
     std::vector<ImageHandle> sink_color_handles = {};
     std::vector<ImageHandle> sink_accum_handles = {};
+    std::vector<ImageHandle> sink_albedo_handles = {};
+    std::vector<ImageHandle> sink_normal_handles = {};
 
     Camera m_Camera;
 

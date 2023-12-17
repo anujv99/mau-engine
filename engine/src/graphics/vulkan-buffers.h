@@ -16,17 +16,19 @@ namespace mau {
     void           *Map();
     void            UnMap();
     VkDeviceAddress GetDeviceAddress();
+    VkDeviceMemory  GetDeviceMemory();
 
     inline VkBuffer        Get() const { return m_Buffer; }
     inline const VkBuffer *Ref() const { return &m_Buffer; }
     inline TUint64         GetSize() const { return m_Size; }
 
   protected:
-    VkBuffer        m_Buffer = VK_NULL_HANDLE;
-    VmaAllocation   m_Allocation = VK_NULL_HANDLE;
-    void           *m_MappedMemory = nullptr;
-    TUint64         m_Size = 0u;
-    VkDeviceAddress m_DeviceAddress = 0u;
+    VkBuffer          m_Buffer = VK_NULL_HANDLE;
+    VmaAllocation     m_Allocation = VK_NULL_HANDLE;
+    VmaAllocationInfo m_AllocationInfo = {};
+    void             *m_MappedMemory = nullptr;
+    TUint64           m_Size = 0u;
+    VkDeviceAddress   m_DeviceAddress = 0u;
   };
 
   class VertexBuffer: public Buffer {

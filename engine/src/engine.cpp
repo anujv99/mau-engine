@@ -11,6 +11,7 @@
 #include "renderer/renderer.h"
 #include "graphics/vulkan-bindless.h"
 #include "scene/internal-components.h"
+#include "optix/denoiser.h"
 
 namespace mau {
 
@@ -41,6 +42,8 @@ namespace mau {
 
     VulkanBindless::Create();
 
+    Denoiser::Create();
+
     Renderer::Create(m_Window.GetRawWindow());
 
     String model_path = GetAssetFolderPath() + "assets/models/Sponza/glTF/Sponza.gltf";
@@ -60,6 +63,7 @@ namespace mau {
   Engine::~Engine() {
     m_Scene = nullptr;
     Renderer::Destroy();
+    Denoiser::Destroy();
     VulkanBindless::Destroy();
     VulkanState::Destroy();
   };

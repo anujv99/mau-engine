@@ -5,6 +5,10 @@ project( engine )
 find_package( Vulkan REQUIRED ) # Vulkan_INCLUDE_DIR, Vulkan_LIBRARIES
 find_package( Shaderc REQUIRED ) # Shaderc_INCLUDE_DIR, Shaderc_combined_LIBRARIES, Shaderc_shared_LIBRARIES
 
+# optional
+find_package( OptiX REQUIRED ) # Optix_INCLUDE_DIR
+find_package( CUDAToolkit REQUIRED ) # CUDAToolkit_INCLUDE_DIR
+
 file( GLOB_RECURSE project_source_files src/*.* )
 file( GLOB_RECURSE project_header_files include/*.* )
 
@@ -32,6 +36,14 @@ target_link_libraries( engine PRIVATE
   ${Vulkan_LIBRARIES}
   ${Shaderc_shared_LIBRARIES}
 )
+
+# enable optix support if available
+if ( OptiX_FOUND AND CUDAToolkit_FOUND )
+  message( STATUS "OptiX found, enabling OptiX support" )
+  add_compile_definitions( MAU_OPTIX )
+  target_include_directories( engine PRIVATE ${OptiX_INCLUDE_DIR} ${CUDAToolkit_INCLUDE_DIR} )
+  target_link_libraries( engine PRIVATE CUDA::cudart CUDA::cuda_driver )
+endif()
 
 # add asset folder path
 set( ASSET_FOLDER_PATH  "assets"  )

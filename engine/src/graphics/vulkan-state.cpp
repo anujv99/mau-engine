@@ -20,6 +20,7 @@ namespace mau {
   PFN_vkCreateRayTracingPipelinesKHR             vkCreateRayTracingPipelinesKHR = nullptr;
   PFN_vkCmdTraceRaysKHR                          vkCmdTraceRaysKHR = nullptr;
   PFN_vkGetRayTracingShaderGroupHandlesKHR       vkGetRayTracingShaderGroupHandlesKHR = nullptr;
+  PFN_vkGetMemoryFdKHR                           vkGetMemoryFdKHR = nullptr;
 
   static VKAPI_ATTR VkBool32 VKAPI_CALL debug_callback(VkDebugUtilsMessageSeverityFlagBitsEXT message_severity, VkDebugUtilsMessageTypeFlagsEXT message_type,
                                                        const VkDebugUtilsMessengerCallbackDataEXT *callback_data, void *user_data) {
@@ -112,7 +113,6 @@ namespace mau {
       EnableInstanceLayer("VK_LAYER_KHRONOS_validation");
       EnableInstanceExtension(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
     }
-
     // add surface extensions
     uint32_t           glfw_extension_count = 0u;
     const char *const *extensions = glfwGetRequiredInstanceExtensions(&glfw_extension_count);
@@ -217,6 +217,7 @@ namespace mau {
       LOAD_DEVICE_FUNCTION(vkCmdTraceRaysKHR);
       LOAD_DEVICE_FUNCTION(vkGetRayTracingShaderGroupHandlesKHR);
     }
+    LOAD_DEVICE_FUNCTION(vkGetMemoryFdKHR);
   }
 
   bool VulkanState::EnableInstanceLayer(std::string_view layer_name) noexcept {

@@ -4,6 +4,7 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <backends/imgui_impl_vulkan.h>
 #include <engine/input/input.h>
+#include <vulkan/vulkan_core.h>
 
 #include "context/imgui-context.h"
 #include "glm/geometric.hpp"
@@ -15,6 +16,7 @@
 #include "renderer/rendergraph/passes/imgui-pass.h"
 #include "scene/internal-components.h"
 #include "context/imgui-context.h"
+#include "optix/denoiser.h"
 
 namespace mau {
 
@@ -230,7 +232,7 @@ namespace mau {
 
     vkCmdBindPipeline(cmd->Get(), VK_PIPELINE_BIND_POINT_RAY_TRACING_KHR, m_RTPipeline->Get());
 
-    const std::vector<VkDescriptorSet> &sets = VulkanBindless::Ref().GetDescriptorSet();
+    const Vector<VkDescriptorSet> &sets = VulkanBindless::Ref().GetDescriptorSet();
     vkCmdBindDescriptorSets(cmd->Get(), VK_PIPELINE_BIND_POINT_RAY_TRACING_KHR, m_RTPipeline->GetLayout(), 0u, static_cast<TUint32>(sets.size()), sets.data(), 0u, nullptr);
 
     glm::mat4     mvp = m_Camera.GetMVP(glm::vec2(static_cast<float>(m_ImGuiViewportWidth), static_cast<float>(m_ImGuiViewportHeight)));
@@ -244,6 +246,8 @@ namespace mau {
         .camera_buffer_index = m_CameraBufferHandle,
         .current_frame = current_frame,
         .accum_image_index = sink_accum_handles[frame_index],
+        .albedo_image_index = sink_albedo_handles[frame_index],
+        .normal_image_index = sink_normal_handles[frame_index],
         .dir_light_color = m_PushConstant->GetData().dir_light_color,
         .dir_light_direction = m_PushConstant->GetData().dir_light_direction,
     });
@@ -267,8 +271,16 @@ namespace mau {
       vkCmdTraceRaysKHR(cmd->Get(), &region.RayGen, &region.RayMiss, &region.RayClosestHit, &region.RayCall, m_ImGuiViewportWidth, m_ImGuiViewportHeight, 1);
 
       Handle<ImageResource> current_image = sink_color.GetResource(frame_index);
+      Handle<ImageResource> current_albedo = sink_albedo.GetResource(frame_index);
+      Handle<ImageResource> current_normal = sink_normal.GetResource(frame_index);
 
-      TransitionImageLayout(cmd, current_image->GetImage(), VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+      if (current_frame > 100) {
+        Denoiser::Ref().ImageToBuffers(cmd, current_image->GetImage(), current_albedo->GetImage(), current_normal->GetImage(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+        Denoiser::Ref().Denoise(cmd);
+        Denoiser::Ref().BufferToImage(cmd, current_image->GetImage(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+      }
+
+      // TransitionImageLayout(cmd, current_image->GetImage(), VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
       if (transform_updated) {
         for (size_t i = 0; i < m_ClearAccumFlag.size(); i++)
@@ -385,6 +397,8 @@ namespace mau {
   void Renderer::CreateViewportBuffers(TUint32 width, TUint32 height) {
     sink_color_handles.clear();
     sink_accum_handles.clear();
+    sink_albedo_handles.clear();
+    sink_normal_handles.clear();
 
     const VkFormat color_format = VulkanState::Ref().GetSwapchainColorFormat();
     const VkFormat depth_format = VulkanState::Ref().GetSwapchainDepthFormat();
@@ -393,9 +407,11 @@ namespace mau {
     std::vector<Handle<Resource>> color_images = {};
     std::vector<Handle<Resource>> depth_images = {};
     std::vector<Handle<Resource>> accum_images = {};
+    std::vector<Handle<Resource>> albedo_images = {};
+    std::vector<Handle<Resource>> normal_images = {};
 
     for (TUint64 i = 0; i < image_count; i++) {
-      Handle<Image>     color = make_handle<Image>(width, height, 1, 1, 1, VK_IMAGE_TYPE_2D, VK_SAMPLE_COUNT_1_BIT, color_format, VK_IMAGE_TILING_OPTIMAL,
+      Handle<Image>     color = make_handle<Image>(width, height, 1, 1, 1, VK_IMAGE_TYPE_2D, VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_R32G32B32A32_SFLOAT, VK_IMAGE_TILING_OPTIMAL,
                                                VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_STORAGE_BIT);
       Handle<ImageView> color_view = make_handle<ImageView>(color, VK_IMAGE_VIEW_TYPE_2D, VK_IMAGE_ASPECT_COLOR_BIT);
 
@@ -406,19 +422,35 @@ namespace mau {
                                                VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_STORAGE_BIT);
       Handle<ImageView> accum_view = make_handle<ImageView>(accum, VK_IMAGE_VIEW_TYPE_2D, VK_IMAGE_ASPECT_COLOR_BIT);
 
+      Handle<Image>     alb = make_handle<Image>(width, height, 1, 1, 1, VK_IMAGE_TYPE_2D, VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_R32G32B32A32_SFLOAT, VK_IMAGE_TILING_OPTIMAL,
+                                             VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_STORAGE_BIT);
+      Handle<ImageView> alb_view = make_handle<ImageView>(alb, VK_IMAGE_VIEW_TYPE_2D, VK_IMAGE_ASPECT_COLOR_BIT);
+
+      Handle<Image>     norm = make_handle<Image>(width, height, 1, 1, 1, VK_IMAGE_TYPE_2D, VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_R32G32B32A32_SFLOAT, VK_IMAGE_TILING_OPTIMAL,
+                                              VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_STORAGE_BIT);
+      Handle<ImageView> norm_view = make_handle<ImageView>(norm, VK_IMAGE_VIEW_TYPE_2D, VK_IMAGE_ASPECT_COLOR_BIT);
+
       color_images.push_back(make_handle<ImageResource>(color, color_view));
       depth_images.push_back(make_handle<ImageResource>(depth, depth_view));
       accum_images.push_back(make_handle<ImageResource>(accum, accum_view));
+      albedo_images.push_back(make_handle<ImageResource>(alb, alb_view));
+      normal_images.push_back(make_handle<ImageResource>(norm, norm_view));
 
       if (VulkanFeatures::IsRtEnabled()) {
         sink_color_handles.push_back(VulkanBindless::Ref().AddStorageImage(color_view));
         sink_accum_handles.push_back(VulkanBindless::Ref().AddStorageImage(accum_view));
+        sink_albedo_handles.push_back(VulkanBindless::Ref().AddStorageImage(alb_view));
+        sink_normal_handles.push_back(VulkanBindless::Ref().AddStorageImage(norm_view));
       }
     }
 
     sink_color.AssignResources(color_images);
     sink_depth.AssignResources(depth_images);
     sink_accum.AssignResources(accum_images);
+    sink_albedo.AssignResources(albedo_images);
+    sink_normal.AssignResources(normal_images);
+
+    Denoiser::Ref().AllocateBuffers(width, height);
   }
 
   void Renderer::CreateImguiTextures() {

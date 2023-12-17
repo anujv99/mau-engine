@@ -49,7 +49,7 @@ namespace mau {
     create_info.queueFamilyIndexCount = 0u;
     create_info.pQueueFamilyIndices = nullptr;
 
-    VK_CALL(vmaCreateBuffer(VulkanState::Ref().GetVulkanMemoryAllocator(), &create_info, &alloc_info, &m_Buffer, &m_Allocation, nullptr));
+    VK_CALL(vmaCreateBuffer(VulkanState::Ref().GetVulkanMemoryAllocator(), &create_info, &alloc_info, &m_Buffer, &m_Allocation, &m_AllocationInfo));
   }
 
   Buffer::~Buffer() {
@@ -89,6 +89,8 @@ namespace mau {
 
     return m_DeviceAddress;
   }
+
+  VkDeviceMemory Buffer::GetDeviceMemory() { return m_AllocationInfo.deviceMemory; }
 
   VertexBuffer::VertexBuffer(TUint64 buffer_size, const void *data)
       : Buffer(buffer_size, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT_KHR,
@@ -185,7 +187,7 @@ namespace mau {
         .maxVertex = create_info.VertexCount,
         .indexType = VK_INDEX_TYPE_UINT32,
         .indexData = index_buffer_address,
-        .transformData = 0u,
+        .transformData = {0ul},
     };
 
     VkAccelerationStructureGeometryDataKHR geometry_data = {

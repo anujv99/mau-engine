@@ -32,10 +32,10 @@ layout (push_constant) uniform Constants {
   uint camera_buffer_index;
   uint current_frame;
   uint accum_storage_index;
+  uint alb_storage_index;
+  uint nrm_storage_index;
 
   uint pad1;
-  uint pad2;
-  uint pad3;
 
   vec4 light_col;
   vec4 light_dir;
@@ -75,11 +75,19 @@ void main() {
   const vec3 light_col         = push_constant.light_col.xyz;
   const float light_intensity  = push_constant.light_col.w;
 
+  vec3 first_hit_color = vec3(0.0f);
+  vec3 first_hit_normal = vec3(0.0f);
+
   for (int i = 0; i < MAX_RAY_RECURSION; i++) {
     ray_payload.ray_dir = direction.xyz;
     
     traceRayEXT(top_level_as[0], ray_flags, 0xFF, 0, 0, 0, origin.xyz, t_min, direction.xyz, t_max, 0);
     const vec3 hit_color = ray_payload.material.albedo;
+
+    if (i == 0) {
+      first_hit_color = hit_color;
+      first_hit_normal = ray_payload.normal;
+    }
 
     if (ray_payload.distance < 0.0) {
       color *= hit_color * factor;
@@ -110,4 +118,6 @@ void main() {
 
   const vec4 final_color = accum_color / accum_color.w;
   imageStore(storage_image[push_constant.rt_storage_index], storageIndex, linear_to_gamma(final_color));
+  imageStore(storage_image[push_constant.alb_storage_index], storageIndex, vec4(first_hit_color, 1.0f));
+  imageStore(storage_image[push_constant.nrm_storage_index], storageIndex, vec4(first_hit_normal, 1.0f));
 }

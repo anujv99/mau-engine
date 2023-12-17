@@ -12,9 +12,4 @@ namespace mau {
     ALL = BIT(0) | BIT(1) | BIT(2) | BIT(3),
   };
 
-  enum ShaderType {
-    VERTEX = BIT(0),
-    FRAGMENT = BIT(1),
-  };
-
 } // namespace mau

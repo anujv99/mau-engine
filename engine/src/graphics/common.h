@@ -41,6 +41,7 @@ namespace mau {
   extern PFN_vkCreateRayTracingPipelinesKHR             vkCreateRayTracingPipelinesKHR;
   extern PFN_vkCmdTraceRaysKHR                          vkCmdTraceRaysKHR;
   extern PFN_vkGetRayTracingShaderGroupHandlesKHR       vkGetRayTracingShaderGroupHandlesKHR;
+  extern PFN_vkGetMemoryFdKHR                           vkGetMemoryFdKHR;
 
   using TextureHandle = TUint32;
   using BufferHandle = TUint32;
