@@ -123,6 +123,9 @@ namespace mau {
 
     if (ImGui::Begin("Scene List")) {
 
+      ImGui::Checkbox("Enable Denoiser", &Renderer::Ref().EnableDenoiser);
+      ImGui::Separator();
+
       m_Scene->Each([](Entity entity) -> void {
         NameComponent &name = entity.Get<NameComponent>();
         const bool     is_selected = selected_entity == entity.GetId();

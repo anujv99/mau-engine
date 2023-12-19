@@ -40,4 +40,9 @@ namespace mau {
       layer->OnEvent(e);
   }
 
+  void LayerStack::OnImGuiUpdate() {
+    for (auto &layer : m_Layers)
+      layer->OnImgGiUpdate();
+  }
+
 } // namespace mau

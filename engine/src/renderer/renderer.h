@@ -65,6 +65,9 @@ namespace mau {
     void CreateImguiTextures();
     void UpdateCamera();
 
+  public:
+    bool EnableDenoiser = false;
+
   private:
     TUint64    m_CurrentFrame = 0u;
     VkExtent2D m_Extent = {};

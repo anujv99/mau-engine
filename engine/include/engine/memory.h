@@ -27,7 +27,7 @@
 #define MAU_FREE_BYTES(ptr)                                                                                                                                                                            \
   {                                                                                                                                                                                                    \
     TracyFree(ptr);                                                                                                                                                                                    \
-    delete[] ptr;                                                                                                                                                                                      \
+    delete[] reinterpret_cast<char *>(ptr);                                                                                                                                                            \
     ptr = nullptr;                                                                                                                                                                                     \
   }
 #define MAU_FREE_ARRAY(ptr)                                                                                                                                                                            \

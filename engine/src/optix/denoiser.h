@@ -1,19 +1,19 @@
 #pragma once
 
-#ifdef MAU_OPTIX
-
-#include <optix_types.h>
-#include <cuda.h>
-#include <cuda_runtime.h>
-#include <vulkan/vulkan.h>
-#include <glm/glm.hpp>
-
 #include <engine/types.h>
 #include <engine/utils/singleton.h>
 
 #include "graphics/vulkan-buffers.h"
 #include "graphics/vulkan-image.h"
 #include "graphics/vulkan-commands.h"
+
+#if defined(MAU_OPTIX)
+
+#include <optix_types.h>
+#include <cuda.h>
+#include <cuda_runtime.h>
+#include <vulkan/vulkan.h>
+#include <glm/glm.hpp>
 
 namespace mau {
 
@@ -64,6 +64,30 @@ namespace mau {
     CUdeviceptr m_CudaAlbedoBuffer = {};
     CUdeviceptr m_CudaNormalBuffer = {};
     CUdeviceptr m_CudaOutputBuffer = {};
+  };
+
+} // namespace mau
+
+#else
+
+namespace mau {
+
+  class Denoiser: public Singleton<Denoiser> {
+    friend class Singleton<Denoiser>;
+
+  private:
+    Denoiser() = default;
+    ~Denoiser() = default;
+
+  public:
+    void AllocateBuffers(TUint32 width, TUint32 height) { }
+    void ImageToBuffers(Handle<CommandBuffer> &cmd, const Handle<Image> &color, const Handle<Image> &albedo, const Handle<Image> &normal, VkImageLayout layout) { }
+    void BufferToImage(Handle<CommandBuffer> &cmd, const Handle<Image> &output, VkImageLayout layout) { }
+    void Denoise(Handle<CommandBuffer> &cmd) { }
+
+  private:
+    void Init() { }
+    void DestroyBuffers() { }
   };
 
 } // namespace mau

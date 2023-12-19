@@ -16,6 +16,7 @@ namespace mau {
     virtual void OnDetach() = 0;
     virtual void OnUpdate(TFloat32 dt) = 0;
     virtual void OnEvent(Event &e) = 0;
+    virtual void OnImgGiUpdate(){};
 
     inline const String &GetName() const { return m_LayerName; }
 
@@ -33,6 +34,7 @@ namespace mau {
     void PopLayer(const String &name);
     void OnUpdate(TFloat32 dt);
     void OnEvent(Event &e);
+    void OnImGuiUpdate();
 
     Vector<Handle<Layer>>::iterator begin() { return m_Layers.begin(); }
     Vector<Handle<Layer>>::iterator end() { return m_Layers.end(); }

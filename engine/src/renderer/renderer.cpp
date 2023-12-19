@@ -274,7 +274,7 @@ namespace mau {
       Handle<ImageResource> current_albedo = sink_albedo.GetResource(frame_index);
       Handle<ImageResource> current_normal = sink_normal.GetResource(frame_index);
 
-      if (current_frame > 100) {
+      if (EnableDenoiser) {
         Denoiser::Ref().ImageToBuffers(cmd, current_image->GetImage(), current_albedo->GetImage(), current_normal->GetImage(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
         Denoiser::Ref().Denoise(cmd);
         Denoiser::Ref().BufferToImage(cmd, current_image->GetImage(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);

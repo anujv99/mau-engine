@@ -23,10 +23,10 @@ namespace mau {
   }
 
   void Scene::Each(EntityIterator func) {
-    m_Registry.each([this, &func](entt::entity entity_id) -> void {
+    for (auto [entity_id] : m_Registry.storage<entt::entity>().each()) {
       Entity entity(entity_id, m_Registry);
       func(entity);
-    });
+    }
   }
 
 } // namespace mau
