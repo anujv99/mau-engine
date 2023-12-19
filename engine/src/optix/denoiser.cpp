@@ -1,7 +1,5 @@
 #include "denoiser.h"
 #include "engine/types.h"
-#include "optix_host.h"
-#include "optix_types.h"
 
 #ifdef MAU_OPTIX
 

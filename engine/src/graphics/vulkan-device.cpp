@@ -42,6 +42,7 @@ namespace mau {
     vulkan12_features.shaderStorageBufferArrayNonUniformIndexing = VK_TRUE;
     vulkan12_features.descriptorBindingStorageBufferUpdateAfterBind = VK_TRUE;
     vulkan12_features.descriptorBindingPartiallyBound = VK_TRUE;
+    vulkan12_features.scalarBlockLayout = VK_TRUE;
 
     // buffer device address
     vulkan12_features.bufferDeviceAddress = VK_TRUE;

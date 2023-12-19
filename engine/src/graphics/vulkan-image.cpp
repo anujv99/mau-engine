@@ -117,9 +117,17 @@ namespace mau {
     alloc_info.usage = VMA_MEMORY_USAGE_AUTO;
     alloc_info.flags = VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT;
 
+#ifdef MAU_OPTIX
+    VkExternalMemoryImageCreateInfo external_info = {
+        .sType = VK_STRUCTURE_TYPE_EXTERNAL_MEMORY_IMAGE_CREATE_INFO,
+        .pNext = nullptr,
+        .handleTypes = VK_EXTERNAL_MEMORY_HANDLE_TYPE_OPAQUE_FD_BIT,
+    };
+#endif
+
     VkImageCreateInfo create_info = {};
     create_info.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
-    create_info.pNext = nullptr;
+    create_info.pNext = &external_info;
     create_info.flags = 0u;
     create_info.imageType = type;
     create_info.format = format;

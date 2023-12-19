@@ -39,9 +39,15 @@ namespace mau {
       usage |= VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT;
     }
 
+    VkExternalMemoryBufferCreateInfo external_buffer_info = {
+        .sType = VK_STRUCTURE_TYPE_EXTERNAL_MEMORY_BUFFER_CREATE_INFO,
+        .pNext = nullptr,
+        .handleTypes = VK_EXTERNAL_MEMORY_HANDLE_TYPE_OPAQUE_FD_BIT,
+    };
+
     VkBufferCreateInfo create_info = {};
     create_info.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-    create_info.pNext = nullptr;
+    create_info.pNext = &external_buffer_info;
     create_info.flags = 0u;
     create_info.size = buffer_size;
     create_info.usage = usage;

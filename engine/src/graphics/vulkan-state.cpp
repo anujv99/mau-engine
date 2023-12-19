@@ -381,6 +381,18 @@ namespace mau {
     create_info.vulkanApiVersion = VK_API_VERSION_1_3;
     create_info.pTypeExternalMemoryHandleTypes = nullptr;
 
+#ifdef MAU_OPTIX
+    VkPhysicalDeviceMemoryProperties memory_properties = {};
+    vkGetPhysicalDeviceMemoryProperties(m_PhysicalDevice, &memory_properties);
+
+    Vector<VkExternalMemoryHandleTypeFlagsKHR> external_memory_handle_types(memory_properties.memoryTypeCount);
+    for (uint32_t i = 0; i < memory_properties.memoryTypeCount; i++) {
+      external_memory_handle_types[i] = VK_EXTERNAL_MEMORY_HANDLE_TYPE_OPAQUE_FD_BIT_KHR;
+    }
+
+    create_info.pTypeExternalMemoryHandleTypes = external_memory_handle_types.data();
+#endif
+
     if (VulkanFeatures::IsBufferDeviceAddressEnabled()) {
       create_info.flags |= VMA_ALLOCATOR_CREATE_BUFFER_DEVICE_ADDRESS_BIT;
     }

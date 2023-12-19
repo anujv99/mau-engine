@@ -278,9 +278,9 @@ namespace mau {
         Denoiser::Ref().ImageToBuffers(cmd, current_image->GetImage(), current_albedo->GetImage(), current_normal->GetImage(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
         Denoiser::Ref().Denoise(cmd);
         Denoiser::Ref().BufferToImage(cmd, current_image->GetImage(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+      } else {
+        TransitionImageLayout(cmd, current_image->GetImage(), VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
       }
-
-      // TransitionImageLayout(cmd, current_image->GetImage(), VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
       if (transform_updated) {
         for (size_t i = 0; i < m_ClearAccumFlag.size(); i++)
@@ -411,8 +411,9 @@ namespace mau {
     std::vector<Handle<Resource>> normal_images = {};
 
     for (TUint64 i = 0; i < image_count; i++) {
-      Handle<Image>     color = make_handle<Image>(width, height, 1, 1, 1, VK_IMAGE_TYPE_2D, VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_R32G32B32A32_SFLOAT, VK_IMAGE_TILING_OPTIMAL,
-                                               VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_STORAGE_BIT);
+      Handle<Image> color =
+          make_handle<Image>(width, height, 1, 1, 1, VK_IMAGE_TYPE_2D, VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_R32G32B32A32_SFLOAT, VK_IMAGE_TILING_OPTIMAL,
+                             VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_STORAGE_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT);
       Handle<ImageView> color_view = make_handle<ImageView>(color, VK_IMAGE_VIEW_TYPE_2D, VK_IMAGE_ASPECT_COLOR_BIT);
 
       Handle<Image>     depth = make_handle<Image>(width, height, 1, 1, 1, VK_IMAGE_TYPE_2D, VK_SAMPLE_COUNT_1_BIT, depth_format, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT);
@@ -423,11 +424,11 @@ namespace mau {
       Handle<ImageView> accum_view = make_handle<ImageView>(accum, VK_IMAGE_VIEW_TYPE_2D, VK_IMAGE_ASPECT_COLOR_BIT);
 
       Handle<Image>     alb = make_handle<Image>(width, height, 1, 1, 1, VK_IMAGE_TYPE_2D, VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_R32G32B32A32_SFLOAT, VK_IMAGE_TILING_OPTIMAL,
-                                             VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_STORAGE_BIT);
+                                             VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_STORAGE_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT);
       Handle<ImageView> alb_view = make_handle<ImageView>(alb, VK_IMAGE_VIEW_TYPE_2D, VK_IMAGE_ASPECT_COLOR_BIT);
 
       Handle<Image>     norm = make_handle<Image>(width, height, 1, 1, 1, VK_IMAGE_TYPE_2D, VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_R32G32B32A32_SFLOAT, VK_IMAGE_TILING_OPTIMAL,
-                                              VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_STORAGE_BIT);
+                                              VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_STORAGE_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT);
       Handle<ImageView> norm_view = make_handle<ImageView>(norm, VK_IMAGE_VIEW_TYPE_2D, VK_IMAGE_ASPECT_COLOR_BIT);
 
       color_images.push_back(make_handle<ImageResource>(color, color_view));

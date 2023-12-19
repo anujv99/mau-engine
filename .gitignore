@@ -4,3 +4,6 @@ out
 build
 .cache
 compile_commands.json
+.idea
+cmake-build-debug
+cmake-build-release
